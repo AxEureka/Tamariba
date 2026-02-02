@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ルーム作成</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <h1>ルーム作成</h1>
+
+  <input id="host" placeholder="親の名前" required><br>
+  <input id="room" placeholder="ルーム名" required><br>
+
+  <select id="theme">
+    <option value="forest">森</option>
+    <option value="mansion">洋館</option>
+    <option value="club">クラブ</option>
+  </select><br>
+
+  <button onclick="createRoom()">作成</button>
+
+  <script>
+    async function createRoom() {
+      const res = await fetch("/create_room", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          host_name: document.getElementById("host").value,
+          room_name: document.getElementById("room").value,
+          theme: document.getElementById("theme").value
+        })
+      });
+
+      const data = await res.json();
+      location.href =
+        `/static/room.html?room=${data.room_id}&theme=${data.theme}`;
+    }
+  </script>
+</body>
+</html>

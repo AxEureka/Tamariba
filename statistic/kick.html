@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>退出しました</title>
+  <style>
+    body {
+      background: #111;             /* 黒背景 */
+      color: white;
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      text-align: center;
+    }
+
+    button {
+      padding: 8px 16px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    h1 {
+      font-size: 24px;
+    }
+  </style>
+</head>
+<body>
+
+<div>
+  <h1 id="msg">退出しました</h1>
+  <button onclick="window.close()">OK</button>
+</div>
+
+<script>
+  // URLパラメータから親名・ルーム名を取得
+  const params = new URLSearchParams(location.search);
+  const host = params.get("host");        // 親の名前
+  const roomName = params.get("roomName"); // ルーム名
+
+  // もし親名とルーム名があれば表示を置き換える
+  if (host && roomName) {
+    document.getElementById("msg").textContent =
+      `${roomName}（親：${host}さん）から退出しました`;
+  }
+</script>
+
+</body>
+</html>

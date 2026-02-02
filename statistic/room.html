@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ルーム</title>
+
+<style>
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  font-family: sans-serif;
+  color: white;
+}
+body { background-size: cover; background-position: center; }
+.exit { position: fixed; top: 20px; right: 20px; padding: 8px 14px; cursor: pointer; }
+.room-ui { background: rgba(0,0,0,0.65); padding: 24px; margin: 40px; border-radius: 14px; max-width: 600px; }
+button { cursor: pointer; padding: 6px 12px; margin-left: 6px; }
+#join-url { width: 36ch; }
+#popup { position: fixed; top: 20px; right: 20px; background: rgba(0,0,0,0.8); padding: 12px 18px; border-radius: 10px; display: none; }
+</style>
+</head>
+
+<body>
+
+<button class="exit" onclick="exitRoom()">退出</button>
+
+<div class="room-ui">
+  <h1 id="room-title">読み込み中...</h1>
+
+  <p>
+    ルームID：<strong id="room-id"></strong> /
+    参加人数：<strong id="count">0</strong>人
+    <button onclick="toggleMembers()">メンバーを見る</button>
+  </p>
+
+  <div id="members" style="display:none; margin-bottom:10px;"></div>
+
+  <p id="join-url-container">
+    参加URL：
+    <input id="join-url" readonly>
+    <button onclick="copyURL()">コピー</button>
+  </p>
+
+  <div id="host-only" style="display:none; margin-top:20px;">
+    <button onclick="selectGame()">🎮 ゲームを選ぶ（親のみ）</button>
+  </div>
+</div>
+
+<div id="popup"></div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const roomId = params.get("room");
+let myName = params.get("name") || "";
+
+let hostName = "";
+let lastCount = 0;
+
+// ===== ルーム情報読み込み =====
+async function loadRoom() {
+  const res = await fetch(`/room/${roomId}`);
+  if (!res.ok) { alert("ルームが見つかりません"); return; }
+  const data = await res.json();
+  hostName = data.host;
+
+  if (!myName) myName = hostName; // 自分で作ったルームなら親扱い
+
+  if (myName !== hostName) {
+    document.body.style.backgroundImage = ""; // 子は背景非表示
+  } else {
+    document.body.style.backgroundImage = `url('/static/themes/${data.theme}.jpg')`;
+  }
+
+  document.getElementById("room-title").textContent =
+    `${data.room}（親：${data.host}さん）`;
+
+  document.getElementById("room-id").textContent = roomId;
+
+  const joinURL = `${location.origin}/static/join.html?room=${roomId}`;
+  if (myName === hostName) {
+    document.getElementById("host-only").style.display = "block";
+    document.getElementById("join-url-container").style.display = "block";
+    document.getElementById("join-url").value = joinURL;
+  } else {
+    document.getElementById("join-url-container").style.display = "none";
+  }
+}
+
+// ===== メンバー更新（自動）=====
+async function updateMembers(auto = false) {
+  const res = await fetch(`/room/${roomId}/members`);
+  if (!res.ok) return;
+  const data = await res.json();
+
+  const prevMembers = document.querySelectorAll("#members div.member");
+  const prevNames = Array.from(prevMembers).map(e => e.dataset.name);
+
+  document.getElementById("count").textContent = data.count;
+
+  // 入退ポップアップ
+  if (auto) {
+    // 参加者
+    data.members.forEach(m => {
+      if (!prevNames.includes(m) && m !== hostName) showPopup(`${m}さんが参加しました`);
+    });
+    // 退出者
+    prevNames.forEach(m => {
+      if (!data.members.includes(m)) showPopup(`${m}さんが退出しました`);
+    });
+  }
+
+  // ===== 親・子で表示切替 =====
+  const memberList = [];
+  memberList.push(`<div class="member" data-name="${hostName}"><strong>${hostName} (親)</strong></div>`);
+
+  data.members.forEach(m => {
+    if (m === hostName) return;
+    if (myName === hostName) {
+      memberList.push(`<div class="member" data-name="${m}">・${m} <button onclick="confirmKick('${m}')">退出</button></div>`);
+    } else if (m === myName) {
+      memberList.push(`<div class="member" data-name="${m}">・${m} (自分)</div>`);
+    } else {
+      memberList.push(`<div class="member" data-name="${m}">・${m}</div>`);
+    }
+  });
+
+  document.getElementById("members").innerHTML = memberList.join("<br>");
+}
+
+// ===== 定期更新 =====
+setInterval(() => updateMembers(true), 3000);
+
+// ===== UI操作 =====
+function toggleMembers() {
+  const box = document.getElementById("members");
+  box.style.display = box.style.display === "none" ? "block" : "none";
+}
+
+function copyURL() {
+  const input = document.getElementById("join-url");
+  input.select();
+  navigator.clipboard.writeText(input.value);
+  showPopup("参加URLをコピーしました");
+}
+
+function showPopup(text) {
+  const popup = document.getElementById("popup");
+  popup.textContent = text;
+  popup.style.display = "block";
+  setTimeout(() => popup.style.display = "none", 3000);
+}
+
+// ===== 親専用 強制退出 =====
+function confirmKick(name) {
+  if (confirm(`${name}さんを退出させますか？`)) kick(name);
+}
+
+async function kick(name) {
+  await fetch(`/room/${roomId}/kick`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ name })
+  });
+  updateMembers();
+
+  // 子が強制退出対象ならkick画面へ
+  if (name === myName && myName !== hostName) {
+    window.location.href = `/static/kick.html?room=${roomId}&host=${encodeURIComponent(hostName)}&roomName=${encodeURIComponent(document.getElementById("room-title").textContent.split('（')[0])}`;
+  }
+}
+
+// ===== 親専用 ゲーム選択 =====
+function selectGame() { alert("ゲーム選択（後で実装）"); }
+
+// ===== 退出 =====
+function exitRoom() {
+  if (myName === hostName) {
+    if (!confirm("ルームを閉じますか？")) return;
+    // 親が退出するとルームを閉じる→子全員kick
+    fetch(`/room/${roomId}/close`, { method: "POST" })
+      .then(() => { location.href = "/static/index.html"; });
+  } else {
+    // 子は自分で退出→kick画面
+    window.location.href = `/static/kick.html?room=${roomId}&host=${encodeURIComponent(hostName)}&roomName=${encodeURIComponent(document.getElementById("room-title").textContent.split('（')[0])}`;
+  }
+}
+
+// ===== 子がウインドウ閉じた場合も退出扱い =====
+window.addEventListener("beforeunload", async function() {
+  if (myName && myName !== hostName) {
+    await fetch(`/room/${roomId}/kick`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ name: myName })
+    });
+  }
+});
+
+loadRoom();
+updateMembers();
+</script>
+
+</body>
+</html>

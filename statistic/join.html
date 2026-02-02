@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ルーム参加</title>
+  <style>
+    body {
+      background: #111;
+      color: white;
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      text-align: center;
+    }
+    input { padding: 6px; font-size: 14px; }
+    button { padding: 6px 12px; margin-top: 10px; cursor: pointer; }
+    .container { background: rgba(0,0,0,0.7); padding: 24px; border-radius: 12px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1 id="join-title">ルームに入ります</h1>
+
+  <input id="nickname" placeholder="ニックネーム">
+  <br>
+  <button onclick="join()">OK</button>
+</div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const roomId = params.get("room");
+
+async function join() {
+  const name = document.getElementById("nickname").value;
+  if (!name) { alert("ニックネームを入力してください"); return; }
+
+  // 参加リクエスト
+  await fetch(`/room/${roomId}/join`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ name })
+  });
+
+  // ルーム画面へ
+  location.href = `/static/room.html?room=${roomId}&name=${encodeURIComponent(name)}`;
+}
+</script>
+
+</body>
+</html>
