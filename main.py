@@ -9,13 +9,14 @@ app = FastAPI()
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 
-# static フォルダ公開
+# ===== static フォルダ公開 =====
 if os.path.exists(STATIC_DIR):
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
+# ルーム保存（インメモリ）
 rooms = {}
 
-# ===== ルート =====
+# ===== ルート（直アクセス対策）=====
 @app.get("/")
 async def root():
     return RedirectResponse(url="/static/index.html")
@@ -59,7 +60,10 @@ async def join_room(room_id: str, data: dict):
     if name not in room["members"]:
         room["members"].append(name)
 
-    return {"members": room["members"]}
+    return {
+        "count": len(room["members"]),
+        "members": room["members"]
+    }
 
 
 # ===== Kick =====
@@ -76,7 +80,10 @@ async def kick_member(room_id: str, data: dict):
     if target in room["members"] and target != room["host"]:
         room["members"].remove(target)
 
-    return {"members": room["members"]}
+    return {
+        "count": len(room["members"]),
+        "members": room["members"]
+    }
 
 
 # ===== メンバー一覧 =====
@@ -96,4 +103,8 @@ async def get_members(room_id: str):
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=port
+    )
