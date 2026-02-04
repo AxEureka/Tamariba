@@ -219,14 +219,23 @@ async function kick(name) {
 // ===== 退出 =====
 function exitRoom() {
   kicked = true;
+
   if (myName === hostName) {
     if (!confirm("ルームを閉じますか？")) return;
     fetch(`/room/${roomId}/close`, { method: "POST" })
       .then(() => location.href = "/static/index.html");
   } else {
-    goKick();
+    // ★ 追加：自発退出をサーバーに伝える
+    fetch(`/room/${roomId}/kick`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ name: myName })
+    }).finally(() => {
+      goKick();
+    });
   }
 }
+
 
 // ===== kick画面 =====
 function goKick() {
@@ -249,5 +258,6 @@ updateMembers();
 </script>
 </body>
 </html>
+
 
 
