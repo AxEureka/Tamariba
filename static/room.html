@@ -1,222 +1,186 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>ルーム</title>
+  <meta charset="UTF-8" />
+  <title>Room</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background-size: cover;
+      background-position: center;
+      color: #fff;
+    }
 
-<style>
-html, body {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  font-family: sans-serif;
-  color: white;
-}
-body { background-size: cover; background-position: center; }
-.exit { position: fixed; top: 20px; right: 20px; padding: 8px 14px; cursor: pointer; }
-.room-ui { background: rgba(0,0,0,0.65); padding: 24px; margin: 40px; border-radius: 14px; max-width: 600px; }
-button { cursor: pointer; padding: 6px 12px; margin-left: 6px; }
-#join-url { width: 36ch; }
-#popup { position: fixed; top: 20px; right: 20px; background: rgba(0,0,0,0.8); padding: 12px 18px; border-radius: 10px; display: none; }
-</style>
+    .overlay {
+      background: rgba(0,0,0,0.55);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      padding: 6px 0;
+    }
+
+    button {
+      font-size: 1rem;
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .danger {
+      background: #c0392b;
+      color: #fff;
+    }
+  </style>
 </head>
 
 <body>
+<div class="overlay">
+  <h1 id="room-title"></h1>
 
-<button class="exit" onclick="exitRoom()">退出</button>
+  <h2>参加者</h2>
+  <ul id="member-list"></ul>
 
-<div class="room-ui">
-  <h1 id="room-title">読み込み中...</h1>
-
-  <p>
-    ルームID：<strong id="room-id"></strong> /
-    参加人数：<strong id="count">0</strong>人
-    <button onclick="toggleMembers()">メンバーを見る</button>
-  </p>
-
-  <div id="members" style="display:none; margin-bottom:10px;"></div>
-
-  <p id="join-url-container">
-    参加URL：
-    <input id="join-url" readonly>
-    <button onclick="copyURL()">コピー</button>
-  </p>
-
-  <div id="host-only" style="display:none; margin-top:20px;">
-    <button onclick="selectGame()">🎮 ゲームを選ぶ（親のみ）</button>
-  </div>
+  <button id="close-room" class="danger" style="display:none;">
+    ルームを閉じる
+  </button>
 </div>
 
-<div id="popup"></div>
-
 <script>
+/* =============================
+   初期設定・ガード
+============================= */
+
 const params = new URLSearchParams(location.search);
 const roomId = params.get("room");
 let myName = params.get("name") || "";
 
-let hostName = "";
+if (!sessionStorage.getItem("joinedRoom")) {
+  location.href = "/static/index.html";
+}
 
-// ===== ルーム情報読み込み =====
+let hostName = "";
+let auto = true;
+let firstUpdate = true;
+
+/* =============================
+   Kick 処理
+============================= */
+
+function goKick() {
+  sessionStorage.removeItem("joinedRoom");
+  location.href =
+    `/static/kick.html?room=${roomId}` +
+    `&host=${encodeURIComponent(hostName)}` +
+    `&roomName=${encodeURIComponent(
+      document.getElementById("room-title").textContent.split("（")[0]
+    )}`;
+}
+
+/* =============================
+   ルーム情報ロード
+============================= */
+
 async function loadRoom() {
   const res = await fetch(`/room/${roomId}`);
   if (!res.ok) {
-    if (myName) goKick();
+    goKick();
     return;
   }
 
   const data = await res.json();
+
   hostName = data.host;
 
-  if (!myName) myName = hostName;
-
-  if (myName === hostName) {
-    document.body.style.backgroundImage =
-      `url('/static/themes/${data.theme}.jpg')`;
-  } else {
-    document.body.style.backgroundImage = "";
-  }
-
   document.getElementById("room-title").textContent =
-    `${data.room}（親：${data.host}さん）`;
+    `${data.name}（ホスト：${hostName}）`;
 
-  document.getElementById("room-id").textContent = roomId;
+  // ★ 親子関係なく背景を表示
+  document.body.style.backgroundImage =
+    `url('/static/themes/${data.theme}.jpg')`;
 
-  const joinURL = `${location.origin}/static/join.html?room=${roomId}`;
+  // ホストのみ「閉じる」ボタン表示
   if (myName === hostName) {
-    document.getElementById("host-only").style.display = "block";
-    document.getElementById("join-url").value = joinURL;
-  } else {
-    document.getElementById("join-url-container").style.display = "none";
+    document.getElementById("close-room").style.display = "inline-block";
   }
+
+  updateMembers(data);
 }
 
-// ===== メンバー更新 =====
-async function updateMembers(auto = false) {
-  const res = await fetch(`/room/${roomId}/members`);
+/* =============================
+   メンバー更新
+============================= */
 
-  // ★ 親がルームを閉じた
-  if (!res.ok) {
-    if (myName !== hostName) goKick();
-    return;
-  }
+function updateMembers(data) {
+  const ul = document.getElementById("member-list");
+  ul.innerHTML = "";
 
-  const data = await res.json();
-  document.getElementById("count").textContent = data.count;
+  data.members.forEach(name => {
+    const li = document.createElement("li");
+    li.textContent = name + (name === hostName ? "（ホスト）" : "");
+    ul.appendChild(li);
+  });
 
-  // ★ 自分がkickされていた
-  if (auto && myName !== hostName && !data.members.includes(myName)) {
+  // ★ kick 判定（初回 update は除外）
+  if (
+    auto &&
+    !firstUpdate &&
+    myName !== hostName &&
+    !data.members.includes(myName)
+  ) {
     goKick();
     return;
   }
 
-  const memberList = [];
+  firstUpdate = false;
+}
 
-  // 親
-  memberList.push(
-    `<div class="member" data-name="${hostName}">
-      <strong>${hostName} (親)</strong>
-     </div>`
-  );
+/* =============================
+   ポーリング
+============================= */
 
-  // 自分（親以外）
-  if (myName !== hostName && data.members.includes(myName)) {
-    memberList.push(
-      `<div class="member" data-name="${myName}">
-        ・${myName} (自分)
-       </div>`
-    );
-  }
-
-  // その他（入室順）
-  data.members.forEach(m => {
-    if (m === hostName || m === myName) return;
-
-    if (myName === hostName) {
-      memberList.push(
-        `<div class="member" data-name="${m}">
-          ・${m}
-          <button onclick="confirmKick('${m}')">退出</button>
-         </div>`
-      );
-    } else {
-      memberList.push(
-        `<div class="member" data-name="${m}">
-          ・${m}
-         </div>`
-      );
+setInterval(async () => {
+  try {
+    const res = await fetch(`/room/${roomId}`);
+    if (!res.ok) {
+      goKick();
+      return;
     }
-  });
-
-  document.getElementById("members").innerHTML = memberList.join("<br>");
-}
-
-// ===== 定期更新 =====
-setInterval(() => updateMembers(true), 3000);
-
-// ===== UI =====
-function toggleMembers() {
-  const box = document.getElementById("members");
-  box.style.display = box.style.display === "none" ? "block" : "none";
-}
-
-function copyURL() {
-  const input = document.getElementById("join-url");
-  input.select();
-  navigator.clipboard.writeText(input.value);
-  showPopup("参加URLをコピーしました");
-}
-
-function showPopup(text) {
-  const popup = document.getElementById("popup");
-  popup.textContent = text;
-  popup.style.display = "block";
-  setTimeout(() => popup.style.display = "none", 3000);
-}
-
-// ===== kick =====
-function confirmKick(name) {
-  if (confirm(`${name}さんを退出させますか？`)) kick(name);
-}
-
-async function kick(name) {
-  await fetch(`/room/${roomId}/kick`, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ name })
-  });
-}
-
-// ===== 退出 =====
-function exitRoom() {
-  if (myName === hostName) {
-    if (!confirm("ルームを閉じますか？")) return;
-    fetch(`/room/${roomId}/close`, { method: "POST" })
-      .then(() => location.href = "/static/index.html");
-  } else {
-    goKick();
+    const data = await res.json();
+    updateMembers(data);
+  } catch (e) {
+    console.error(e);
   }
-}
+}, 2000);
 
-// ===== kick画面遷移 =====
-function goKick() {
-  location.href =
-    `/static/kick.html?room=${roomId}&host=${encodeURIComponent(hostName)}&roomName=${encodeURIComponent(document.getElementById("room-title").textContent.split('（')[0])}`;
-}
+/* =============================
+   ルーム閉鎖（ホスト）
+============================= */
 
-// ===== タブ閉じ =====
-window.addEventListener("beforeunload", () => {
-  if (myName && myName !== hostName) {
-    fetch(`/room/${roomId}/kick`, {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ name: myName })
-    });
-  }
-});
+document.getElementById("close-room").onclick = async () => {
+  await fetch(`/room/${roomId}/close`, { method: "POST" });
+  sessionStorage.removeItem("joinedRoom");
+  location.href = "/static/index.html";
+};
+
+/* =============================
+   初期ロード
+============================= */
 
 loadRoom();
-updateMembers();
 </script>
-
 </body>
 </html>
