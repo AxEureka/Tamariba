@@ -5,7 +5,7 @@
   <title>退出しました</title>
   <style>
     body {
-      background: #111;             /* 黒背景 */
+      background: #111;
       color: white;
       font-family: sans-serif;
       display: flex;
@@ -14,14 +14,12 @@
       height: 100vh;
       text-align: center;
     }
-
     button {
       padding: 8px 16px;
       font-size: 16px;
       cursor: pointer;
       margin-top: 20px;
     }
-
     h1 {
       font-size: 24px;
     }
@@ -31,21 +29,30 @@
 
 <div>
   <h1 id="msg">退出しました</h1>
-  <button onclick="window.close()">OK</button>
+  <button onclick="closeKick()">OK</button>
 </div>
 
 <script>
-  // URLパラメータから親名・ルーム名を取得
   const params = new URLSearchParams(location.search);
-  const host = params.get("host");        // 親の名前
-  const roomName = params.get("roomName"); // ルーム名
+  const host = params.get("host");
+  const roomName = params.get("roomName");
 
-  // もし親名とルーム名があれば表示を置き換える
   if (host && roomName) {
     document.getElementById("msg").textContent =
       `${roomName}（親：${host}さん）から退出しました`;
+  }
+
+  function closeKick() {
+    // まず閉じようとする
+    window.close();
+
+    // 閉じられなかった場合の保険
+    setTimeout(() => {
+      location.href = "/static/index.html";
+    }, 100);
   }
 </script>
 
 </body>
 </html>
+
