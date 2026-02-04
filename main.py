@@ -15,12 +15,13 @@ if os.path.exists(STATIC_DIR):
 
 rooms = {}
 
-# ===== ルート（RailwayでURL直打ちした時用）=====
+# ===== ルート =====
 @app.get("/")
 async def root():
     return RedirectResponse(url="/static/index.html")
 
 
+# ===== ルーム作成 =====
 @app.post("/create_room")
 async def create_room(data: dict):
     room_id = str(uuid.uuid4())[:8]
@@ -35,6 +36,7 @@ async def create_room(data: dict):
     return {"room_id": room_id}
 
 
+# ===== ルーム情報取得 =====
 @app.get("/room/{room_id}")
 async def get_room(room_id: str):
     room = rooms.get(room_id)
@@ -43,6 +45,7 @@ async def get_room(room_id: str):
     return room
 
 
+# ===== 参加 =====
 @app.post("/room/{room_id}/join")
 async def join_room(room_id: str, data: dict):
     room = rooms.get(room_id)
@@ -59,6 +62,7 @@ async def join_room(room_id: str, data: dict):
     return {"members": room["members"]}
 
 
+# ===== Kick =====
 @app.post("/room/{room_id}/kick")
 async def kick_member(room_id: str, data: dict):
     room = rooms.get(room_id)
@@ -75,6 +79,7 @@ async def kick_member(room_id: str, data: dict):
     return {"members": room["members"]}
 
 
+# ===== メンバー一覧 =====
 @app.get("/room/{room_id}/members")
 async def get_members(room_id: str):
     room = rooms.get(room_id)
@@ -91,8 +96,4 @@ async def get_members(room_id: str):
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=port
-    )
+    uvicorn.run(app, host="0.0.0.0", port=port)
