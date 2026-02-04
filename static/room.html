@@ -55,21 +55,25 @@ const roomId = params.get("room");
 let myName = params.get("name") || "";
 
 let hostName = "";
-let lastCount = 0;
 
 // ===== ルーム情報読み込み =====
 async function loadRoom() {
   const res = await fetch(`/room/${roomId}`);
-  if (!res.ok) { alert("ルームが見つかりません"); return; }
+  if (!res.ok) {
+    if (myName) goKick();
+    return;
+  }
+
   const data = await res.json();
   hostName = data.host;
 
-  if (!myName) myName = hostName; // 自分で作ったルームなら親扱い
+  if (!myName) myName = hostName;
 
-  if (myName !== hostName) {
-    document.body.style.backgroundImage = ""; // 子は背景非表示
+  if (myName === hostName) {
+    document.body.style.backgroundImage =
+      `url('/static/themes/${data.theme}.jpg')`;
   } else {
-    document.body.style.backgroundImage = `url('/static/themes/${data.theme}.jpg')`;
+    document.body.style.backgroundImage = "";
   }
 
   document.getElementById("room-title").textContent =
@@ -80,48 +84,66 @@ async function loadRoom() {
   const joinURL = `${location.origin}/static/join.html?room=${roomId}`;
   if (myName === hostName) {
     document.getElementById("host-only").style.display = "block";
-    document.getElementById("join-url-container").style.display = "block";
     document.getElementById("join-url").value = joinURL;
   } else {
     document.getElementById("join-url-container").style.display = "none";
   }
 }
 
-// ===== メンバー更新（自動）=====
+// ===== メンバー更新 =====
 async function updateMembers(auto = false) {
   const res = await fetch(`/room/${roomId}/members`);
-  if (!res.ok) return;
-  const data = await res.json();
 
-  const prevMembers = document.querySelectorAll("#members div.member");
-  const prevNames = Array.from(prevMembers).map(e => e.dataset.name);
-
-  document.getElementById("count").textContent = data.count;
-
-  // 入退ポップアップ
-  if (auto) {
-    // 参加者
-    data.members.forEach(m => {
-      if (!prevNames.includes(m) && m !== hostName) showPopup(`${m}さんが参加しました`);
-    });
-    // 退出者
-    prevNames.forEach(m => {
-      if (!data.members.includes(m)) showPopup(`${m}さんが退出しました`);
-    });
+  // ★ 親がルームを閉じた
+  if (!res.ok) {
+    if (myName !== hostName) goKick();
+    return;
   }
 
-  // ===== 親・子で表示切替 =====
-  const memberList = [];
-  memberList.push(`<div class="member" data-name="${hostName}"><strong>${hostName} (親)</strong></div>`);
+  const data = await res.json();
+  document.getElementById("count").textContent = data.count;
 
+  // ★ 自分がkickされていた
+  if (auto && myName !== hostName && !data.members.includes(myName)) {
+    goKick();
+    return;
+  }
+
+  const memberList = [];
+
+  // 親
+  memberList.push(
+    `<div class="member" data-name="${hostName}">
+      <strong>${hostName} (親)</strong>
+     </div>`
+  );
+
+  // 自分（親以外）
+  if (myName !== hostName && data.members.includes(myName)) {
+    memberList.push(
+      `<div class="member" data-name="${myName}">
+        ・${myName} (自分)
+       </div>`
+    );
+  }
+
+  // その他（入室順）
   data.members.forEach(m => {
-    if (m === hostName) return;
+    if (m === hostName || m === myName) return;
+
     if (myName === hostName) {
-      memberList.push(`<div class="member" data-name="${m}">・${m} <button onclick="confirmKick('${m}')">退出</button></div>`);
-    } else if (m === myName) {
-      memberList.push(`<div class="member" data-name="${m}">・${m} (自分)</div>`);
+      memberList.push(
+        `<div class="member" data-name="${m}">
+          ・${m}
+          <button onclick="confirmKick('${m}')">退出</button>
+         </div>`
+      );
     } else {
-      memberList.push(`<div class="member" data-name="${m}">・${m}</div>`);
+      memberList.push(
+        `<div class="member" data-name="${m}">
+          ・${m}
+         </div>`
+      );
     }
   });
 
@@ -131,7 +153,7 @@ async function updateMembers(auto = false) {
 // ===== 定期更新 =====
 setInterval(() => updateMembers(true), 3000);
 
-// ===== UI操作 =====
+// ===== UI =====
 function toggleMembers() {
   const box = document.getElementById("members");
   box.style.display = box.style.display === "none" ? "block" : "none";
@@ -151,7 +173,7 @@ function showPopup(text) {
   setTimeout(() => popup.style.display = "none", 3000);
 }
 
-// ===== 親専用 強制退出 =====
+// ===== kick =====
 function confirmKick(name) {
   if (confirm(`${name}さんを退出させますか？`)) kick(name);
 }
@@ -162,34 +184,29 @@ async function kick(name) {
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({ name })
   });
-  updateMembers();
-
-  // 子が強制退出対象ならkick画面へ
-  if (name === myName && myName !== hostName) {
-    window.location.href = `/static/kick.html?room=${roomId}&host=${encodeURIComponent(hostName)}&roomName=${encodeURIComponent(document.getElementById("room-title").textContent.split('（')[0])}`;
-  }
 }
-
-// ===== 親専用 ゲーム選択 =====
-function selectGame() { alert("ゲーム選択（後で実装）"); }
 
 // ===== 退出 =====
 function exitRoom() {
   if (myName === hostName) {
     if (!confirm("ルームを閉じますか？")) return;
-    // 親が退出するとルームを閉じる→子全員kick
     fetch(`/room/${roomId}/close`, { method: "POST" })
-      .then(() => { location.href = "/static/index.html"; });
+      .then(() => location.href = "/static/index.html");
   } else {
-    // 子は自分で退出→kick画面
-    window.location.href = `/static/kick.html?room=${roomId}&host=${encodeURIComponent(hostName)}&roomName=${encodeURIComponent(document.getElementById("room-title").textContent.split('（')[0])}`;
+    goKick();
   }
 }
 
-// ===== 子がウインドウ閉じた場合も退出扱い =====
-window.addEventListener("beforeunload", async function() {
+// ===== kick画面遷移 =====
+function goKick() {
+  location.href =
+    `/static/kick.html?room=${roomId}&host=${encodeURIComponent(hostName)}&roomName=${encodeURIComponent(document.getElementById("room-title").textContent.split('（')[0])}`;
+}
+
+// ===== タブ閉じ =====
+window.addEventListener("beforeunload", () => {
   if (myName && myName !== hostName) {
-    await fetch(`/room/${roomId}/kick`, {
+    fetch(`/room/${roomId}/kick`, {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({ name: myName })
