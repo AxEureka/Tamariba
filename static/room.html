@@ -84,12 +84,24 @@ let kicked = false;
 // ===== ルーム情報 =====
 async function loadRoom() {
   const res = await fetch(`/room/${roomId}`);
-  if (!res.ok) return;
+  if (!res.ok) {
+    document.getElementById("room-title").textContent = "ルームが見つかりません";
+    return;
+  }
 
   const data = await res.json();
   hostName = data.host;
 
   if (!myName) myName = hostName;
+
+  // 子はここで join する（※重要）
+  if (myName !== hostName) {
+    await fetch(`/room/${roomId}/join`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: myName })
+    });
+  }
 
   if (myName === hostName) {
     document.body.style.backgroundImage =
@@ -119,7 +131,6 @@ async function updateMembers(auto = false) {
   const data = await res.json();
   document.getElementById("count").textContent = data.count;
 
-  // 自分がkickされた場合のみ遷移
   if (
     auto &&
     myName !== hostName &&
@@ -130,7 +141,6 @@ async function updateMembers(auto = false) {
   }
 
   const list = [];
-
   list.push(`<strong>${hostName} (親)</strong>`);
 
   data.members.forEach(m => {
@@ -204,7 +214,7 @@ function goKick() {
     `/static/kick.html?room=${roomId}&host=${encodeURIComponent(hostName)}`;
 }
 
-// ===== unload（reload対策）=====
+// ===== reload対策（現状は何もしないが残す）=====
 window.addEventListener("beforeunload", () => {
   if (kicked) return;
 });
