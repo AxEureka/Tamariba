@@ -43,16 +43,18 @@
   }
 
   function closeKick() {
-    // まず閉じようとする
-    window.close();
+  // タブを閉じられる場合
+  window.close();
 
-    // 閉じられなかった場合の保険
-    setTimeout(() => {
-      location.href = "/static/index.html";
-    }, 100);
-  }
+  // 閉じられなかった場合（ブラウザ制限）
+  setTimeout(() => {
+    location.replace("/static/index.html");
+  }, 100);
+}
+
 </script>
 
 </body>
 </html>
+
 
