@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 import uuid
 import os
@@ -14,6 +14,12 @@ if os.path.exists(STATIC_DIR):
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 rooms = {}
+
+# ===== ルート（RailwayでURL直打ちした時用）=====
+@app.get("/")
+async def root():
+    return RedirectResponse(url="/static/index.html")
+
 
 @app.post("/create_room")
 async def create_room(data: dict):
@@ -43,7 +49,10 @@ async def join_room(room_id: str, data: dict):
     if not room:
         return JSONResponse({"error": "room not found"}, status_code=404)
 
-    name = data["name"]
+    name = data.get("name")
+    if not name:
+        return JSONResponse({"error": "name required"}, status_code=400)
+
     if name not in room["members"]:
         room["members"].append(name)
 
@@ -56,7 +65,10 @@ async def kick_member(room_id: str, data: dict):
     if not room:
         return JSONResponse({"error": "room not found"}, status_code=404)
 
-    target = data["name"]
+    target = data.get("name")
+    if not target:
+        return JSONResponse({"error": "name required"}, status_code=400)
+
     if target in room["members"] and target != room["host"]:
         room["members"].remove(target)
 
@@ -75,12 +87,12 @@ async def get_members(room_id: str):
     }
 
 
-# Railway / ローカル両対応
+# ===== Railway / ローカル両対応 =====
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run(
-        "main:app",
+        app,
         host="0.0.0.0",
         port=port
     )
