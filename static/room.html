@@ -84,10 +84,11 @@ let kicked = false;
 // ===== ルーム情報 =====
 async function loadRoom() {
   const res = await fetch(`/room/${roomId}`);
-  if (!res.ok) {
-    document.getElementById("room-title").textContent = "ルームが見つかりません";
-    return;
-  }
+if (!res.ok) {
+  alert("このルームは存在しません。\n親が先に入室してください。");
+  location.href = "/static/index.html";
+  return;
+}
 
   const data = await res.json();
   hostName = data.host;
@@ -224,3 +225,4 @@ updateMembers();
 </script>
 </body>
 </html>
+
