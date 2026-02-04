@@ -80,6 +80,7 @@ const roomId = params.get("room");
 let myName = params.get("name") || "";
 let hostName = "";
 let kicked = false;
+let lastMembers = [];
 
 // ===== ルーム情報 =====
 async function loadRoom() {
@@ -104,10 +105,8 @@ if (!res.ok) {
     });
   }
 
-  if (myName === hostName) {
-    document.body.style.backgroundImage =
+      document.body.style.backgroundImage =
       `url('/static/themes/${data.theme}.jpg')`;
-  }
 
   document.getElementById("room-title").textContent =
     `${data.room}（親：${data.host}さん）`;
@@ -131,6 +130,26 @@ async function updateMembers(auto = false) {
 
   const data = await res.json();
   document.getElementById("count").textContent = data.count;
+
+  // ===== 入退室ポップアウト =====
+if (lastMembers.length > 0) {
+  const joined = data.members.filter(m => !lastMembers.includes(m));
+  const left = lastMembers.filter(m => !data.members.includes(m));
+
+  joined.forEach(m => {
+    if (m !== myName) {
+      showPopup(`${m}さんが入室しました`);
+    }
+  });
+
+  left.forEach(m => {
+    showPopup(`${m}さんが退出しました`);
+  });
+}
+
+// 次回比較用に保存
+lastMembers = [...data.members];
+
 
   if (
     auto &&
@@ -217,12 +236,18 @@ function goKick() {
 
 // ===== reload対策（現状は何もしないが残す）=====
 window.addEventListener("beforeunload", () => {
-  if (kicked) return;
-});
+  if (!myName || myName === hostName) return;
 
+  navigator.sendBeacon(
+    `/room/${roomId}/kick`,
+    JSON.stringify({ name: myName })
+  );
+});
+  
 loadRoom();
 updateMembers();
 </script>
 </body>
 </html>
+
 
