@@ -79,18 +79,18 @@ async function loadRoom() {
   }
 
   // 子はまだ join していなければ一度だけ join
-  if (myName !== hostName && !joined) {
-    joined = true; // ←先にtrueにする
-    try {
-      await fetch(`/room/${roomId}/join`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: myName })
-      });
-    } catch (e) {
-      console.error("参加処理でエラー", e);
-    }
+if (myName !== hostName && !joined) {
+  try {
+    await fetch(`/room/${roomId}/join`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: myName })
+    });
+    joined = true; // ← join 成功後に true にセット
+  } catch (e) {
+    console.error("参加処理でエラー", e);
   }
+}
 
   // 初回の lastMembers 初期化
   if (!joined) lastMembers = [];
@@ -216,5 +216,6 @@ updateMembers();
 
 </body>
 </html>
+
 
 
