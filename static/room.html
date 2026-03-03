@@ -56,8 +56,8 @@ let joined = false;
 // ===== 初期ロード =====
 async function loadRoom() {
 
-  const res = await fetch(`/room/${roomId}?name=${encodeURIComponent(myName)}`);
-  if (!res.ok) return; // すぐkickしない
+  const res = await fetch(`/room/${roomId}`);
+  if (!res.ok) return; // 404 でも即kickしない
 
   const data = await res.json();
   hostName = data.host;
@@ -71,6 +71,16 @@ async function loadRoom() {
     `${data.room}（親：${data.host}さん）`;
 
   document.getElementById("room-id").textContent = roomId;
+
+  // 子はまだ join していなければ一度だけ join
+  if (myName !== hostName && !joined) {
+    await fetch(`/room/${roomId}/join`, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ name:myName })
+    });
+    joined = true;
+  }
 
   // 親UI
   if (myName === hostName) {
@@ -87,52 +97,57 @@ async function loadRoom() {
 
 // ===== メンバー更新 =====
 async function updateMembers() {
-
   const res = await fetch(`/room/${roomId}/members`);
-  if (!res.ok) return; // 404即kickしない
+  if (!res.ok) return;
 
   const data = await res.json();
 
-  // 自分が消されたらkick
-  if (!data.members.includes(myName)) {
+  // 自分が消されたら kick
+  if (myName !== hostName && !data.members.includes(myName)) {
     location.href="/static/kick.html";
     return;
   }
 
   document.getElementById("count").textContent = data.count;
 
-  const joinedList = data.members.filter(m=>!lastMembers.includes(m));
-  const leftList = lastMembers.filter(m=>!data.members.includes(m));
+  const joinedList = data.members.filter(m => !lastMembers.includes(m));
+  const leftList = lastMembers.filter(m => !data.members.includes(m));
 
-  joinedList.forEach(m=>{
-    if(m!==myName) showPopup(`${m}さんが入室しました`);
+  // 入室通知（親は表示しない）
+  joinedList.forEach(m => {
+    if (m !== myName && m !== hostName) showPopup(`${m}さんが入室しました`);
   });
 
-  leftList.forEach(m=>{
-    if(m!==myName) showPopup(`${m}さんが退出しました`);
+  leftList.forEach(m => {
+    if (m !== myName) showPopup(`${m}さんが退出しました`);
   });
 
-  lastMembers=[...data.members];
+  lastMembers = [...data.members];
 
-  const list=[];
-  list.push(`<strong>${hostName} (親)</strong>`);
+  // メンバーリスト作成
+  const list = [];
 
-  data.members.forEach(m=>{
-    if(m===hostName) return;
-
-    if(myName===hostName){
+  if (myName === hostName) {
+    // 親画面：親はトップ、その下に全員
+    list.push(`<strong>${hostName} (親)</strong>`);
+    data.members.forEach(m => {
+      if (m === hostName) return;
       list.push(`・${m} <button onclick="kickMember('${m}')">退室させる</button>`);
-    }else if(m===myName){
-      list.push(`・${m} (自分)`);
-    }else{
+    });
+  } else {
+    // 子画面：親はトップ、自分は最後、それ以外は真ん中
+    list.push(`<strong>${hostName} (親)</strong>`);
+    data.members.forEach(m => {
+      if (m === hostName || m === myName) return;
       list.push(`・${m}`);
-    }
-  });
+    });
+    list.push(`・${myName} (自分)`);
+  }
 
-  document.getElementById("members").innerHTML=list.join("<br>");
+  document.getElementById("members").innerHTML = list.join("<br>");
 }
 
-setInterval(updateMembers,2000);
+setInterval(updateMembers, 2000);
 
 // ===== 親が子を退室させる =====
 async function kickMember(name){
