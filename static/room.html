@@ -3,18 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <title>ルーム</title>
+
 <style>
 html, body {
-  width: 100%;
-  height: 100%;
   margin: 0;
+  height: 100%;
   font-family: sans-serif;
   color: white;
 }
+
 body {
   background-size: cover;
   background-position: center;
 }
+
 .exit {
   position: fixed;
   top: 20px;
@@ -22,24 +24,36 @@ body {
   padding: 8px 14px;
   cursor: pointer;
 }
+
 .room-ui {
-  background: rgba(0,0,0,0.65);
-  padding: 24px;
+  background: rgba(0,0,0,0.7);
+  padding: 28px;
   margin: 40px;
-  border-radius: 14px;
-  max-width: 600px;
+  border-radius: 16px;
+  max-width: 700px;
 }
+
 button {
   cursor: pointer;
   padding: 6px 12px;
   margin-left: 6px;
 }
-#join-url { width: 36ch; }
+
+.section {
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.3);
+}
+
+#members {
+  margin-top: 10px;
+}
+
 #popup {
   position: fixed;
   top: 20px;
   right: 20px;
-  background: rgba(0,0,0,0.8);
+  background: rgba(0,0,0,0.85);
   padding: 12px 18px;
   border-radius: 10px;
   display: none;
@@ -48,9 +62,11 @@ button {
 </head>
 
 <body>
+
 <button class="exit" onclick="exitRoom()">退出</button>
 
 <div class="room-ui">
+
   <h1 id="room-title">読み込み中...</h1>
 
   <p>
@@ -59,17 +75,32 @@ button {
     <button onclick="toggleMembers()">メンバーを見る</button>
   </p>
 
-  <div id="members" style="display:none; margin-bottom:10px;"></div>
+  <div id="members" style="display:none;"></div>
 
-  <p id="join-url-container">
-    参加URL：
-    <input id="join-url" readonly>
-    <button onclick="copyURL()">コピー</button>
-  </p>
+  <!-- 親専用エリア -->
+  <div id="host-area" class="section" style="display:none;">
 
-  <div id="host-only" style="display:none; margin-top:20px;">
-    <button onclick="selectGame()">🎮 ゲームを選ぶ（親のみ）</button>
+    <h3>🎮 クイズ設定</h3>
+
+    問題モード：
+    <select id="question-mode">
+      <option value="manual">その場入力</option>
+      <option value="list">事前登録リスト</option>
+    </select>
+
+    出題形式：
+    <select id="answer-style">
+      <option value="normal">通常（全員回答）</option>
+      <option value="fast">早押し（将来用）</option>
+    </select>
+
+    <br><br>
+
+    <button onclick="goQuestionEditor()">📝 問題リストを管理</button>
+    <button onclick="startQuiz()">🚀 クイズ開始</button>
+
   </div>
+
 </div>
 
 <div id="popup"></div>
@@ -79,86 +110,65 @@ const params = new URLSearchParams(location.search);
 const roomId = params.get("room");
 let myName = params.get("name") || "";
 let hostName = "";
-let kicked = false;
 let lastMembers = [];
 
-// ===== ルーム情報 =====
+// ===== 初期読み込み =====
 async function loadRoom() {
   const res = await fetch(`/room/${roomId}`);
-if (!res.ok) {
-  alert("このルームは存在しません。\n親が先に入室してください。");
-  location.href = "/static/index.html";
-  return;
-}
+  if (!res.ok) {
+    alert("ルームが存在しません");
+    location.href = "/static/index.html";
+    return;
+  }
 
   const data = await res.json();
   hostName = data.host;
 
   if (!myName) myName = hostName;
 
-  // 子はここで join する（※重要）
   if (myName !== hostName) {
     await fetch(`/room/${roomId}/join`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({ name: myName })
     });
   }
 
-      document.body.style.backgroundImage =
-      `url('/static/themes/${data.theme}.jpg')`;
+  document.body.style.backgroundImage =
+    `url('/static/themes/${data.theme}.jpg')`;
 
   document.getElementById("room-title").textContent =
     `${data.room}（親：${data.host}さん）`;
+
   document.getElementById("room-id").textContent = roomId;
 
-  const joinURL =
-    `${location.origin}/static/join.html?room=${roomId}`;
-
   if (myName === hostName) {
-    document.getElementById("host-only").style.display = "block";
-    document.getElementById("join-url").value = joinURL;
-  } else {
-    document.getElementById("join-url-container").style.display = "none";
+    document.getElementById("host-area").style.display = "block";
   }
 }
 
 // ===== メンバー更新 =====
-async function updateMembers(auto = false) {
+async function updateMembers() {
   const res = await fetch(`/room/${roomId}/members`);
   if (!res.ok) return;
 
   const data = await res.json();
   document.getElementById("count").textContent = data.count;
 
-  // ===== 入退室ポップアウト =====
-if (lastMembers.length > 0) {
-  const joined = data.members.filter(m => !lastMembers.includes(m));
-  const left = lastMembers.filter(m => !data.members.includes(m));
+  if (lastMembers.length > 0) {
+    const joined = data.members.filter(m => !lastMembers.includes(m));
+    const left = lastMembers.filter(m => !data.members.includes(m));
 
-  joined.forEach(m => {
-    if (m !== myName) {
-      showPopup(`${m}さんが入室しました`);
-    }
-  });
+    joined.forEach(m => {
+      if (m !== myName) showPopup(`${m}さんが入室しました`);
+    });
 
-  left.forEach(m => {
-    showPopup(`${m}さんが退出しました`);
-  });
-}
-
-// 次回比較用に保存
-lastMembers = [...data.members];
-
-
-  if (
-    auto &&
-    myName !== hostName &&
-    !data.members.includes(myName)
-  ) {
-    goKick();
-    return;
+    left.forEach(m => {
+      showPopup(`${m}さんが退出しました`);
+    });
   }
+
+  lastMembers = [...data.members];
 
   const list = [];
   list.push(`<strong>${hostName} (親)</strong>`);
@@ -167,9 +177,7 @@ lastMembers = [...data.members];
     if (m === hostName) return;
 
     if (myName === hostName) {
-      list.push(
-        `・${m} <button onclick="confirmKick('${m}')">退出</button>`
-      );
+      list.push(`・${m} <button onclick="kick('${m}')">退出</button>`);
     } else if (m === myName) {
       list.push(`・${m} (自分)`);
     } else {
@@ -180,8 +188,30 @@ lastMembers = [...data.members];
   document.getElementById("members").innerHTML = list.join("<br>");
 }
 
-// ===== 定期更新 =====
-setInterval(() => updateMembers(true), 3000);
+setInterval(updateMembers, 3000);
+
+// ===== クイズ開始 =====
+async function startQuiz() {
+  const mode = document.getElementById("question-mode").value;
+  const style = document.getElementById("answer-style").value;
+
+  await fetch(`/room/${roomId}/start_quiz`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      mode,
+      style
+    })
+  });
+
+  location.href = `/static/quiz.html?room=${roomId}&name=${encodeURIComponent(myName)}`;
+}
+
+// ===== 問題管理画面へ =====
+function goQuestionEditor() {
+  location.href =
+    `/static/question_editor.html?room=${roomId}&name=${encodeURIComponent(myName)}`;
+}
 
 // ===== UI =====
 function toggleMembers() {
@@ -189,23 +219,11 @@ function toggleMembers() {
   box.style.display = box.style.display === "none" ? "block" : "none";
 }
 
-function copyURL() {
-  const input = document.getElementById("join-url");
-  input.select();
-  navigator.clipboard.writeText(input.value);
-  showPopup("参加URLをコピーしました");
-}
-
 function showPopup(text) {
   const popup = document.getElementById("popup");
   popup.textContent = text;
   popup.style.display = "block";
   setTimeout(() => popup.style.display = "none", 3000);
-}
-
-// ===== kick =====
-function confirmKick(name) {
-  if (confirm(`${name}さんを退出させますか？`)) kick(name);
 }
 
 async function kick(name) {
@@ -216,48 +234,13 @@ async function kick(name) {
   });
 }
 
-// ===== 退出 =====
 function exitRoom() {
-  kicked = true;
-
-  if (myName === hostName) {
-    if (!confirm("ルームを閉じますか？")) return;
-    fetch(`/room/${roomId}/close`, { method: "POST" })
-      .then(() => location.href = "/static/index.html");
-  } else {
-    // ★ 追加：自発退出をサーバーに伝える
-    fetch(`/room/${roomId}/kick`, {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ name: myName })
-    }).finally(() => {
-      goKick();
-    });
-  }
+  location.href = "/static/index.html";
 }
 
-
-// ===== kick画面 =====
-function goKick() {
-  location.href =
-    `/static/kick.html?room=${roomId}&host=${encodeURIComponent(hostName)}`;
-}
-
-// ===== reload対策（現状は何もしないが残す）=====
-window.addEventListener("beforeunload", () => {
-  if (!myName || myName === hostName) return;
-
-  navigator.sendBeacon(
-    `/room/${roomId}/kick`,
-    JSON.stringify({ name: myName })
-  );
-});
-  
 loadRoom();
 updateMembers();
 </script>
+
 </body>
 </html>
-
-
-
