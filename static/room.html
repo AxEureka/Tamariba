@@ -156,26 +156,30 @@
 
         lastMembers = [...data.members];
 
-        // メンバーリスト作成
         // ===== メンバーリスト作成 =====
 const list = [];
+
+// まず親を追加
+list.push(`<strong>${hostName} (親)</strong>`);
+
 if (myName === hostName) {
-  list.push(`<strong>${hostName} (親)</strong>`);
+  // 自分が親の場合 → 他のメンバーに退室ボタンを付ける
   data.members.forEach(m => {
     if (m === hostName) return;
     list.push(`・${m} <button onclick="kickMember('${m}')">退室させる</button>`);
   });
 } else {
-  list.push(`<strong>${hostName} (親)</strong>`);
-
-  // 自分の名前を2番目に挿入
+  // 自分が子の場合 → 自分を2番目に表示
   list.push(`・${myName} (自分)`);
 
+  // 残りの子（自分と親は除く）
   data.members.forEach(m => {
     if (m === hostName || m === myName) return;
     list.push(`・${m}`);
   });
 }
+
+// 最終的にリストを HTML に反映
 document.getElementById("members").innerHTML = list.join("<br>");
       } catch (e) {
         console.error("メンバー更新エラー", e);
@@ -251,3 +255,4 @@ document.getElementById("members").innerHTML = list.join("<br>");
 
 </body>
 </html>
+
