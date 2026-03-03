@@ -20,11 +20,6 @@ body {
   border-radius: 14px;
   text-align: center;
 }
-button {
-  margin-top: 15px;
-  padding: 8px 16px;
-  cursor: pointer;
-}
 </style>
 </head>
 <body>
@@ -32,24 +27,11 @@ button {
 <div class="box">
   <h2>⚠ ルームから退出しました</h2>
   <p>画面を閉じてください。</p>
-  <button onclick="closeWindow()">閉じる</button>
 </div>
 
 <script>
-function closeWindow() {
-  // 親ページから開かれた場合やポップアップなら閉じる
-  if (window.opener && !window.opener.closed) {
-    window.close();
-  } else {
-    // 通常タブの場合はトップへ戻す
-    alert("ブラウザの制限でこのウィンドウは閉じられません。\nタブを手動で閉じてください。");
-  }
-}
-
-// ページが読み込まれた時も注意喚起
-window.onload = () => {
-  console.log("kickページ表示中: 画面を閉じてください");
-};
+// 表示だけでOK
+console.log("kickページ表示中: 画面を閉じてください");
 </script>
 
 </body>
