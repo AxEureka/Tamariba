@@ -1,40 +1,74 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>ルーム作成</title>
-  <link rel="stylesheet" href="/static/style.css">
+<meta charset="UTF-8">
+<title>クイズルーム作成</title>
+<style>
+body {
+  font-family: sans-serif;
+  background: #111;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+.box {
+  background: #222;
+  padding: 30px;
+  border-radius: 14px;
+  width: 320px;
+}
+input, select, button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px;
+}
+button {
+  cursor: pointer;
+}
+</style>
 </head>
 <body>
-  <h1>ルーム作成</h1>
 
-  <input id="host" placeholder="親の名前" required><br>
-  <input id="room" placeholder="ルーム名" required><br>
+<div class="box">
+  <h2>🎮 ルーム作成</h2>
+
+  <input id="host-name" placeholder="あなたの名前">
+  <input id="room-name" placeholder="ルーム名">
 
   <select id="theme">
-    <option value="forest">森</option>
     <option value="mansion">洋館</option>
+    <option value="forest">森</option>
     <option value="club">クラブ</option>
-  </select><br>
+  </select>
 
   <button onclick="createRoom()">作成</button>
+</div>
 
-  <script>
-    async function createRoom() {
-      const res = await fetch("/create_room", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-          host_name: document.getElementById("host").value,
-          room_name: document.getElementById("room").value,
-          theme: document.getElementById("theme").value
-        })
-      });
+<script>
+async function createRoom() {
+  const host_name = document.getElementById("host-name").value;
+  const room_name = document.getElementById("room-name").value;
+  const theme = document.getElementById("theme").value;
 
-      const data = await res.json();
-      location.href =
-        `/static/room.html?room=${data.room_id}&theme=${data.theme}`;
-    }
-  </script>
+  if (!host_name || !room_name) {
+    alert("入力してください");
+    return;
+  }
+
+  const res = await fetch("/create_room", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ host_name, room_name, theme })
+  });
+
+  const data = await res.json();
+
+  location.href =
+    `/static/room.html?room=${data.room_id}&name=${encodeURIComponent(host_name)}`;
+}
+</script>
+
 </body>
 </html>
