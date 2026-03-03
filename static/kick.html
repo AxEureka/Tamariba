@@ -37,9 +37,13 @@ button {
 
 <script>
 function closeWindow() {
-  // 可能な場合はウィンドウを閉じる
-  if (window.close) window.close();
-  else alert("この画面を閉じてください。");
+  // 親ページから開かれた場合やポップアップなら閉じる
+  if (window.opener && !window.opener.closed) {
+    window.close();
+  } else {
+    // 通常タブの場合はトップへ戻す
+    alert("ブラウザの制限でこのウィンドウは閉じられません。\nタブを手動で閉じてください。");
+  }
 }
 
 // ページが読み込まれた時も注意喚起
