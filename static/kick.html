@@ -20,6 +20,11 @@ body {
   border-radius: 14px;
   text-align: center;
 }
+button {
+  margin-top: 15px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
 </style>
 </head>
 <body>
@@ -27,17 +32,20 @@ body {
 <div class="box">
   <h2>⚠ ルームから退出しました</h2>
   <p>画面を閉じてください。</p>
+  <button onclick="closeWindow()">閉じる</button>
 </div>
 
 <script>
-/*
-  このページに来るのは以下の場合：
-  ・親が子を退室させた
-  ・子が自分で退室した
-  ・親がルームを閉鎖した（全員強制退出）
-  
-  表示だけでOK。画面は閉じるよう指示。
-*/
+function closeWindow() {
+  // 可能な場合はウィンドウを閉じる
+  if (window.close) window.close();
+  else alert("この画面を閉じてください。");
+}
+
+// ページが読み込まれた時も注意喚起
+window.onload = () => {
+  console.log("kickページ表示中: 画面を閉じてください");
+};
 </script>
 
 </body>
