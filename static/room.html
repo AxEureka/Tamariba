@@ -91,6 +91,7 @@ async function loadRoom() {
 }
 
 // ===== メンバー更新 =====
+// ===== メンバー更新 =====
 async function updateMembers() {
   try {
     const res = await fetch(`/room/${roomId}/members`);
@@ -98,7 +99,13 @@ async function updateMembers() {
 
     const data = await res.json();
 
-    // 自分がサーバーにまだ登録されていなければ kick しない
+    // 親がいなくなったら子全員kick
+    if (!data.members.includes(hostName) && myName !== hostName) {
+      location.href="/static/kick.html";
+      return;
+    }
+
+    // 自分がサーバーにまだ登録済みで、自分が消されていたらkick
     if (myName !== hostName && joined && !data.members.includes(myName)) {
       location.href="/static/kick.html";
       return;
@@ -195,3 +202,4 @@ updateMembers();
 
 </body>
 </html>
+
