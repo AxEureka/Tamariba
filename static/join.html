@@ -1,76 +1,51 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>ルーム参加</title>
-  <style>
-    body {
-      background: #111;
-      color: white;
-      font-family: sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      text-align: center;
-    }
-    input {
-      padding: 6px;
-      font-size: 14px;
-    }
-    button {
-      padding: 6px 12px;
-      margin-top: 10px;
-      cursor: pointer;
-    }
-    .container {
-      background: rgba(0,0,0,0.7);
-      padding: 24px;
-      border-radius: 12px;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>ルーム参加</title>
+<style>
+body {
+  font-family: sans-serif;
+  background: #111;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+.box {
+  background: #222;
+  padding: 30px;
+  border-radius: 14px;
+  width: 320px;
+}
+input, button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px;
+}
+button { cursor: pointer; }
+</style>
 </head>
 <body>
 
-<div class="container">
-  <h1 id="join-title">ルームに入ります</h1>
-
+<div class="box">
+  <h2>ルーム参加</h2>
   <input id="nickname" placeholder="ニックネーム">
-  <br>
-  <button onclick="join()">OK</button>
+  <button onclick="joinRoom()">参加</button>
 </div>
 
 <script>
 const params = new URLSearchParams(location.search);
 const roomId = params.get("room");
 
-// roomIdがない場合
-if (!roomId) {
-  document.getElementById("join-title").textContent =
-    "ルームが見つかりません";
-}
-
-async function join() {
-  const name = document.getElementById("nickname").value.trim();
+async function joinRoom() {
+  const name = document.getElementById("nickname").value;
   if (!name) {
-    alert("ニックネームを入力してください");
+    alert("名前を入力してください");
     return;
   }
 
-  // 参加リクエスト
-  const res = await fetch(`/room/${roomId}/join`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name })
-  });
-
-  // ★ ルームが存在しない場合
-  if (!res.ok) {
-    alert("このルームは存在しません");
-    return;
-  }
-
-  // ルーム画面へ
   location.href =
     `/static/room.html?room=${roomId}&name=${encodeURIComponent(name)}`;
 }
