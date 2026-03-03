@@ -45,6 +45,7 @@ button { cursor:pointer; padding:6px 12px; margin-left:6px;}
 
 <div id="popup"></div>
 
+<!-- room.html 修正版 -->
 <script>
 const params = new URLSearchParams(location.search);
 const roomId = params.get("room");
@@ -67,6 +68,15 @@ async function loadRoom() {
   document.getElementById("room-title").textContent = `${data.room}（親：${data.host}さん）`;
   document.getElementById("room-id").textContent = roomId;
 
+  // 親UI
+  if (myName === hostName) {
+    document.getElementById("host-area").style.display = "block";
+
+    const joinURL = window.location.origin + "/static/join.html?room=" + roomId;
+    document.getElementById("join-url").value = joinURL;
+    new QRCode(document.getElementById("qrcode"), joinURL);
+  }
+
   // 子はまだ join していなければ一度だけ join
   if (myName !== hostName && !joined) {
     try {
@@ -81,13 +91,9 @@ async function loadRoom() {
     }
   }
 
-  // 親UI
-  if (myName === hostName) {
-    document.getElementById("host-area").style.display = "block";
-
-    const joinURL = window.location.origin + "/static/join.html?room=" + roomId;
-    document.getElementById("join-url").value = joinURL;
-    new QRCode(document.getElementById("qrcode"), joinURL);
+  // 初回の lastMembers 初期化
+  if (!joined) {
+    lastMembers = [];
   }
 }
 
@@ -110,7 +116,7 @@ async function updateMembers() {
     const joinedList = data.members.filter(m => !lastMembers.includes(m));
     const leftList = lastMembers.filter(m => !data.members.includes(m));
 
-    // 入室通知（親は表示しない、親自身の入室は通知しない）
+    // 入室通知（親は表示しない）
     joinedList.forEach(m => {
       if (m !== myName && m !== hostName) showPopup(`${m}さんが入室しました`);
     });
@@ -124,14 +130,12 @@ async function updateMembers() {
     // メンバーリスト作成
     const list = [];
     if (myName === hostName) {
-      // 親画面：親はトップ、その下に全員
       list.push(`<strong>${hostName} (親)</strong>`);
       data.members.forEach(m => {
         if (m === hostName) return;
         list.push(`・${m} <button onclick="kickMember('${m}')">退室させる</button>`);
       });
     } else {
-      // 子画面：親はトップ、自分は最後、それ以外は真ん中
       list.push(`<strong>${hostName} (親)</strong>`);
       data.members.forEach(m => {
         if (m === hostName || m === myName) return;
@@ -148,7 +152,7 @@ async function updateMembers() {
 
 setInterval(updateMembers, 2000);
 
-// ===== 親が子を退室させる =====
+// 親が子を退室させる
 async function kickMember(name) {
   if (!confirm(`${name}さんを退室させますか？`)) return;
   await fetch(`/room/${roomId}/kick`, {
@@ -158,7 +162,7 @@ async function kickMember(name) {
   });
 }
 
-// ===== 自主退室 =====
+// 自主退室
 async function exitRoom() {
   if (!confirm("退室しますか？")) return;
 
@@ -169,7 +173,7 @@ async function exitRoom() {
       body: JSON.stringify({ name: myName })
     });
   } else {
-    // 親が退室したら全員強制kick
+    // 親退室 → 子全員強制kick
     const res = await fetch(`/room/${roomId}/members`);
     if (res.ok) {
       const data = await res.json();
@@ -213,3 +217,4 @@ updateMembers();
 
 </body>
 </html>
+
