@@ -13,12 +13,10 @@ html, body {
   font-family: sans-serif;
   color: white;
 }
-
 body {
   background-size: cover;
   background-position: center;
 }
-
 .exit {
   position: fixed;
   top: 20px;
@@ -26,7 +24,6 @@ body {
   padding: 8px 14px;
   cursor: pointer;
 }
-
 .room-ui {
   background: rgba(0,0,0,0.75);
   padding: 28px;
@@ -34,23 +31,19 @@ body {
   border-radius: 16px;
   max-width: 720px;
 }
-
 button {
   cursor: pointer;
   padding: 6px 12px;
   margin-left: 6px;
 }
-
 .section {
   margin-top: 24px;
   padding-top: 16px;
   border-top: 1px solid rgba(255,255,255,0.3);
 }
-
 #members {
   margin-top: 10px;
 }
-
 #popup {
   position: fixed;
   top: 20px;
@@ -79,37 +72,11 @@ button {
 
   <div id="members" style="display:none;"></div>
 
-  <!-- 親専用エリア -->
   <div id="host-area" class="section" style="display:none;">
-
     <h3>🔗 招待</h3>
-
     <input id="join-url" readonly style="width:75%;">
     <button onclick="copyURL()">コピー</button>
-
     <div id="qrcode" style="margin-top:15px;"></div>
-
-    <div class="section">
-      <h3>🎮 クイズ設定</h3>
-
-      問題モード：
-      <select id="question-mode">
-        <option value="manual">その場入力</option>
-        <option value="list">事前登録リスト</option>
-      </select>
-
-      出題形式：
-      <select id="answer-style">
-        <option value="normal">通常（全員回答）</option>
-        <option value="fast">早押し（将来用）</option>
-      </select>
-
-      <br><br>
-
-      <button onclick="goQuestionEditor()">📝 問題リストを管理</button>
-      <button onclick="startQuiz()">🚀 クイズ開始</button>
-    </div>
-
   </div>
 
 </div>
@@ -126,9 +93,10 @@ let lastMembers = [];
 // ===== 初期読み込み =====
 async function loadRoom() {
   const res = await fetch(`/room/${roomId}`);
+
+  // 親が退出してルーム消滅した場合
   if (!res.ok) {
-    alert("ルームが存在しません");
-    location.href = "/static/index.html";
+    location.href = "/static/kick.html";
     return;
   }
 
@@ -153,7 +121,6 @@ async function loadRoom() {
 
   document.getElementById("room-id").textContent = roomId;
 
-  // ===== 親のみ招待機能表示 =====
   if (myName === hostName) {
     document.getElementById("host-area").style.display = "block";
 
@@ -162,34 +129,40 @@ async function loadRoom() {
       "/static/join.html?room=" + roomId;
 
     document.getElementById("join-url").value = joinURL;
-
-    new QRCode(
-      document.getElementById("qrcode"),
-      joinURL
-    );
+    new QRCode(document.getElementById("qrcode"), joinURL);
   }
 }
 
-// ===== メンバー更新 =====
+// ===== メンバー監視 =====
 async function updateMembers() {
   const res = await fetch(`/room/${roomId}/members`);
-  if (!res.ok) return;
+
+  // 親が退室してルーム消滅
+  if (!res.ok) {
+    location.href = "/static/kick.html";
+    return;
+  }
 
   const data = await res.json();
+
+  // 自分がもうメンバーにいない → kickへ
+  if (!data.members.includes(myName)) {
+    location.href = "/static/kick.html";
+    return;
+  }
+
   document.getElementById("count").textContent = data.count;
 
-  if (lastMembers.length > 0) {
-    const joined = data.members.filter(m => !lastMembers.includes(m));
-    const left = lastMembers.filter(m => !data.members.includes(m));
+  const joined = data.members.filter(m => !lastMembers.includes(m));
+  const left = lastMembers.filter(m => !data.members.includes(m));
 
-    joined.forEach(m => {
-      if (m !== myName) showPopup(`${m}さんが入室しました`);
-    });
+  joined.forEach(m => {
+    if (m !== myName) showPopup(`${m}さんが入室しました`);
+  });
 
-    left.forEach(m => {
-      showPopup(`${m}さんが退出しました`);
-    });
-  }
+  left.forEach(m => {
+    if (m !== myName) showPopup(`${m}さんが退出しました`);
+  });
 
   lastMembers = [...data.members];
 
@@ -200,7 +173,7 @@ async function updateMembers() {
     if (m === hostName) return;
 
     if (myName === hostName) {
-      list.push(`・${m} <button onclick="kick('${m}')">退出</button>`);
+      list.push(`・${m} <button onclick="kickMember('${m}')">退室させる</button>`);
     } else if (m === myName) {
       list.push(`・${m} (自分)`);
     } else {
@@ -211,30 +184,33 @@ async function updateMembers() {
   document.getElementById("members").innerHTML = list.join("<br>");
 }
 
-setInterval(updateMembers, 3000);
+setInterval(updateMembers, 2000);
 
-// ===== クイズ開始 =====
-async function startQuiz() {
-  const mode = document.getElementById("question-mode").value;
-  const style = document.getElementById("answer-style").value;
+// ===== 親が子を退室させる =====
+async function kickMember(name) {
+  if (!confirm(`${name}さんを退室させますか？`)) return;
 
-  await fetch(`/room/${roomId}/start_quiz`, {
+  await fetch(`/room/${roomId}/kick`, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ mode, style })
+    body: JSON.stringify({ name })
+  });
+}
+
+// ===== 退出（親・子共通） =====
+async function exitRoom() {
+  if (!confirm("退室しますか？")) return;
+
+  // 親が退室 → ルーム削除（既存ロジックに依存）
+  await fetch(`/room/${roomId}/leave`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ name: myName })
   });
 
-  location.href =
-    `/static/quiz.html?room=${roomId}&name=${encodeURIComponent(myName)}`;
+  location.href = "/static/kick.html";
 }
 
-// ===== 問題管理画面 =====
-function goQuestionEditor() {
-  location.href =
-    `/static/question_editor.html?room=${roomId}&name=${encodeURIComponent(myName)}`;
-}
-
-// ===== UI =====
 function toggleMembers() {
   const box = document.getElementById("members");
   box.style.display =
@@ -250,21 +226,8 @@ function showPopup(text) {
 
 function copyURL() {
   const input = document.getElementById("join-url");
-  input.select();
   navigator.clipboard.writeText(input.value);
   showPopup("参加URLをコピーしました");
-}
-
-async function kick(name) {
-  await fetch(`/room/${roomId}/kick`, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ name })
-  });
-}
-
-function exitRoom() {
-  location.href = "/static/index.html";
 }
 
 loadRoom();
