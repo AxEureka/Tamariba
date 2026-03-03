@@ -12,6 +12,7 @@ body {
   justify-content: center;
   align-items: center;
   height: 100vh;
+  margin: 0;
 }
 .box {
   background: #300;
@@ -27,6 +28,17 @@ body {
   <h2>⚠ ルームから退出しました</h2>
   <p>画面を閉じてください。</p>
 </div>
+
+<script>
+/*
+  このページに来るのは以下の場合：
+  ・親が子を退室させた
+  ・子が自分で退室した
+  ・親がルームを閉鎖した（全員強制退出）
+  
+  表示だけでOK。画面は閉じるよう指示。
+*/
+</script>
 
 </body>
 </html>
