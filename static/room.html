@@ -1,3 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ルーム</title>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
+<style>
+html, body { margin:0; height:100%; font-family:sans-serif; color:white;}
+body { background-size:cover; background-position:center;}
+.exit { position:fixed; top:20px; right:20px; padding:8px 14px; cursor:pointer;}
+.room-ui { background:rgba(0,0,0,0.75); padding:28px; margin:40px; border-radius:16px; max-width:720px;}
+button { cursor:pointer; padding:6px 12px; margin-left:6px;}
+.section { margin-top:24px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.3);}
+#members { margin-top:10px;}
+#popup { position:fixed; top:20px; right:20px; background:rgba(0,0,0,0.9); padding:12px 18px; border-radius:10px; display:none;}
+</style>
+</head>
+
+<body>
+
+<button class="exit" onclick="exitRoom()">退出</button>
+
+<div class="room-ui">
+
+<h1 id="room-title">読み込み中...</h1>
+
+<p>
+ルームID：<strong id="room-id"></strong>
+/ 参加人数：<strong id="count">0</strong>人
+<button onclick="toggleMembers()">メンバーを見る</button>
+</p>
+
+<div id="members" style="display:none;"></div>
+
+<div id="host-area" class="section" style="display:none;">
+<h3>🔗 招待</h3>
+<input id="join-url" readonly style="width:75%;">
+<button onclick="copyURL()">コピー</button>
+<div id="qrcode" style="margin-top:15px;"></div>
+</div>
+
+</div>
+
+<div id="popup"></div>
+
 <script>
 const params = new URLSearchParams(location.search);
 const roomId = params.get("room");
@@ -163,3 +210,6 @@ function copyURL() {
 loadRoom();
 updateMembers();
 </script>
+
+</body>
+</html>
