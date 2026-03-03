@@ -1,60 +1,44 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>退出しました</title>
-  <style>
-    body {
-      background: #111;
-      color: white;
-      font-family: sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      text-align: center;
-    }
-    button {
-      padding: 8px 16px;
-      font-size: 16px;
-      cursor: pointer;
-      margin-top: 20px;
-    }
-    h1 {
-      font-size: 24px;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>退出しました</title>
+<style>
+body {
+  font-family: sans-serif;
+  background: #111;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+.box {
+  background: #300;
+  padding: 30px;
+  border-radius: 14px;
+  text-align: center;
+}
+button {
+  margin-top: 15px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+</style>
 </head>
 <body>
 
-<div>
-  <h1 id="msg">退出しました</h1>
-  <button onclick="closeKick()">OK</button>
+<div class="box">
+  <h2>⚠ ルームから退出しました</h2>
+  <p>ホストにより退出させられたか、<br>ルームが終了しました。</p>
+  <button onclick="goHome()">トップへ戻る</button>
 </div>
 
 <script>
-  const params = new URLSearchParams(location.search);
-  const host = params.get("host");
-  const roomName = params.get("roomName");
-
-  if (host && roomName) {
-    document.getElementById("msg").textContent =
-      `${roomName}（親：${host}さん）から退出しました`;
-  }
-
-  function closeKick() {
-  // タブを閉じられる場合
-  window.close();
-
-  // 閉じられなかった場合（ブラウザ制限）
-  setTimeout(() => {
-    location.replace("/static/index.html");
-  }, 100);
+function goHome() {
+  location.href = "/static/index.html";
 }
-
 </script>
 
 </body>
 </html>
-
-
