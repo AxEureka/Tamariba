@@ -7,52 +7,14 @@
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
 <style>
-html, body {
-  margin: 0;
-  height: 100%;
-  font-family: sans-serif;
-  color: white;
-}
-body {
-  background-size: cover;
-  background-position: center;
-}
-.exit {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  padding: 8px 14px;
-  cursor: pointer;
-}
-.room-ui {
-  background: rgba(0,0,0,0.75);
-  padding: 28px;
-  margin: 40px;
-  border-radius: 16px;
-  max-width: 720px;
-}
-button {
-  cursor: pointer;
-  padding: 6px 12px;
-  margin-left: 6px;
-}
-.section {
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(255,255,255,0.3);
-}
-#members {
-  margin-top: 10px;
-}
-#popup {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background: rgba(0,0,0,0.9);
-  padding: 12px 18px;
-  border-radius: 10px;
-  display: none;
-}
+html, body { margin:0; height:100%; font-family:sans-serif; color:white;}
+body { background-size:cover; background-position:center;}
+.exit { position:fixed; top:20px; right:20px; padding:8px 14px; cursor:pointer;}
+.room-ui { background:rgba(0,0,0,0.75); padding:28px; margin:40px; border-radius:16px; max-width:720px;}
+button { cursor:pointer; padding:6px 12px; margin-left:6px;}
+.section { margin-top:24px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.3);}
+#members { margin-top:10px;}
+#popup { position:fixed; top:20px; right:20px; background:rgba(0,0,0,0.9); padding:12px 18px; border-radius:10px; display:none;}
 </style>
 </head>
 
@@ -62,22 +24,22 @@ button {
 
 <div class="room-ui">
 
-  <h1 id="room-title">読み込み中...</h1>
+<h1 id="room-title">読み込み中...</h1>
 
-  <p>
-    ルームID：<strong id="room-id"></strong>
-    / 参加人数：<strong id="count">0</strong>人
-    <button onclick="toggleMembers()">メンバーを見る</button>
-  </p>
+<p>
+ルームID：<strong id="room-id"></strong>
+/ 参加人数：<strong id="count">0</strong>人
+<button onclick="toggleMembers()">メンバーを見る</button>
+</p>
 
-  <div id="members" style="display:none;"></div>
+<div id="members" style="display:none;"></div>
 
-  <div id="host-area" class="section" style="display:none;">
-    <h3>🔗 招待</h3>
-    <input id="join-url" readonly style="width:75%;">
-    <button onclick="copyURL()">コピー</button>
-    <div id="qrcode" style="margin-top:15px;"></div>
-  </div>
+<div id="host-area" class="section" style="display:none;">
+<h3>🔗 招待</h3>
+<input id="join-url" readonly style="width:75%;">
+<button onclick="copyURL()">コピー</button>
+<div id="qrcode" style="margin-top:15px;"></div>
+</div>
 
 </div>
 
@@ -89,29 +51,18 @@ const roomId = params.get("room");
 let myName = params.get("name") || "";
 let hostName = "";
 let lastMembers = [];
+let joined = false;
 
-// ===== 初期読み込み =====
+// ===== 初期ロード =====
 async function loadRoom() {
-  const res = await fetch(`/room/${roomId}`);
 
-  // 親が退出してルーム消滅した場合
-  if (!res.ok) {
-    location.href = "/static/kick.html";
-    return;
-  }
+  const res = await fetch(`/room/${roomId}`);
+  if (!res.ok) return; // すぐkickしない
 
   const data = await res.json();
   hostName = data.host;
 
   if (!myName) myName = hostName;
-
-  if (myName !== hostName) {
-    await fetch(`/room/${roomId}/join`, {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ name: myName })
-    });
-  }
 
   document.body.style.backgroundImage =
     `url('/static/themes/${data.theme}.jpg')`;
@@ -121,8 +72,19 @@ async function loadRoom() {
 
   document.getElementById("room-id").textContent = roomId;
 
+  // 子はここで一度だけjoin
+  if (myName !== hostName && !joined) {
+    await fetch(`/room/${roomId}/join`, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ name:myName })
+    });
+    joined = true;
+  }
+
+  // 親UI
   if (myName === hostName) {
-    document.getElementById("host-area").style.display = "block";
+    document.getElementById("host-area").style.display="block";
 
     const joinURL =
       window.location.origin +
@@ -133,99 +95,95 @@ async function loadRoom() {
   }
 }
 
-// ===== メンバー監視 =====
+// ===== メンバー更新 =====
 async function updateMembers() {
-  const res = await fetch(`/room/${roomId}/members`);
 
-  // 親が退室してルーム消滅
-  if (!res.ok) {
-    location.href = "/static/kick.html";
-    return;
-  }
+  const res = await fetch(`/room/${roomId}/members`);
+  if (!res.ok) return; // 404即kickしない
 
   const data = await res.json();
 
-  // 自分がもうメンバーにいない → kickへ
-  if (!data.members.includes(myName)) {
-    location.href = "/static/kick.html";
+  // 自分が消されたらkick
+  if (joined && !data.members.includes(myName)) {
+    location.href="/static/kick.html";
     return;
   }
 
   document.getElementById("count").textContent = data.count;
 
-  const joined = data.members.filter(m => !lastMembers.includes(m));
-  const left = lastMembers.filter(m => !data.members.includes(m));
+  const joinedList = data.members.filter(m=>!lastMembers.includes(m));
+  const leftList = lastMembers.filter(m=>!data.members.includes(m));
 
-  joined.forEach(m => {
-    if (m !== myName) showPopup(`${m}さんが入室しました`);
+  joinedList.forEach(m=>{
+    if(m!==myName) showPopup(`${m}さんが入室しました`);
   });
 
-  left.forEach(m => {
-    if (m !== myName) showPopup(`${m}さんが退出しました`);
+  leftList.forEach(m=>{
+    if(m!==myName) showPopup(`${m}さんが退出しました`);
   });
 
-  lastMembers = [...data.members];
+  lastMembers=[...data.members];
 
-  const list = [];
+  const list=[];
   list.push(`<strong>${hostName} (親)</strong>`);
 
-  data.members.forEach(m => {
-    if (m === hostName) return;
+  data.members.forEach(m=>{
+    if(m===hostName) return;
 
-    if (myName === hostName) {
+    if(myName===hostName){
       list.push(`・${m} <button onclick="kickMember('${m}')">退室させる</button>`);
-    } else if (m === myName) {
+    }else if(m===myName){
       list.push(`・${m} (自分)`);
-    } else {
+    }else{
       list.push(`・${m}`);
     }
   });
 
-  document.getElementById("members").innerHTML = list.join("<br>");
+  document.getElementById("members").innerHTML=list.join("<br>");
 }
 
-setInterval(updateMembers, 2000);
+setInterval(updateMembers,2000);
 
 // ===== 親が子を退室させる =====
-async function kickMember(name) {
-  if (!confirm(`${name}さんを退室させますか？`)) return;
+async function kickMember(name){
+  if(!confirm(`${name}さんを退室させますか？`)) return;
 
-  await fetch(`/room/${roomId}/kick`, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ name })
+  await fetch(`/room/${roomId}/kick`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({name})
   });
 }
 
-// ===== 退出（親・子共通） =====
-async function exitRoom() {
-  if (!confirm("退室しますか？")) return;
+// ===== 自主退室 =====
+async function exitRoom(){
+  if(!confirm("退室しますか？")) return;
 
-  // 親が退室 → ルーム削除（既存ロジックに依存）
-  await fetch(`/room/${roomId}/leave`, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ name: myName })
-  });
+  if(myName!==hostName){
+    await fetch(`/room/${roomId}/kick`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({name:myName})
+    });
+  }
 
-  location.href = "/static/kick.html";
+  location.href="/static/kick.html";
 }
 
-function toggleMembers() {
-  const box = document.getElementById("members");
-  box.style.display =
-    box.style.display === "none" ? "block" : "none";
+function toggleMembers(){
+  const box=document.getElementById("members");
+  box.style.display=box.style.display==="none"?"block":"none";
 }
 
-function showPopup(text) {
-  const popup = document.getElementById("popup");
-  popup.textContent = text;
-  popup.style.display = "block";
-  setTimeout(() => popup.style.display = "none", 3000);
+function showPopup(text){
+  const popup=document.getElementById("popup");
+  popup.textContent=text;
+  popup.style.display="block";
+  setTimeout(()=>popup.style.display="none",3000);
 }
 
-function copyURL() {
-  const input = document.getElementById("join-url");
+function copyURL(){
+  const input=document.getElementById("join-url");
   navigator.clipboard.writeText(input.value);
   showPopup("参加URLをコピーしました");
 }
