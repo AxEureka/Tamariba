@@ -51,46 +51,50 @@ const roomId = params.get("room");
 let myName = params.get("name") || "";
 let hostName = "";
 let lastMembers = [];
-let joined = false;   // 自分がサーバーに登録済みか
+let joined = false;
 
 // ===== 初期ロード =====
 async function loadRoom() {
-  try {
-    const res = await fetch(`/room/${roomId}`);
-    if (!res.ok) return; // 404 でも即kickしない
 
-    const data = await res.json();
-    hostName = data.host;
+  const res = await fetch(`/room/${roomId}`);
+  if (!res.ok) return; // 404 でも即kickしない
 
-    if (!myName) myName = hostName;
+  const data = await res.json();
+  hostName = data.host;
 
-    document.body.style.backgroundImage = `url('/static/themes/${data.theme}.jpg')`;
-    document.getElementById("room-title").textContent = `${data.room}（親：${data.host}さん）`;
-    document.getElementById("room-id").textContent = roomId;
+  if (!myName) myName = hostName;
 
-    // 子はまだ join していなければ一度だけ join
-    if (myName !== hostName && !joined) {
-      await fetch(`/room/${roomId}/join`, {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({ name:myName })
-      });
-      joined = true;
-    }
+  document.body.style.backgroundImage =
+    `url('/static/themes/${data.theme}.jpg')`;
 
-    // 親UI
-    if (myName === hostName) {
-      document.getElementById("host-area").style.display="block";
-      const joinURL = window.location.origin + "/static/join.html?room=" + roomId;
-      document.getElementById("join-url").value = joinURL;
-      new QRCode(document.getElementById("qrcode"), joinURL);
-    }
-  } catch(e) {
-    console.error(e);
+  document.getElementById("room-title").textContent =
+    `${data.room}（親：${data.host}さん）`;
+
+  document.getElementById("room-id").textContent = roomId;
+
+  // 子はまだ join していなければ一度だけ join
+  if (myName !== hostName && !joined) {
+    await fetch(`/room/${roomId}/join`, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ name:myName })
+    });
+    joined = true;
+  }
+
+  // 親UI
+  if (myName === hostName) {
+    document.getElementById("host-area").style.display="block";
+
+    const joinURL =
+      window.location.origin +
+      "/static/join.html?room=" + roomId;
+
+    document.getElementById("join-url").value = joinURL;
+    new QRCode(document.getElementById("qrcode"), joinURL);
   }
 }
 
-// ===== メンバー更新 =====
 // ===== メンバー更新 =====
 async function updateMembers() {
   try {
@@ -105,7 +109,7 @@ async function updateMembers() {
       return;
     }
 
-    // 自分がサーバーにまだ登録済みで、自分が消されていたらkick
+    // 自分が消されたらkick
     if (myName !== hostName && joined && !data.members.includes(myName)) {
       location.href="/static/kick.html";
       return;
@@ -155,6 +159,7 @@ setInterval(updateMembers, 2000);
 // ===== 親が子を退室させる =====
 async function kickMember(name){
   if(!confirm(`${name}さんを退室させますか？`)) return;
+
   await fetch(`/room/${roomId}/kick`,{
     method:"POST",
     headers:{"Content-Type":"application/json"},
@@ -202,4 +207,3 @@ updateMembers();
 
 </body>
 </html>
-
