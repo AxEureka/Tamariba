@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>ルーム</title>
 
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
 <style>
 html, body {
   margin: 0;
@@ -26,11 +28,11 @@ body {
 }
 
 .room-ui {
-  background: rgba(0,0,0,0.7);
+  background: rgba(0,0,0,0.75);
   padding: 28px;
   margin: 40px;
   border-radius: 16px;
-  max-width: 700px;
+  max-width: 720px;
 }
 
 button {
@@ -40,8 +42,8 @@ button {
 }
 
 .section {
-  margin-top: 20px;
-  padding-top: 10px;
+  margin-top: 24px;
+  padding-top: 16px;
   border-top: 1px solid rgba(255,255,255,0.3);
 }
 
@@ -53,7 +55,7 @@ button {
   position: fixed;
   top: 20px;
   right: 20px;
-  background: rgba(0,0,0,0.85);
+  background: rgba(0,0,0,0.9);
   padding: 12px 18px;
   border-radius: 10px;
   display: none;
@@ -80,24 +82,33 @@ button {
   <!-- 親専用エリア -->
   <div id="host-area" class="section" style="display:none;">
 
-    <h3>🎮 クイズ設定</h3>
+    <h3>🔗 招待</h3>
 
-    問題モード：
-    <select id="question-mode">
-      <option value="manual">その場入力</option>
-      <option value="list">事前登録リスト</option>
-    </select>
+    <input id="join-url" readonly style="width:75%;">
+    <button onclick="copyURL()">コピー</button>
 
-    出題形式：
-    <select id="answer-style">
-      <option value="normal">通常（全員回答）</option>
-      <option value="fast">早押し（将来用）</option>
-    </select>
+    <div id="qrcode" style="margin-top:15px;"></div>
 
-    <br><br>
+    <div class="section">
+      <h3>🎮 クイズ設定</h3>
 
-    <button onclick="goQuestionEditor()">📝 問題リストを管理</button>
-    <button onclick="startQuiz()">🚀 クイズ開始</button>
+      問題モード：
+      <select id="question-mode">
+        <option value="manual">その場入力</option>
+        <option value="list">事前登録リスト</option>
+      </select>
+
+      出題形式：
+      <select id="answer-style">
+        <option value="normal">通常（全員回答）</option>
+        <option value="fast">早押し（将来用）</option>
+      </select>
+
+      <br><br>
+
+      <button onclick="goQuestionEditor()">📝 問題リストを管理</button>
+      <button onclick="startQuiz()">🚀 クイズ開始</button>
+    </div>
 
   </div>
 
@@ -142,8 +153,20 @@ async function loadRoom() {
 
   document.getElementById("room-id").textContent = roomId;
 
+  // ===== 親のみ招待機能表示 =====
   if (myName === hostName) {
     document.getElementById("host-area").style.display = "block";
+
+    const joinURL =
+      window.location.origin +
+      "/static/join.html?room=" + roomId;
+
+    document.getElementById("join-url").value = joinURL;
+
+    new QRCode(
+      document.getElementById("qrcode"),
+      joinURL
+    );
   }
 }
 
@@ -198,16 +221,14 @@ async function startQuiz() {
   await fetch(`/room/${roomId}/start_quiz`, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({
-      mode,
-      style
-    })
+    body: JSON.stringify({ mode, style })
   });
 
-  location.href = `/static/quiz.html?room=${roomId}&name=${encodeURIComponent(myName)}`;
+  location.href =
+    `/static/quiz.html?room=${roomId}&name=${encodeURIComponent(myName)}`;
 }
 
-// ===== 問題管理画面へ =====
+// ===== 問題管理画面 =====
 function goQuestionEditor() {
   location.href =
     `/static/question_editor.html?room=${roomId}&name=${encodeURIComponent(myName)}`;
@@ -216,7 +237,8 @@ function goQuestionEditor() {
 // ===== UI =====
 function toggleMembers() {
   const box = document.getElementById("members");
-  box.style.display = box.style.display === "none" ? "block" : "none";
+  box.style.display =
+    box.style.display === "none" ? "block" : "none";
 }
 
 function showPopup(text) {
@@ -224,6 +246,13 @@ function showPopup(text) {
   popup.textContent = text;
   popup.style.display = "block";
   setTimeout(() => popup.style.display = "none", 3000);
+}
+
+function copyURL() {
+  const input = document.getElementById("join-url");
+  input.select();
+  navigator.clipboard.writeText(input.value);
+  showPopup("参加URLをコピーしました");
 }
 
 async function kick(name) {
