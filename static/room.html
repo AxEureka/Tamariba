@@ -56,7 +56,7 @@ let joined = false;
 // ===== 初期ロード =====
 async function loadRoom() {
 
-  const res = await fetch(`/room/${roomId}`);
+  const res = await fetch(`/room/${roomId}?name=${encodeURIComponent(myName)}`);
   if (!res.ok) return; // すぐkickしない
 
   const data = await res.json();
@@ -71,16 +71,6 @@ async function loadRoom() {
     `${data.room}（親：${data.host}さん）`;
 
   document.getElementById("room-id").textContent = roomId;
-
-  // 子はここで一度だけjoin
-  if (myName !== hostName && !joined) {
-    await fetch(`/room/${roomId}/join`, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({ name:myName })
-    });
-    joined = true;
-  }
 
   // 親UI
   if (myName === hostName) {
@@ -104,7 +94,7 @@ async function updateMembers() {
   const data = await res.json();
 
   // 自分が消されたらkick
-  if (joined && !data.members.includes(myName)) {
+  if (!data.members.includes(myName)) {
     location.href="/static/kick.html";
     return;
   }
@@ -188,6 +178,7 @@ function copyURL(){
   showPopup("参加URLをコピーしました");
 }
 
+// 初回ロード
 loadRoom();
 updateMembers();
 </script>
