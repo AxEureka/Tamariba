@@ -30,6 +30,7 @@ async def root():
 @app.post("/create_room")
 async def create_room(data: dict):
     room_id = str(uuid.uuid4())[:8]
+
     host_name = data["host_name"]
     room_name = data["room_name"]
     theme = data["theme"]
@@ -38,31 +39,50 @@ async def create_room(data: dict):
         "host": host_name,
         "room_name": room_name,
         "theme": theme,
+
+        # ゲーム拡張用
         "mode": None,
         "status": "waiting",
+
         "players": {
             host_name: {
                 "nickname": host_name,
                 "score": 0,
                 "answer": None,
-                "connected": True  # 🔥 親は作成時に登録
+                "connected": True
             }
         },
+
         "current_question": None,
-        "votes": {"A": [], "B": [], "C": [], "D": []},
-        "connections": []
+        "votes": {
+            "A": [],
+            "B": [],
+            "C": [],
+            "D": []
+        },
+
+        "connections": []  # WebSocket保存
     }
 
     return {"room_id": room_id, "theme": theme}
 
 # =========================
-# ルーム情報
+# ルーム情報取得（子の race condition 回避）
 # =========================
 @app.get("/room/{room_id}")
-async def get_room(room_id: str):
+async def get_room(room_id: str, name: str = None):
     room = rooms.get(room_id)
     if not room:
         return JSONResponse({"error": "room not found"}, status_code=404)
+
+    # 子が room.html を開いた時点で未登録なら追加
+    if name and name not in room["players"]:
+        room["players"][name] = {
+            "nickname": name,
+            "score": 0,
+            "answer": None,
+            "connected": True
+        }
 
     return {
         "host": room["host"],
@@ -83,7 +103,6 @@ async def join_room(room_id: str, data: dict):
     if not name:
         return JSONResponse({"error": "name required"}, status_code=400)
 
-    # 参加者が未登録なら登録、すでにある場合はconnected=Trueに更新
     if name not in room["players"]:
         room["players"][name] = {
             "nickname": name,
@@ -91,8 +110,6 @@ async def join_room(room_id: str, data: dict):
             "answer": None,
             "connected": True
         }
-    else:
-        room["players"][name]["connected"] = True
 
     return {
         "count": len(room["players"]),
@@ -112,7 +129,6 @@ async def kick_member(room_id: str, data: dict):
     if not target:
         return JSONResponse({"error": "name required"}, status_code=400)
 
-    # 親は除く
     if target in room["players"] and target != room["host"]:
         del room["players"][target]
 
@@ -141,16 +157,11 @@ async def get_members(room_id: str):
 @app.post("/room/{room_id}/close")
 async def close_room(room_id: str):
     if room_id in rooms:
-        # 全員 connected=False にして親以外はkick扱い
-        room = rooms[room_id]
-        for p in room["players"]:
-            if p != room["host"]:
-                room["players"][p]["connected"] = False
         del rooms[room_id]
     return {"status": "closed"}
 
 # =========================
-# WebSocket（将来用）
+# WebSocket（将来クイズ用）
 # =========================
 @app.websocket("/ws/{room_id}")
 async def websocket_endpoint(websocket: WebSocket, room_id: str):
@@ -165,18 +176,25 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
     try:
         while True:
             data = await websocket.receive_json()
+
+            # 例：回答受付
             if data.get("type") == "answer":
                 name = data.get("name")
                 choice = data.get("choice")
+
                 if name in room["players"]:
                     room["players"][name]["answer"] = choice
                     room["votes"][choice].append(name)
+
+                    # ホストへ更新通知
                     await broadcast(room, {
                         "type": "vote_update",
                         "votes": {k: len(v) for k, v in room["votes"].items()}
                     })
+
     except WebSocketDisconnect:
         room["connections"].remove(websocket)
+
 
 async def broadcast(room, message):
     for connection in room["connections"]:
