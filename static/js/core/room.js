@@ -208,9 +208,32 @@ function connectSocket() {
 }
 
 function showQuestion(question, choices) {
-  alert("問題: " + question);
+
+  const container = document.getElementById("game-container");
+
+  let html = `<h2>${question}</h2>`;
+
+  choices.forEach((c, i) => {
+    html += `
+      <button onclick="sendAnswer(${i})">
+        ${String.fromCharCode(65+i)}: ${c}
+      </button>
+      <br>
+    `;
+  });
+
+  container.innerHTML = html;
 }
 
+function sendAnswer(choiceIndex) {
+
+  socket.send(JSON.stringify({
+    type: "answer",
+    name: myName,
+    choice: choiceIndex
+  }));
+
+}
 document.addEventListener("click", (e) => {
   if (
     gameDropdown &&
