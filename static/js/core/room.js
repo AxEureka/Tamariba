@@ -182,7 +182,7 @@ async function startQuiz() {
   });
 }
 }
-}
+
 let socket;
 
 function connectSocket() {
