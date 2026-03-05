@@ -187,10 +187,16 @@ async function startQuiz() {
 let socket;
 
 function connectSocket() {
-  socket = new WebSocket(
-    `ws://${location.host}/ws/${roomId}`
-  );
+  const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+  socket = new WebSocket(`${protocol}//${location.host}/ws/${roomId}`);
 
+  socket.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    if (data.type === "update") {
+      updateMembers();
+    }
+  };
+}
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
 
