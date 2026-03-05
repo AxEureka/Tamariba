@@ -164,18 +164,11 @@ if (gameBtn) {
 
 function selectGame(type) {
   gameDropdown.style.display = "none";
-  if (type === "quiz") {
-  startQuiz();
-}
-asyncfunction selectGame(type) {
-  gameDropdown.style.display = "none";
 
   if (type === "quiz") {
     startQuiz();
   }
 }
-
-// ← ここでちゃんと閉じる
 
 async function startQuiz() {
   const question = "日本の首都は？";
