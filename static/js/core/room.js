@@ -6,7 +6,7 @@ let lastMembers = [];
 let joined = false;
 
 async function loadRoom() {
-  const res = await fetch(`/room/${roomId}`);
+  const res = await fetch(`/room/${roomId}?name=${encodeURIComponent(myName)}`);
   if (!res.ok) return;
 
   const data = await res.json();
