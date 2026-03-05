@@ -160,6 +160,46 @@ async def close_room(room_id: str):
         del rooms[room_id]
     return {"status": "closed"}
 
+
+# =========================
+# クイズ出題API（最小版）
+# =========================
+@app.post("/room/{room_id}/quiz/start")
+async def start_quiz(room_id: str, data: dict):
+    room = rooms.get(room_id)
+    if not room:
+        return JSONResponse({"error": "room not found"}, status_code=404)
+
+    name = data.get("name")
+    question = data.get("question")
+    choices = data.get("choices")
+
+    # 親だけ許可
+    if name != room["host"]:
+        return JSONResponse({"error": "only host can start"}, status_code=403)
+
+    if not question or not choices:
+        return JSONResponse({"error": "invalid data"}, status_code=400)
+
+    # 問題保存
+    room["current_question"] = {
+        "question": question,
+        "choices": choices,
+        "status": "answering"
+    }
+
+    # 投票初期化
+    room["votes"] = { c: [] for c in choices }
+
+    # 全員に送信
+    await broadcast(room, {
+        "type": "new_question",
+        "question": question,
+        "choices": choices
+    })
+
+    return {"status": "started"}
+    
 # =========================
 # WebSocket（将来クイズ用）
 # =========================
@@ -207,3 +247,4 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
+
