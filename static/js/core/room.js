@@ -5,8 +5,10 @@ let hostName = "";
 let lastMembers = [];
 let joined = false;
 
+const baseURL = location.origin; // ←絶対パス対応
+
 async function loadRoom() {
-  const res = await fetch(`/room/${roomId}?name=${encodeURIComponent(myName)}`);
+  const res = await fetch(`${baseURL}/room/${roomId}?name=${encodeURIComponent(myName)}`);
   if (!res.ok) return;
 
   const data = await res.json();
@@ -23,7 +25,6 @@ async function loadRoom() {
     const joinURL = window.location.origin + "/static/join.html?room=" + roomId;
     document.getElementById("join-url").value = joinURL;
 
-    // 🔥 ここだけ安全化（QRCode未読込でも落ちない）
     if (typeof QRCode !== "undefined") {
       new QRCode(document.getElementById("qrcode"), joinURL);
     }
@@ -32,7 +33,7 @@ async function loadRoom() {
   if (myName !== hostName && !joined) {
     joined = true;
     try {
-      await fetch(`/room/${roomId}/join`, {
+      await fetch(`${baseURL}/room/${roomId}/join`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: myName })
@@ -47,7 +48,7 @@ async function loadRoom() {
 
 async function updateMembers() {
   try {
-    const res = await fetch(`/room/${roomId}/members`);
+    const res = await fetch(`${baseURL}/room/${roomId}/members`);
     if (!res.ok) return;
 
     const data = await res.json();
@@ -96,7 +97,7 @@ async function updateMembers() {
 
 async function kickMember(name) {
   if (!confirm(`${name}さんを退室させますか？`)) return;
-  await fetch(`/room/${roomId}/kick`, {
+  await fetch(`${baseURL}/room/${roomId}/kick`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name })
@@ -107,18 +108,18 @@ async function exitRoom() {
   if (!confirm("退室しますか？")) return;
 
   if (myName !== hostName) {
-    await fetch(`/room/${roomId}/kick`, {
+    await fetch(`${baseURL}/room/${roomId}/kick`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: myName })
     });
   } else {
-    const res = await fetch(`/room/${roomId}/members`);
+    const res = await fetch(`${baseURL}/room/${roomId}/members`);
     if (res.ok) {
       const data = await res.json();
       for (const m of data.members) {
         if (m !== hostName) {
-          await fetch(`/room/${roomId}/kick`, {
+          await fetch(`${baseURL}/room/${roomId}/kick`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name: m })
@@ -174,7 +175,7 @@ async function startQuiz() {
   const question = "日本の首都は？";
   const choices = ["大阪", "東京", "名古屋", "福岡"];
 
-  await fetch(`/room/${roomId}/quiz/start`, {
+  await fetch(`${baseURL}/room/${roomId}/quiz/start`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -184,33 +185,31 @@ async function startQuiz() {
     })
   });
 }
+
 let socket;
 
 function connectSocket() {
-
   const protocol = location.protocol === "https:" ? "wss" : "ws";
 
-  const socket = new WebSocket(
-    `${protocol}://${location.host}/ws/${roomId}`
-  );
+  socket = new WebSocket(`${protocol}://${location.host}/ws/${roomId}`);
 
   socket.onopen = () => {
     console.log("WebSocket connected");
   };
 
- socket.onmessage = (event) => {
-  const data = JSON.parse(event.data);
-  console.log("WS message", data);
+  socket.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    console.log("WS message", data);
 
-  if (data.type === "new_question") {
-    showQuestion(data.question, data.choices);
-  }
+    if (data.type === "new_question") {
+      showQuestion(data.question, data.choices);
+    }
 
-  if (data.type === "vote_update") {
-    console.log("投票状況更新:", data.votes);
-    // ここでUIに反映もできる
-  }
-};
+    if (data.type === "vote_update") {
+      console.log("投票状況更新:", data.votes);
+    }
+  };
+
   socket.onerror = (e) => {
     console.error("WebSocket error", e);
   };
@@ -219,6 +218,7 @@ function connectSocket() {
 function showQuestion(question, choices) {
   alert("問題: " + question);
 }
+
 document.addEventListener("click", (e) => {
   if (
     gameDropdown &&
@@ -232,7 +232,7 @@ document.addEventListener("click", (e) => {
 /* 🔥 初期起動 */
 
 window.addEventListener("DOMContentLoaded", () => {
-  connectSocket();   // ← これを追加
+  connectSocket();
 
   loadRoom().then(() => {
     updateMembers();
