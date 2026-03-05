@@ -1,6 +1,5 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.responses import RedirectResponse
-from fastapi.responses import JSONResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 import uuid
 import os
@@ -11,10 +10,12 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
-# 追加
+
+
 @app.get("/")
 async def root():
     return RedirectResponse(url="/static/index.html")
+
 
 rooms = {}
 
@@ -23,16 +24,59 @@ rooms = {}
 # ルーム作成
 # =========================
 @app.post("/create_room")
-async def create_room():
+async def create_room(data: dict):
+
     room_id = str(uuid.uuid4())[:8]
 
+    host = data.get("host_name")
+    room_name = data.get("room_name")
+    theme = data.get("theme", "mansion")
+
     rooms[room_id] = {
-        "members": [],
+        "room": room_name,
+        "host": host,
+        "theme": theme,
+        "members": [host],
         "sockets": [],
         "answers": {}
     }
 
-    return {"room": room_id}
+    return {"room_id": room_id}
+
+
+# =========================
+# ルーム情報取得
+# =========================
+@app.get("/room/{room_id}")
+async def get_room(room_id: str, name: str = ""):
+
+    if room_id not in rooms:
+        return JSONResponse({"error": "room not found"}, status_code=404)
+
+    room = rooms[room_id]
+
+    return {
+        "room": room["room"],
+        "host": room["host"],
+        "theme": room["theme"]
+    }
+
+
+# =========================
+# 入室
+# =========================
+@app.post("/room/{room_id}/join")
+async def join_room(room_id: str, data: dict):
+
+    if room_id not in rooms:
+        return {"ok": False}
+
+    name = data.get("name")
+
+    if name and name not in rooms[room_id]["members"]:
+        rooms[room_id]["members"].append(name)
+
+    return {"ok": True}
 
 
 # =========================
@@ -42,9 +86,31 @@ async def create_room():
 async def get_members(room_id: str):
 
     if room_id not in rooms:
-        return JSONResponse({"members": []})
+        return {"members": [], "count": 0}
 
-    return {"members": rooms[room_id]["members"]}
+    members = rooms[room_id]["members"]
+
+    return {
+        "members": members,
+        "count": len(members)
+    }
+
+
+# =========================
+# キック
+# =========================
+@app.post("/room/{room_id}/kick")
+async def kick_member(room_id: str, data: dict):
+
+    if room_id not in rooms:
+        return {"ok": False}
+
+    name = data.get("name")
+
+    if name in rooms[room_id]["members"]:
+        rooms[room_id]["members"].remove(name)
+
+    return {"ok": True}
 
 
 # =========================
@@ -57,6 +123,9 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
 
     if room_id not in rooms:
         rooms[room_id] = {
+            "room": "room",
+            "host": "",
+            "theme": "mansion",
             "members": [],
             "sockets": [],
             "answers": {}
@@ -66,42 +135,24 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
     room["sockets"].append(websocket)
 
     try:
+
         while True:
 
             data = await websocket.receive_json()
 
-            # =========================
-            # 入室
-            # =========================
-            if data.get("type") == "join":
-
-                name = data.get("name")
-
-                if name and name not in room["members"]:
-                    room["members"].append(name)
-
-                await broadcast(room, {
-                    "type": "members",
-                    "members": room["members"]
-                })
-
-
-            # =========================
             # 新しい問題
-            # =========================
             if data.get("type") == "new_question":
 
                 room["answers"] = {}
 
                 await broadcast(room, {
-                    "type": "new_question",   # ←ここ
+                    "type": "new_question",
                     "question": data.get("question"),
                     "choices": data.get("choices")
                 })
 
-            # =========================
+
             # 回答
-            # =========================
             if data.get("type") == "answer":
 
                 name = data.get("name")
@@ -112,13 +163,11 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
 
                 await broadcast(room, {
                     "type": "vote_update",
-                    "answers": room["answers"]
+                    "votes": room["answers"]
                 })
 
 
-            # =========================
             # 正解発表
-            # =========================
             if data.get("type") == "show_answer":
 
                 await broadcast(room, {
@@ -128,6 +177,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
 
 
     except WebSocketDisconnect:
+
         room["sockets"].remove(websocket)
 
 
@@ -138,5 +188,3 @@ async def broadcast(room, message):
 
     for socket in room["sockets"]:
         await socket.send_json(message)
-
-
