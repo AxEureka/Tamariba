@@ -178,28 +178,6 @@ function selectGame(type) {
   }
 }
 
-function selectGame(type) {
-  gameDropdown.style.display = "none";
-
-  if (type === "quiz") {
-    startQuiz();
-  }
-}
-
-async function startQuiz() {
-  const question = "日本の首都は？";
-  const choices = ["大阪", "東京", "名古屋", "福岡"];
-
-  await fetch(`${baseURL}/room/${roomId}/quiz/start`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      name: myName,
-      question,
-      choices
-    })
-  });
-}
 
 let socket;
 
