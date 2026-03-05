@@ -1,1 +1,181 @@
+const params = new URLSearchParams(location.search);
+const roomId = params.get("room");
+let myName = params.get("name") || "";
+let hostName = "";
+let lastMembers = [];
+let joined = false;
 
+async function loadRoom() {
+  const res = await fetch(`/room/${roomId}`);
+  if (!res.ok) return;
+
+  const data = await res.json();
+  hostName = data.host;
+  if (!myName) myName = hostName;
+
+  document.body.style.backgroundImage = `url('/static/themes/${data.theme}.jpg')`;
+  document.getElementById("room-title").textContent = `${data.room}（親：${data.host}さん）`;
+  document.getElementById("room-id").textContent = roomId;
+
+  if (myName === hostName) {
+    document.getElementById("host-area").style.display = "block";
+    document.getElementById("gameSelectBtn").style.display = "inline-block";
+    const joinURL = window.location.origin + "/static/join.html?room=" + roomId;
+    document.getElementById("join-url").value = joinURL;
+    new QRCode(document.getElementById("qrcode"), joinURL);
+  }
+
+  if (myName !== hostName && !joined) {
+    joined = true;
+    try {
+      await fetch(`/room/${roomId}/join`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: myName })
+      });
+    } catch (e) {
+      console.error("参加処理でエラー", e);
+    }
+  }
+
+  if (!joined) lastMembers = [];
+}
+
+async function updateMembers() {
+  try {
+    const res = await fetch(`/room/${roomId}/members`);
+    if (!res.ok) return;
+
+    const data = await res.json();
+
+    if (myName !== hostName && joined && !data.members.includes(myName)) {
+      location.href = "/static/kick.html";
+      return;
+    }
+
+    document.getElementById("count").textContent = data.count;
+
+    const joinedList = data.members.filter(m => !lastMembers.includes(m));
+    const leftList = lastMembers.filter(m => !data.members.includes(m));
+
+    joinedList.forEach(m => {
+      if (m !== myName && m !== hostName) showPopup(`${m}さんが入室しました`);
+    });
+
+    leftList.forEach(m => {
+      if (m !== myName) showPopup(`${m}さんが退出しました`);
+    });
+
+    lastMembers = [...data.members];
+
+    const list = [];
+    list.push(`<strong>${hostName} (親)</strong>`);
+
+    if (myName === hostName) {
+      data.members.forEach(m => {
+        if (m === hostName) return;
+        list.push(`・${m} <button onclick="kickMember('${m}')">退室させる</button>`);
+      });
+    } else {
+      list.push(`・${myName} (自分)`);
+      data.members.forEach(m => {
+        if (m === hostName || m === myName) return;
+        list.push(`・${m}`);
+      });
+    }
+
+    document.getElementById("members").innerHTML = list.join("<br>");
+  } catch (e) {
+    console.error("メンバー更新エラー", e);
+  }
+}
+
+setInterval(updateMembers, 2000);
+
+async function kickMember(name) {
+  if (!confirm(`${name}さんを退室させますか？`)) return;
+  await fetch(`/room/${roomId}/kick`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name })
+  });
+}
+
+async function exitRoom() {
+  if (!confirm("退室しますか？")) return;
+
+  if (myName !== hostName) {
+    await fetch(`/room/${roomId}/kick`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: myName })
+    });
+  } else {
+    const res = await fetch(`/room/${roomId}/members`);
+    if (res.ok) {
+      const data = await res.json();
+      for (const m of data.members) {
+        if (m !== hostName) {
+          await fetch(`/room/${roomId}/kick`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: m })
+          });
+        }
+      }
+    }
+  }
+
+  location.href = "/static/kick.html";
+}
+
+function toggleMembers() {
+  const box = document.getElementById("members");
+  box.style.display = box.style.display === "none" ? "block" : "none";
+}
+
+function showPopup(text) {
+  const popup = document.getElementById("popup");
+  popup.textContent = text;
+  popup.style.display = "block";
+  setTimeout(() => popup.style.display = "none", 3000);
+}
+
+function copyURL() {
+  const input = document.getElementById("join-url");
+  navigator.clipboard.writeText(input.value);
+  showPopup("参加URLをコピーしました");
+}
+
+/* ===== 追加：遊び選択UI制御（これだけ追加） ===== */
+
+const gameBtn = document.getElementById("gameSelectBtn");
+const gameDropdown = document.getElementById("gameDropdown");
+
+if (gameBtn) {
+  gameBtn.onclick = (e) => {
+    e.stopPropagation();
+    gameDropdown.style.display =
+      gameDropdown.style.display === "none" ? "block" : "none";
+  };
+}
+
+function selectGame(type) {
+  gameDropdown.style.display = "none";
+  if (type === "quiz") {
+    alert("クイズ設定は次で実装します");
+  }
+}
+
+document.addEventListener("click", (e) => {
+  if (
+    gameDropdown &&
+    !gameDropdown.contains(e.target) &&
+    e.target !== gameBtn
+  ) {
+    gameDropdown.style.display = "none";
+  }
+});
+
+loadRoom();
+updateMembers();
