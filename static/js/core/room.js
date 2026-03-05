@@ -1,3 +1,6 @@
+import { startQuizHost } from "./quiz-host.js";
+import { startQuizPlayer } from "./quiz-player.js";
+
 const params = new URLSearchParams(location.search);
 const roomId = params.get("room");
 let myName = params.get("name") || "";
@@ -161,6 +164,18 @@ if (gameBtn) {
     gameDropdown.style.display =
       gameDropdown.style.display === "none" ? "block" : "none";
   };
+}
+
+function selectGame(type) {
+  gameDropdown.style.display = "none";
+
+  if (type === "quiz") {
+    if (myName === hostName) {
+      startQuizHost(socket, document.getElementById("game-container"));
+    } else {
+      startQuizPlayer(socket, document.getElementById("game-container"));
+    }
+  }
 }
 
 function selectGame(type) {
