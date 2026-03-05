@@ -86,8 +86,14 @@ export function startQuizHost(socket, container) {
 
     if(data.type === "vote_update") {
 
-      votes = data.votes;
+      const answers = data.answers;
 
+      votes = [0,0,0,0];
+
+      for(const name in answers){
+        votes[answers[name]]++;
+      }
+      
       showResultGraph(
         document.getElementById("host-results"),
         votes,
