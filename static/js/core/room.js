@@ -1,6 +1,5 @@
-import { startQuizHost } from "./quiz-host.js";
-import { startQuizPlayer } from "./quiz-player.js";
-
+import { startQuizHost } from "../quiz/quiz-host.js";
+import { startQuizPlayer } from "../quiz/quiz-player.js";
 const params = new URLSearchParams(location.search);
 const roomId = params.get("room");
 let myName = params.get("name") || "";
