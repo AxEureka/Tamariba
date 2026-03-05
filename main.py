@@ -206,24 +206,21 @@ async def start_quiz(room_id: str, data: dict):
 # =========================
 @app.websocket("/ws/{room_id}")
 async def websocket_endpoint(websocket: WebSocket, room_id: str):
-
     print("WS接続要求:", room_id)
     print("現在のrooms:", list(rooms.keys()))
 
-    await websocket.accept()
-    
+    room = rooms.get(room_id)   # ← これが抜けていた
     if not room:
-        await websocket.send_json({"type": "error", "message": "room not found"})
         await websocket.close()
         return
 
+    await websocket.accept()
+    
     room["connections"].append(websocket)
     
     try:
         while True:
             data = await websocket.receive_json()
-
-            # 例：回答受付
             if data.get("type") == "answer":
                 name = data.get("name")
                 choice = data.get("choice")
@@ -232,12 +229,10 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     room["players"][name]["answer"] = choice
                     room["votes"][choice].append(name)
 
-                    # ホストへ更新通知
                     await broadcast(room, {
                         "type": "vote_update",
                         "votes": {k: len(v) for k, v in room["votes"].items()}
                     })
-
     except WebSocketDisconnect:
         room["connections"].remove(websocket)
 
@@ -253,3 +248,4 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
+
