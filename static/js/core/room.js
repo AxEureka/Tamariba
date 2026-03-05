@@ -38,7 +38,6 @@ async function loadRoom() {
     }
   }
 
-  if (!joined) lastMembers = [];
 }
 
 async function updateMembers() {
@@ -90,8 +89,34 @@ async function updateMembers() {
   }
 }
 
-setInterval(updateMembers, 2000);
+window.addEventListener("DOMContentLoaded", () => {
+  gameBtn = document.getElementById("gameSelectBtn");
+  gameDropdown = document.getElementById("gameDropdown");
 
+  if (gameBtn) {
+    gameBtn.onclick = (e) => {
+      e.stopPropagation();
+      gameDropdown.style.display =
+        gameDropdown.style.display === "none" ? "block" : "none";
+    };
+  }
+
+  document.addEventListener("click", (e) => {
+    if (
+      gameDropdown &&
+      !gameDropdown.contains(e.target) &&
+      e.target !== gameBtn
+    ) {
+      gameDropdown.style.display = "none";
+    }
+  });
+
+  // 🔥 ここ大事
+  loadRoom().then(() => {
+    updateMembers();
+    setInterval(updateMembers, 2000);
+  });
+});
 async function kickMember(name) {
   if (!confirm(`${name}さんを退室させますか？`)) return;
   await fetch(`/room/${roomId}/kick`, {
@@ -147,7 +172,7 @@ function copyURL() {
   showPopup("参加URLをコピーしました");
 }
 
-/* ===== 追加：遊び選択UI制御（これだけ追加） ===== */
+/* ===== 遊び選択UI制御 ===== */
 
 let gameBtn;
 let gameDropdown;
@@ -163,34 +188,17 @@ window.addEventListener("DOMContentLoaded", () => {
         gameDropdown.style.display === "none" ? "block" : "none";
     };
   }
-});
 
-if (gameBtn) {
-  gameBtn.onclick = (e) => {
-    e.stopPropagation();
-    gameDropdown.style.display =
-      gameDropdown.style.display === "none" ? "block" : "none";
-  };
-}
+  document.addEventListener("click", (e) => {
+    if (
+      gameDropdown &&
+      !gameDropdown.contains(e.target) &&
+      e.target !== gameBtn
+    ) {
+      gameDropdown.style.display = "none";
+    }
+  });
 
-function selectGame(type) {
-  gameDropdown.style.display = "none";
-  if (type === "quiz") {
-    alert("クイズ設定は次で実装します");
-  }
-}
-
-document.addEventListener("click", (e) => {
-  if (
-    gameDropdown &&
-    !gameDropdown.contains(e.target) &&
-    e.target !== gameBtn
-  ) {
-    gameDropdown.style.display = "none";
-  }
-});
-
-window.addEventListener("DOMContentLoaded", () => {
   loadRoom();
   updateMembers();
 });
