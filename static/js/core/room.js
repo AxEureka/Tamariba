@@ -172,8 +172,6 @@ function copyURL() {
   showPopup("参加URLをコピーしました");
 }
 
-/* ===== 遊び選択UI制御 ===== */
-
 let gameBtn;
 let gameDropdown;
 
@@ -199,6 +197,12 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // ここだけ実行
+  loadRoom().then(() => {
+    updateMembers();
+    setInterval(updateMembers, 2000);
+  });
+});
   loadRoom();
   updateMembers();
 });
