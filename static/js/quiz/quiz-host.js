@@ -69,9 +69,9 @@ export function startQuizHost(socket, container) {
 
     showCorrectAnswer(
       document.getElementById("host-results"),
+      votes,
       currentAnswer
     );
-
     socket.send(JSON.stringify({
       type: "show_answer",
       correct: currentAnswer
