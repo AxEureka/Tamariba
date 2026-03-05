@@ -231,3 +231,16 @@ window.addEventListener("DOMContentLoaded", () => {
     setInterval(updateMembers, 2000);
   });
 });
+
+function copyURL() {
+  const url = location.href;
+  navigator.clipboard.writeText(url);
+  alert("URLをコピーしました");
+}
+
+function selectGame(game) {
+  console.log("選択ゲーム:", game);
+}
+
+window.copyURL = copyURL;
+window.selectGame = selectGame;
