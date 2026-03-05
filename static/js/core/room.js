@@ -198,11 +198,19 @@ function connectSocket() {
     console.log("WebSocket connected");
   };
 
-  socket.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    console.log("WS message", data);
-  };
+ socket.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  console.log("WS message", data);
 
+  if (data.type === "new_question") {
+    showQuestion(data.question, data.choices);
+  }
+
+  if (data.type === "vote_update") {
+    console.log("投票状況更新:", data.votes);
+    // ここでUIに反映もできる
+  }
+};
   socket.onerror = (e) => {
     console.error("WebSocket error", e);
   };
