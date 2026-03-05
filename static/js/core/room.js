@@ -187,19 +187,24 @@ async function startQuiz() {
 let socket;
 
 function connectSocket() {
-  const protocol = location.protocol === "https:" ? "wss:" : "ws:";
-  socket = new WebSocket(`${protocol}//${location.host}/ws/${roomId}`);
+
+  const protocol = location.protocol === "https:" ? "wss" : "ws";
+
+  const socket = new WebSocket(
+    `${protocol}://${location.host}/ws/${roomId}`
+  );
+
+  socket.onopen = () => {
+    console.log("WebSocket connected");
+  };
 
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
+    console.log("WS message", data);
+  };
 
-    if (data.type === "update") {
-      updateMembers();
-    }
-
-    if (data.type === "new_question") {
-      showQuestion(data.question, data.choices);
-    }
+  socket.onerror = (e) => {
+    console.error("WebSocket error", e);
   };
 }
 
