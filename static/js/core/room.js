@@ -192,13 +192,10 @@ function connectSocket() {
 
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
+
     if (data.type === "update") {
       updateMembers();
     }
-  };
-}
-  socket.onmessage = (event) => {
-    const data = JSON.parse(event.data);
 
     if (data.type === "new_question") {
       showQuestion(data.question, data.choices);
