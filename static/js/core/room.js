@@ -90,8 +90,6 @@ async function updateMembers() {
   }
 }
 
-setInterval(updateMembers, 2000);
-
 async function kickMember(name) {
   if (!confirm(`${name}さんを退室させますか？`)) return;
   await fetch(`/room/${roomId}/kick`, {
@@ -147,7 +145,7 @@ function copyURL() {
   showPopup("参加URLをコピーしました");
 }
 
-/* ===== 追加：遊び選択UI制御（これだけ追加） ===== */
+/* ===== 遊び選択UI制御 ===== */
 
 const gameBtn = document.getElementById("gameSelectBtn");
 const gameDropdown = document.getElementById("gameDropdown");
@@ -177,7 +175,11 @@ document.addEventListener("click", (e) => {
   }
 });
 
+/* 🔥 ここだけ順番修正 */
+
 window.addEventListener("DOMContentLoaded", () => {
-  loadRoom();
-  updateMembers();
+  loadRoom().then(() => {
+    updateMembers();
+    setInterval(updateMembers, 2000);
+  });
 });
