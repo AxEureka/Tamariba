@@ -22,7 +22,11 @@ async function loadRoom() {
     document.getElementById("gameSelectBtn").style.display = "inline-block";
     const joinURL = window.location.origin + "/static/join.html?room=" + roomId;
     document.getElementById("join-url").value = joinURL;
-    new QRCode(document.getElementById("qrcode"), joinURL);
+
+    // 🔥 ここだけ安全化（QRCode未読込でも落ちない）
+    if (typeof QRCode !== "undefined") {
+      new QRCode(document.getElementById("qrcode"), joinURL);
+    }
   }
 
   if (myName !== hostName && !joined) {
@@ -175,7 +179,7 @@ document.addEventListener("click", (e) => {
   }
 });
 
-/* 🔥 ここだけ順番修正 */
+/* 🔥 初期起動 */
 
 window.addEventListener("DOMContentLoaded", () => {
   loadRoom().then(() => {
