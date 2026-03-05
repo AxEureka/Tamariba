@@ -205,14 +205,17 @@ async def start_quiz(room_id: str, data: dict):
 # =========================
 @app.websocket("/ws/{room_id}")
 async def websocket_endpoint(websocket: WebSocket, room_id: str):
+
+    await websocket.accept()
+
     room = rooms.get(room_id)
     if not room:
+        await websocket.send_json({"type": "error", "message": "room not found"})
         await websocket.close()
         return
 
-    await websocket.accept()
     room["connections"].append(websocket)
-
+    
     try:
         while True:
             data = await websocket.receive_json()
@@ -247,4 +250,5 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
+
 
