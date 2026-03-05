@@ -1,4 +1,5 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.responses import RedirectResponse
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 import uuid
@@ -10,6 +11,10 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+# 追加
+@app.get("/")
+async def root():
+    return RedirectResponse(url="/static/index.html")
 
 rooms = {}
 
@@ -133,4 +138,5 @@ async def broadcast(room, message):
 
     for socket in room["sockets"]:
         await socket.send_json(message)
+
 
