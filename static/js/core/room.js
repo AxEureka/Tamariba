@@ -149,8 +149,21 @@ function copyURL() {
 
 /* ===== 追加：遊び選択UI制御（これだけ追加） ===== */
 
-const gameBtn = document.getElementById("gameSelectBtn");
-const gameDropdown = document.getElementById("gameDropdown");
+let gameBtn;
+let gameDropdown;
+
+window.addEventListener("DOMContentLoaded", () => {
+  gameBtn = document.getElementById("gameSelectBtn");
+  gameDropdown = document.getElementById("gameDropdown");
+
+  if (gameBtn) {
+    gameBtn.onclick = (e) => {
+      e.stopPropagation();
+      gameDropdown.style.display =
+        gameDropdown.style.display === "none" ? "block" : "none";
+    };
+  }
+});
 
 if (gameBtn) {
   gameBtn.onclick = (e) => {
@@ -177,5 +190,7 @@ document.addEventListener("click", (e) => {
   }
 });
 
-loadRoom();
-updateMembers();
+window.addEventListener("DOMContentLoaded", () => {
+  loadRoom();
+  updateMembers();
+});
