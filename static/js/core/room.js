@@ -165,10 +165,43 @@ if (gameBtn) {
 function selectGame(type) {
   gameDropdown.style.display = "none";
   if (type === "quiz") {
-    alert("クイズ設定は次で実装します");
-  }
+  startQuiz();
+}
+async function startQuiz() {
+  const question = "日本の首都は？";
+  const choices = ["大阪", "東京", "名古屋", "福岡"];
+
+  await fetch(`/room/${roomId}/quiz/start`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: myName,
+      question,
+      choices
+    })
+  });
+}
+}
+}
+let socket;
+
+function connectSocket() {
+  socket = new WebSocket(
+    `ws://${location.host}/ws/${roomId}`
+  );
+
+  socket.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+
+    if (data.type === "new_question") {
+      showQuestion(data.question, data.choices);
+    }
+  };
 }
 
+function showQuestion(question, choices) {
+  alert("問題: " + question);
+}
 document.addEventListener("click", (e) => {
   if (
     gameDropdown &&
@@ -182,6 +215,8 @@ document.addEventListener("click", (e) => {
 /* 🔥 初期起動 */
 
 window.addEventListener("DOMContentLoaded", () => {
+  connectSocket();   // ← これを追加
+
   loadRoom().then(() => {
     updateMembers();
     setInterval(updateMembers, 2000);
