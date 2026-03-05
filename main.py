@@ -89,11 +89,10 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 room["answers"] = {}
 
                 await broadcast(room, {
-                    "type": "question",
+                    "type": "new_question",   # ←ここ
                     "question": data.get("question"),
                     "choices": data.get("choices")
                 })
-
 
             # =========================
             # 回答
@@ -134,3 +133,4 @@ async def broadcast(room, message):
 
     for socket in room["sockets"]:
         await socket.send_json(message)
+
