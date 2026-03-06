@@ -1,34 +1,58 @@
-import { createQuestionUI, showCorrectAnswer } from "./quiz-ui.js";
+// quiz-player.js
 
-export function startQuizPlayer(socket, container) {
+import {
+  createQuestionUI,
+  updateGraph,
+  showCorrectAnswer
+} from "./quiz-ui.js";
 
-  socket.addEventListener("message", (event) => {
+let container;
+let socket;
+let choices = [];
 
-    const data = JSON.parse(event.data);
+export function initQuizPlayer(ws, uiContainer) {
 
-    // 問題表示
-    if(data.type === "new_question") {
+  socket = ws;
+  container = uiContainer;
 
-      createQuestionUI(container, question, choices, (choiceIndex) => {
+  socket.addEventListener("message", e => {
 
-  socket.send(JSON.stringify({
-    type: "answer",
-    name: myName,
-    choice: choiceIndex
-  }));
+    const data = JSON.parse(e.data);
 
-});
+    if (data.type === "quiz_question") {
 
-    // 正解発表
-    if(data.type === "show_answer") {
+      choices = data.choices;
 
-      showCorrectAnswer(
+      createQuestionUI(
         container,
-        data.correct
+        data.question,
+        choices,
+        sendAnswer
       );
 
     }
 
+    if (data.type === "quiz_votes") {
+
+      updateGraph(data.votes, choices);
+
+    }
+
+    if (data.type === "quiz_correct") {
+
+      showCorrectAnswer(data.answer);
+
+    }
+
   });
+
+}
+
+function sendAnswer(index) {
+
+  socket.send(JSON.stringify({
+    type: "quiz_answer",
+    answer: index
+  }));
 
 }
