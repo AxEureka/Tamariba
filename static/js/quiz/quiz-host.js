@@ -1,107 +1,61 @@
-import { createQuestionUI, showResultGraph, showCorrectAnswer } from "./quiz-ui.js";
+// quiz-host.js
 
+let socket;
 let votes = [0,0,0,0];
-let currentAnswer = null;
+let correctAnswer = 0;
+let players = {};
 
-export function startQuizHost(socket, container) {
+export function initQuizHost(ws) {
 
-  const modal = document.createElement("div");
-  modal.innerHTML = `
-    <h3>問題作成</h3>
+  socket = ws;
 
-    <input id="q-text" placeholder="問題文"><br>
+  socket.addEventListener("message", e => {
 
-    <input id="c0" placeholder="選択肢 A"><br>
-    <input id="c1" placeholder="選択肢 B"><br>
-    <input id="c2" placeholder="選択肢 C"><br>
-    <input id="c3" placeholder="選択肢 D"><br>
+    const data = JSON.parse(e.data);
 
-    正解:
-    <select id="correct">
-      <option value="0">A</option>
-      <option value="1">B</option>
-      <option value="2">C</option>
-      <option value="3">D</option>
-    </select>
+    if (data.type === "quiz_answer") {
 
-    <br><br>
+      const a = data.answer;
 
-    <button id="send-question">送信</button>
+      if (a === undefined) return;
 
-    <h3>回答結果</h3>
-    <div id="host-results"></div>
+      votes[a]++;
 
-    <br>
-
-    <button id="reveal-answer">正解発表</button>
-  `;
-
-  container.innerHTML = "";
-  container.appendChild(modal);
-
-  // 問題送信
-  document.getElementById("send-question").onclick = () => {
-
-    const q = document.getElementById("q-text").value;
-
-    const choices = [
-      document.getElementById("c0").value,
-      document.getElementById("c1").value,
-      document.getElementById("c2").value,
-      document.getElementById("c3").value
-    ];
-
-    const correct = parseInt(document.getElementById("correct").value);
-
-    votes = [0,0,0,0];
-    currentAnswer = correct;
-
-    socket.send(JSON.stringify({
-      type: "new_question",
-      question: q,
-      choices
-    }));
-
-  };
-
-  // 正解発表
-  document.getElementById("reveal-answer").onclick = () => {
-
-    showCorrectAnswer(
-      document.getElementById("host-results"),
-      votes,
-      currentAnswer
-    );
-    socket.send(JSON.stringify({
-      type: "show_answer",
-      correct: currentAnswer
-    }));
-
-  };
-
-  // WebSocket受信
-  socket.addEventListener("message", (event) => {
-
-    const data = JSON.parse(event.data);
-
-    if(data.type === "vote_update") {
-
-      const answers = data.answers;
-
-      votes = [0,0,0,0];
-
-      for(const name in answers){
-        votes[answers[name]]++;
-      }
-      
-      showResultGraph(
-        document.getElementById("host-results"),
-        votes,
-        ["A","B","C","D"]
-      );
+      broadcastVotes();
 
     }
 
   });
+
+}
+
+export function sendQuestion(question, choices, answer) {
+
+  votes = [0,0,0,0];
+  correctAnswer = answer;
+
+  socket.send(JSON.stringify({
+    type: "quiz_question",
+    question: question,
+    choices: choices
+  }));
+
+}
+
+export function revealAnswer() {
+
+  socket.send(JSON.stringify({
+    type: "quiz_correct",
+    answer: correctAnswer
+  }));
+
+}
+
+function broadcastVotes() {
+
+  socket.send(JSON.stringify({
+    type: "quiz_votes",
+    votes: votes
+  }));
 
 }
