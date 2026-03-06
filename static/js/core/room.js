@@ -189,49 +189,11 @@ function connectSocket() {
     console.log("WebSocket connected");
   };
 
-  socket.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    console.log("WS message", data);
-
-    if (data.type === "new_question") {
-      showQuestion(data.question, data.choices);
-    }
-
-   console.log("投票状況更新:", data.answers);
-  };
-
   socket.onerror = (e) => {
     console.error("WebSocket error", e);
   };
 }
 
-function showQuestion(question, choices) {
-
-  const container = document.getElementById("game-container");
-
-  let html = `<h2>${question}</h2>`;
-
-  choices.forEach((c, i) => {
-    html += `
-      <button onclick="sendAnswer(${i})">
-        ${String.fromCharCode(65+i)}: ${c}
-      </button>
-      <br>
-    `;
-  });
-
-  container.innerHTML = html;
-}
-
-function sendAnswer(choiceIndex) {
-
-  socket.send(JSON.stringify({
-    type: "answer",
-    name: myName,
-    choice: choiceIndex
-  }));
-
-}
 document.addEventListener("click", (e) => {
   if (
     gameDropdown &&
