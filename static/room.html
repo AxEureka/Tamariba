@@ -100,9 +100,45 @@
 
 <div id="popup"></div>
 
-<div id="game-container"></div>
+<div id="game-container">
+
+  <!-- クイズUI -->
+  <div id="quiz-area" style="display:none; margin-top:20px;">
+
+    <h2 id="question"></h2>
+
+    <div id="choices"></div>
+
+    <div id="vote-result" style="margin-top:20px;">
+
+      <div>
+        A
+        <div id="bar-A" class="vote-bar"></div>
+      </div>
+
+      <div>
+        B
+        <div id="bar-B" class="vote-bar"></div>
+      </div>
+
+      <div>
+        C
+        <div id="bar-C" class="vote-bar"></div>
+      </div>
+
+      <div>
+        D
+        <div id="bar-D" class="vote-bar"></div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
 
 <script type="module" src="/static/js/core/room.js"></script>
 
 </body>
 </html>
+
