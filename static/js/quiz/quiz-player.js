@@ -1,5 +1,3 @@
-// quiz-player.js
-
 import {
   createQuestionUI,
   updateGraph,
@@ -10,49 +8,32 @@ let container;
 let socket;
 let choices = [];
 
-export function initQuizPlayer(ws, uiContainer) {
-
+// 名前を startQuizPlayer に変更
+export function startQuizPlayer(ws, uiContainer) {
   socket = ws;
   container = uiContainer;
 
   socket.addEventListener("message", e => {
-
     const data = JSON.parse(e.data);
 
     if (data.type === "quiz_question") {
-
       choices = data.choices;
-
-      createQuestionUI(
-        container,
-        data.question,
-        choices,
-        sendAnswer
-      );
-
+      createQuestionUI(container, data.question, choices, sendAnswer);
     }
 
     if (data.type === "quiz_votes") {
-
       updateGraph(data.votes, choices);
-
     }
 
     if (data.type === "quiz_correct") {
-
       showCorrectAnswer(data.answer);
-
     }
-
   });
-
 }
 
 function sendAnswer(index) {
-
   socket.send(JSON.stringify({
     type: "quiz_answer",
     answer: index
   }));
-
 }
