@@ -9,21 +9,15 @@ export function startQuizPlayer(socket, container) {
     // 問題表示
     if(data.type === "new_question") {
 
-      createQuestionUI(
-        container,
-        data.question,
-        data.choices,
-        (choiceIndex)=>{
+      createQuestionUI(container, question, choices, (choiceIndex) => {
 
-          socket.send(JSON.stringify({
-            type: "answer",
-            choice: choiceIndex
-          }));
+  socket.send(JSON.stringify({
+    type: "answer",
+    name: myName,
+    choice: choiceIndex
+  }));
 
-        }
-      );
-
-    }
+});
 
     // 正解発表
     if(data.type === "show_answer") {
