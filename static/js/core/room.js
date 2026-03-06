@@ -197,9 +197,7 @@ function connectSocket() {
       showQuestion(data.question, data.choices);
     }
 
-    if (data.type === "vote_update") {
-      console.log("投票状況更新:", data.votes);
-    }
+   console.log("投票状況更新:", data.answers);
   };
 
   socket.onerror = (e) => {
