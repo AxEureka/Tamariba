@@ -41,3 +41,12 @@ body {
   padding: 10px 16px;
   font-size: 16px;
 }
+
+.vote-bar {
+  height: 18px;
+  width: 0;
+  background: #4caf50;
+  margin: 4px 0 12px 0;
+  border-radius: 6px;
+  transition: width 0.3s;
+}
