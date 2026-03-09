@@ -254,9 +254,12 @@ const gameDropdown = document.getElementById("gameDropdown");
 const quizBtn = document.getElementById("quizBtn");
 
 if (quizBtn) {
-  quizBtn.onclick = () => selectGame("quiz");
+  quizBtn.onclick = (e) => {
+    e.stopPropagation();
+    selectGame("quiz");
+  };
 }
-
+  
 if (gameBtn) {
 gameBtn.onclick = (e) => {
 e.stopPropagation();
