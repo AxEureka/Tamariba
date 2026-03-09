@@ -3,57 +3,52 @@
 let socket;
 let votes = [0,0,0,0];
 let correctAnswer = 0;
-let players = {};
 
 export function startQuizHost(ws, container) {
 
 socket = ws;
 
-// ★ UI生成（追加）
-container.innerHTML = ` <div id="quiz-host-ui"> <h2>クイズ出題</h2>
+container.innerHTML = `
+<div id="quiz-host-ui">
+<h2>クイズ出題</h2>
 
-```
-  <input id="quiz-question" placeholder="問題文"><br><br>
+<input id="quiz-question" placeholder="問題文"><br><br>
 
-  <input class="quiz-choice" placeholder="選択肢1"><br>
-  <input class="quiz-choice" placeholder="選択肢2"><br>
-  <input class="quiz-choice" placeholder="選択肢3"><br>
-  <input class="quiz-choice" placeholder="選択肢4"><br><br>
+<input class="quiz-choice" placeholder="選択肢1"><br>
+<input class="quiz-choice" placeholder="選択肢2"><br>
+<input class="quiz-choice" placeholder="選択肢3"><br>
+<input class="quiz-choice" placeholder="選択肢4"><br><br>
 
-  正解:
-  <select id="quiz-answer">
-    <option value="0">1</option>
-    <option value="1">2</option>
-    <option value="2">3</option>
-    <option value="3">4</option>
-  </select>
+正解:
+<select id="quiz-answer">
+<option value="0">1</option>
+<option value="1">2</option>
+<option value="2">3</option>
+<option value="3">4</option>
+</select>
 
-  <br><br>
+<br><br>
 
-  <button id="send-question">出題</button>
-  <button id="reveal-answer">正解発表</button>
+<button id="send-question">出題</button>
+<button id="reveal-answer">正解発表</button>
 
-  <div id="vote-result"></div>
+<div id="vote-result"></div>
 
 </div>
-```
-
 `;
 
 document.getElementById("send-question").onclick = () => {
 
-```
 const q = document.getElementById("quiz-question").value;
 
 const choices = [...document.querySelectorAll(".quiz-choice")]
-  .map(i => i.value);
+.map(i => i.value);
 
 const answer = parseInt(
-  document.getElementById("quiz-answer").value
+document.getElementById("quiz-answer").value
 );
 
 sendQuestion(q, choices, answer);
-```
 
 };
 
@@ -63,23 +58,21 @@ revealAnswer();
 
 socket.addEventListener("message", e => {
 
-```
 const data = JSON.parse(e.data);
 
 if (data.type === "quiz_answer") {
 
-  const a = data.answer;
+const a = data.answer;
 
-  if (a === undefined) return;
+if (a === undefined) return;
 
-  votes[a]++;
+votes[a]++;
 
-  broadcastVotes();
+broadcastVotes();
 
-  updateVotes();
+updateVotes();
 
 }
-```
 
 });
 
@@ -116,7 +109,6 @@ votes: votes
 
 }
 
-// ★ 追加（結果表示）
 function updateVotes(){
 
 const box = document.getElementById("vote-result");
