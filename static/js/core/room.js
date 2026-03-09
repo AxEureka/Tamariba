@@ -48,7 +48,6 @@ async function loadRoom() {
     }
   }
 
-  if (!joined) lastMembers = [];
 }
 
 async function updateMembers() {
@@ -58,11 +57,26 @@ async function updateMembers() {
 
     const data = await res.json();
 
-    if (myName !== hostName && joined && !data.members.includes(myName)) {
+    let missingCount = 0;
+
+    if (myName !== hostName && joined) {
+
+  if (!data.members.includes(myName)) {
+
+    missingCount++;
+
+    if (missingCount >= 2) {
       location.href = "/static/kick.html";
       return;
     }
 
+  } else {
+
+    missingCount = 0;
+
+  }
+
+}
     document.getElementById("count").textContent = data.count;
 
     const joinedList = data.members.filter(m => !lastMembers.includes(m));
@@ -169,15 +183,26 @@ if (gameBtn) {
 }
 
 function selectGame(type) {
+
+  if (!socket || socket.readyState !== WebSocket.OPEN) {
+    console.warn("WebSocketまだ接続されてない");
+    return;
+  }
+
   gameDropdown.style.display = "none";
 
+  const container = document.getElementById("game-container");
+
   if (type === "quiz") {
+
     if (myName === hostName) {
-      startQuizHost(socket, document.getElementById("game-container"));
+      startQuizHost(socket, container);
     } else {
-      startQuizPlayer(socket, document.getElementById("game-container"));
+      startQuizPlayer(socket, container);
     }
+
   }
+
 }
 
 let socket;
