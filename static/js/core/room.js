@@ -227,20 +227,24 @@ setTimeout(connectSocket, 2000);
 
 document.addEventListener("click", (e) => {
 
-const gameBtn = document.getElementById("gameSelectBtn");
-const gameDropdown = document.getElementById("gameDropdown");
+  const gameBtn = document.getElementById("gameSelectBtn");
+  const gameDropdown = document.getElementById("gameDropdown");
 
-if (
-gameDropdown &&
-!gameDropdown.contains(e.target) &&
-e.target !== gameBtn
-) {
-gameDropdown.style.display = "none";
-}
+  // ★ クイズボタン
+  if (e.target.closest("#quizBtn")) {
+    e.stopPropagation();
+    selectGame("quiz");
+    return;
+  }
 
-if (e.target.id === "quizBtn") {
-selectGame("quiz");
-}
+  // ★ ドロップダウン外クリックで閉じる
+  if (
+    gameDropdown &&
+    !gameDropdown.contains(e.target) &&
+    e.target !== gameBtn
+  ) {
+    gameDropdown.style.display = "none";
+  }
 
 });
 
@@ -253,11 +257,7 @@ const gameDropdown = document.getElementById("gameDropdown");
 
 const quizBtn = document.getElementById("quizBtn");
 
-if (quizBtn) {
-  quizBtn.onclick = (e) => {
-    e.stopPropagation();
-    selectGame("quiz");
-  };
+
 }
   
 if (gameBtn) {
