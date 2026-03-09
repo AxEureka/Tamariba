@@ -231,11 +231,10 @@ function selectGame(type) {
 
 console.log("quiz clicked");
 
-if (!socket || socket.readyState !== WebSocket.OPEN) {
-console.warn("WebSocketまだ接続されてない");
-return;
+if (!socket) {
+  console.warn("WebSocket未接続");
+  return;
 }
-
 const gameDropdown = document.getElementById("gameDropdown");
 
 if (gameDropdown) gameDropdown.style.display = "none";
