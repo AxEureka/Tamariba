@@ -2,79 +2,111 @@
 
 export function createQuestionUI(container, question, choices, sendAnswer) {
 
-  container.innerHTML = "";
+if (!container) return;
 
-  const q = document.createElement("h2");
-  q.textContent = question;
-  container.appendChild(q);
+container.innerHTML = "";
 
-  const btnArea = document.createElement("div");
-  btnArea.className = "quiz-buttons";
+const wrapper = document.createElement("div");
+wrapper.className = "quiz-ui";
 
-  choices.forEach((choice, i) => {
+// 問題文
+const q = document.createElement("h2");
+q.textContent = question || "";
+wrapper.appendChild(q);
 
-    const btn = document.createElement("button");
-    btn.textContent = choice;
+// ボタンエリア
+const btnArea = document.createElement("div");
+btnArea.className = "quiz-buttons";
 
-    btn.onclick = () => {
+if (Array.isArray(choices)) {
+
+```
+choices.forEach((choice, i) => {
+
+  const btn = document.createElement("button");
+  btn.textContent = choice ?? "";
+
+  btn.onclick = () => {
+
+    if (typeof sendAnswer === "function") {
       sendAnswer(i);
-      btnArea.querySelectorAll("button").forEach(b => b.disabled = true);
-    };
+    }
 
-    btnArea.appendChild(btn);
+    // 回答後ボタン無効化
+    btnArea.querySelectorAll("button").forEach(b => {
+      b.disabled = true;
+    });
 
-  });
+  };
 
-  container.appendChild(btnArea);
+  btnArea.appendChild(btn);
 
-  const graph = document.createElement("div");
-  graph.id = "quiz-graph";
-  container.appendChild(graph);
+});
+```
+
+}
+
+wrapper.appendChild(btnArea);
+
+// 投票グラフ
+const graph = document.createElement("div");
+graph.id = "quiz-graph";
+graph.style.marginTop = "20px";
+
+wrapper.appendChild(graph);
+
+container.appendChild(wrapper);
 
 }
 
 export function updateGraph(votes, choices) {
 
-  const graph = document.getElementById("quiz-graph");
-  if (!graph) return;
+const graph = document.getElementById("quiz-graph");
+if (!graph) return;
 
-  graph.innerHTML = "";
+graph.innerHTML = "";
 
-  votes.forEach((v, i) => {
+if (!Array.isArray(votes)) return;
 
-    const row = document.createElement("div");
+votes.forEach((v, i) => {
 
-    const label = document.createElement("span");
-    label.textContent = choices[i] + " ";
+```
+const row = document.createElement("div");
+row.style.marginBottom = "6px";
 
-    const bar = document.createElement("div");
-    bar.style.display = "inline-block";
-    bar.style.height = "20px";
-    bar.style.background = "#4CAF50";
-    bar.style.width = (v * 40) + "px";
+const label = document.createElement("span");
+label.textContent = (choices && choices[i] ? choices[i] : "") + " ";
 
-    const count = document.createElement("span");
-    count.textContent = " " + v;
+const bar = document.createElement("div");
+bar.style.display = "inline-block";
+bar.style.height = "20px";
+bar.style.background = "#4CAF50";
+bar.style.width = (v * 40) + "px";
+bar.style.margin = "0 6px";
 
-    row.appendChild(label);
-    row.appendChild(bar);
-    row.appendChild(count);
+const count = document.createElement("span");
+count.textContent = v ?? 0;
 
-    graph.appendChild(row);
+row.appendChild(label);
+row.appendChild(bar);
+row.appendChild(count);
 
-  });
+graph.appendChild(row);
+```
+
+});
 
 }
 
 export function showCorrectAnswer(answerIndex) {
 
-  const graph = document.getElementById("quiz-graph");
-  if (!graph) return;
+const graph = document.getElementById("quiz-graph");
+if (!graph) return;
 
-  const rows = graph.children;
+const rows = graph.children;
 
-  if (rows[answerIndex]) {
-    rows[answerIndex].style.background = "#fff3a0";
-  }
+if (!rows || !rows[answerIndex]) return;
+
+rows[answerIndex].style.background = "#fff3a0";
 
 }
