@@ -1,60 +1,46 @@
-// quiz-host.js
+// quiz-player.js
+
+import {
+createQuestionUI,
+updateGraph,
+showCorrectAnswer
+} from "./quiz-ui.js";
 
 let socket;
-let votes = [0,0,0,0];
-let correctAnswer = 0;
+let container;
+let choices = [];
 
-export function startQuizHost(ws, container){
+export function startQuizPlayer(ws, uiContainer){
 
 socket = ws;
-
-container.innerHTML = `
-<div id="quiz-host-ui">
-
-<h2>クイズ出題</h2>
-
-<input id="quiz-question" placeholder="問題文"><br><br>
-
-<input class="quiz-choice" placeholder="選択肢1"><br>
-<input class="quiz-choice" placeholder="選択肢2"><br>
-<input class="quiz-choice" placeholder="選択肢3"><br>
-<input class="quiz-choice" placeholder="選択肢4"><br><br>
-
-正解:
-<select id="quiz-answer">
-<option value="0">1</option>
-<option value="1">2</option>
-<option value="2">3</option>
-<option value="3">4</option>
-</select>
-
-<br><br>
-
-<button id="send-question">出題</button>
-<button id="reveal-answer">正解発表</button>
-
-<h3>投票結果</h3>
-<div id="vote-result"></div>
-
-</div>
-`;
-
-document.getElementById("send-question").onclick = sendQuestion;
-document.getElementById("reveal-answer").onclick = revealAnswer;
+container = uiContainer;
 
 socket.addEventListener("message", e=>{
 
 const data = JSON.parse(e.data);
 
-if(data.type === "quiz_answer"){
+if(data.type === "quiz_question"){
 
-const a = data.answer;
-if(a === undefined) return;
+choices = data.choices;
 
-votes[a]++;
+createQuestionUI(
+container,
+data.question,
+choices,
+sendAnswer
+);
 
-broadcastVotes();
-updateVotes();
+}
+
+if(data.type === "quiz_votes"){
+
+updateGraph(data.votes, choices);
+
+}
+
+if(data.type === "quiz_correct"){
+
+showCorrectAnswer(data.answer);
 
 }
 
@@ -62,57 +48,11 @@ updateVotes();
 
 }
 
-function sendQuestion(){
-
-const q = document.getElementById("quiz-question").value;
-
-const choices = [...document.querySelectorAll(".quiz-choice")]
-.map(i=>i.value);
-
-const answer = parseInt(
-document.getElementById("quiz-answer").value
-);
-
-votes = [0,0,0,0];
-correctAnswer = answer;
+function sendAnswer(index){
 
 socket.send(JSON.stringify({
-type:"quiz_question",
-question:q,
-choices:choices
+type:"quiz_answer",
+answer:index
 }));
-
-updateVotes();
-
-}
-
-function revealAnswer(){
-
-socket.send(JSON.stringify({
-type:"quiz_correct",
-answer:correctAnswer
-}));
-
-}
-
-function broadcastVotes(){
-
-socket.send(JSON.stringify({
-type:"quiz_votes",
-votes:votes
-}));
-
-}
-
-function updateVotes(){
-
-const box = document.getElementById("vote-result");
-if(!box) return;
-
-box.innerHTML =
-"1: "+votes[0]+"票<br>"+
-"2: "+votes[1]+"票<br>"+
-"3: "+votes[2]+"票<br>"+
-"4: "+votes[3]+"票";
 
 }
