@@ -263,6 +263,7 @@ socket = new WebSocket(`${protocol}://${location.host}/ws/${roomId}`);
 
 socket.onopen = () => {
 console.log("WebSocket connected");
+window.socket = socket;   // ★これ追加
 };
 
 socket.onerror = (e) => {
