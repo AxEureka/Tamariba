@@ -255,11 +255,6 @@ window.addEventListener("DOMContentLoaded", () => {
 const gameBtn = document.getElementById("gameSelectBtn");
 const gameDropdown = document.getElementById("gameDropdown");
 
-const quizBtn = document.getElementById("quizBtn");
-
-
-}
-  
 if (gameBtn) {
 gameBtn.onclick = (e) => {
 e.stopPropagation();
