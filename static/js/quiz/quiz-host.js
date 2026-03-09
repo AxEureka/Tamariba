@@ -4,12 +4,13 @@ let socket;
 let votes = [0,0,0,0];
 let correctAnswer = 0;
 
-export function startQuizHost(ws, container) {
+export function startQuizHost(ws, container){
 
 socket = ws;
 
 container.innerHTML = `
 <div id="quiz-host-ui">
+
 <h2>クイズ出題</h2>
 
 <input id="quiz-question" placeholder="問題文"><br><br>
@@ -32,44 +33,27 @@ container.innerHTML = `
 <button id="send-question">出題</button>
 <button id="reveal-answer">正解発表</button>
 
+<h3>投票結果</h3>
 <div id="vote-result"></div>
 
 </div>
 `;
 
-document.getElementById("send-question").onclick = () => {
+document.getElementById("send-question").onclick = sendQuestion;
+document.getElementById("reveal-answer").onclick = revealAnswer;
 
-const q = document.getElementById("quiz-question").value;
-
-const choices = [...document.querySelectorAll(".quiz-choice")]
-.map(i => i.value);
-
-const answer = parseInt(
-document.getElementById("quiz-answer").value
-);
-
-sendQuestion(q, choices, answer);
-
-};
-
-document.getElementById("reveal-answer").onclick = () => {
-revealAnswer();
-};
-
-socket.addEventListener("message", e => {
+socket.addEventListener("message", e=>{
 
 const data = JSON.parse(e.data);
 
-if (data.type === "quiz_answer") {
+if(data.type === "quiz_answer"){
 
 const a = data.answer;
-
-if (a === undefined) return;
+if(a === undefined) return;
 
 votes[a]++;
 
 broadcastVotes();
-
 updateVotes();
 
 }
@@ -78,33 +62,44 @@ updateVotes();
 
 }
 
-export function sendQuestion(question, choices, answer) {
+function sendQuestion(){
+
+const q = document.getElementById("quiz-question").value;
+
+const choices = [...document.querySelectorAll(".quiz-choice")]
+.map(i=>i.value);
+
+const answer = parseInt(
+document.getElementById("quiz-answer").value
+);
 
 votes = [0,0,0,0];
 correctAnswer = answer;
 
 socket.send(JSON.stringify({
-type: "quiz_question",
-question: question,
-choices: choices
+type:"quiz_question",
+question:q,
+choices:choices
+}));
+
+updateVotes();
+
+}
+
+function revealAnswer(){
+
+socket.send(JSON.stringify({
+type:"quiz_correct",
+answer:correctAnswer
 }));
 
 }
 
-export function revealAnswer() {
+function broadcastVotes(){
 
 socket.send(JSON.stringify({
-type: "quiz_correct",
-answer: correctAnswer
-}));
-
-}
-
-function broadcastVotes() {
-
-socket.send(JSON.stringify({
-type: "quiz_votes",
-votes: votes
+type:"quiz_votes",
+votes:votes
 }));
 
 }
