@@ -178,6 +178,8 @@ showPopup("参加URLをコピーしました");
 
 function selectGame(type) {
 
+console.log("quiz clicked");
+
 if (!socket || socket.readyState !== WebSocket.OPEN) {
 console.warn("WebSocketまだ接続されてない");
 return;
