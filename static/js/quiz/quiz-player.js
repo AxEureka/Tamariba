@@ -10,44 +10,41 @@ let container;
 let socket;
 let choices = [];
 
-// ★ init → start に変更しただけ
 export function startQuizPlayer(ws, uiContainer) {
 
 socket = ws;
 container = uiContainer;
 
-socket.onmessage = e => {
+socket.addEventListener("message", e => {
 
-```
 const data = JSON.parse(e.data);
 
 if (data.type === "quiz_question") {
 
-  choices = data.choices;
+choices = data.choices;
 
-  createQuestionUI(
-    container,
-    data.question,
-    choices,
-    sendAnswer
-  );
+createQuestionUI(
+container,
+data.question,
+choices,
+sendAnswer
+);
 
 }
 
 if (data.type === "quiz_votes") {
 
-  updateGraph(data.votes, choices);
+updateGraph(data.votes, choices);
 
 }
 
 if (data.type === "quiz_correct") {
 
-  showCorrectAnswer(data.answer);
+showCorrectAnswer(data.answer);
 
 }
-```
 
-};
+});
 
 }
 
