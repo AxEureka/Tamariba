@@ -1,96 +1,80 @@
 // quiz-ui.js
 
-export function createQuestionUI(container, question, choices, onAnswer) {
+export function createQuestionUI(container, question, choices, sendAnswer) {
 
   container.innerHTML = "";
 
-  const modal = document.createElement("div");
-  modal.style.position = "fixed";
-  modal.style.top = "50%";
-  modal.style.left = "50%";
-  modal.style.transform = "translate(-50%, -50%)";
-  modal.style.background = "white";
-  modal.style.color = "black";
-  modal.style.padding = "30px";
-  modal.style.borderRadius = "12px";
-  modal.style.textAlign = "center";
-  modal.style.minWidth = "320px";
-  modal.id = "quiz-modal";
+  const q = document.createElement("h2");
+  q.textContent = question;
+  container.appendChild(q);
 
-  const title = document.createElement("h2");
-  title.textContent = question;
-  modal.appendChild(title);
+  const btnArea = document.createElement("div");
+  btnArea.className = "quiz-buttons";
 
-  choices.forEach((c, i) => {
+  choices.forEach((choice, i) => {
 
     const btn = document.createElement("button");
-    btn.textContent = `${String.fromCharCode(65+i)}: ${c}`;
-    btn.style.display = "block";
-    btn.style.margin = "10px auto";
-    btn.style.padding = "10px 20px";
+    btn.textContent = choice;
 
     btn.onclick = () => {
-
-      const buttons = modal.querySelectorAll("button");
-      buttons.forEach(b => b.disabled = true);
-
-      onAnswer(i);
+      sendAnswer(i);
+      btnArea.querySelectorAll("button").forEach(b => b.disabled = true);
     };
 
-    modal.appendChild(btn);
+    btnArea.appendChild(btn);
+
   });
 
-  const result = document.createElement("div");
-  result.id = "quiz-result";
-  result.style.marginTop = "20px";
+  container.appendChild(btnArea);
 
-  modal.appendChild(result);
+  const graph = document.createElement("div");
+  graph.id = "quiz-graph";
+  container.appendChild(graph);
 
-  container.appendChild(modal);
 }
 
 export function updateGraph(votes, choices) {
 
-  const result = document.getElementById("quiz-result");
-  if (!result) return;
+  const graph = document.getElementById("quiz-graph");
+  if (!graph) return;
 
-  result.innerHTML = "<h4>投票状況</h4>";
+  graph.innerHTML = "";
 
-  const max = Math.max(...votes, 1);
-
-  choices.forEach((c, i) => {
-
-    const count = votes[i] || 0;
+  votes.forEach((v, i) => {
 
     const row = document.createElement("div");
 
     const label = document.createElement("span");
-    label.textContent = `${String.fromCharCode(65+i)}: ${c} (${count})`;
+    label.textContent = choices[i] + " ";
 
     const bar = document.createElement("div");
-    bar.style.height = "14px";
-    bar.style.width = (count / max * 200) + "px";
-    bar.style.background = "skyblue";
-    bar.style.margin = "4px auto";
+    bar.style.display = "inline-block";
+    bar.style.height = "20px";
+    bar.style.background = "#4CAF50";
+    bar.style.width = (v * 40) + "px";
+
+    const count = document.createElement("span");
+    count.textContent = " " + v;
 
     row.appendChild(label);
     row.appendChild(bar);
+    row.appendChild(count);
 
-    result.appendChild(row);
+    graph.appendChild(row);
+
   });
 
 }
 
 export function showCorrectAnswer(answerIndex) {
 
-  const result = document.getElementById("quiz-result");
-  if (!result) return;
+  const graph = document.getElementById("quiz-graph");
+  if (!graph) return;
 
-  const msg = document.createElement("h3");
-  msg.style.color = "red";
-  msg.textContent =
-    `正解は ${String.fromCharCode(65+answerIndex)} です！`;
+  const rows = graph.children;
 
-  result.appendChild(msg);
+  if (rows[answerIndex]) {
+    rows[answerIndex].style.background = "#fff3a0";
+  }
 
 }
