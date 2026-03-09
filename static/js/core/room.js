@@ -238,6 +238,10 @@ e.target !== gameBtn
 gameDropdown.style.display = "none";
 }
 
+if (e.target.id === "quizBtn") {
+selectGame("quiz");
+}
+
 });
 
 /* 🔥 初期起動 */
