@@ -62,18 +62,25 @@
   <button id="gameSelectBtn" style="display:none;">🎮 遊びを選ぶ</button>
 
   <div id="gameDropdown" style="
-    display:none;
-    position:absolute;
-    top:45px;
-    left:0;
-    background:rgba(0,0,0,0.95);
-    padding:10px 14px;
-    border-radius:12px;
-    min-width:160px;
+  display:none;
+  position:absolute;
+  top:45px;
+  left:0;
+  background:rgba(0,0,0,0.95);
+  padding:10px 14px;
+  border-radius:12px;
+  min-width:160px;
+  z-index:1000;
   ">
-    <div id="quizBtn" style="padding:6px 0; cursor:pointer;">
-      クイズ
-    </div>
+    
+    <div id="quizBtn" style="
+    padding:6px 0;
+    cursor:pointer;
+    position:relative;
+    z-index:2000;
+    ">
+    クイズ
+</div>
     <div style="padding:6px 0; opacity:0.4;">
       大喜利（準備中）
     </div>
@@ -106,6 +113,7 @@
 
 </body>
 </html>
+
 
 
 
