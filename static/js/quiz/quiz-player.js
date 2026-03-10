@@ -10,9 +10,11 @@ let choices = [];
 
 export function startQuizPlayer(ws, uiContainer){
 
+console.log("quiz player start");
+
 socket = ws;
 container = uiContainer;
-
+  
 socket.addEventListener("message", e=>{
 
 const data = JSON.parse(e.data);
