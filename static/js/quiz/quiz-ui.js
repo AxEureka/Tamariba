@@ -20,29 +20,25 @@ btnArea.className = "quiz-buttons";
 
 if (Array.isArray(choices)) {
 
-```
-(choices || []).forEach((choice, i) => {
+choices.forEach((choice, i) => {
 
-  const btn = document.createElement("button");
-  btn.textContent = choice ?? "";
+const btn = document.createElement("button");
 
-  btn.onclick = () => {
+btn.textContent = String(choice ?? "");
 
-    if (typeof sendAnswer === "function") {
-      sendAnswer(i);
-    }
+btn.onclick = () => {
 
-    // 回答後ボタン無効化
-    btnArea.querySelectorAll("button").forEach(b => {
-      b.disabled = true;
-    });
+sendAnswer?.(i);
 
-  };
+btnArea.querySelectorAll("button").forEach(b=>{
+b.disabled = true;
+});
 
-  btnArea.appendChild(btn);
+};
+
+btnArea.appendChild(btn);
 
 });
-```
 
 }
 
