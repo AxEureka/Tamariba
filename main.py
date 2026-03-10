@@ -138,7 +138,8 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
         while True:
 
             data = await websocket.receive_json()
-
+            print("WS受信:", data)
+            
             # =========================
             # 新しい問題
             # =========================
@@ -190,3 +191,4 @@ async def broadcast(room, message):
 
     for socket in room["sockets"]:
         await socket.send_json(message)
+
