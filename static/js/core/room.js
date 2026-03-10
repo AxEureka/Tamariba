@@ -232,9 +232,10 @@ function selectGame(type) {
 console.log("quiz clicked");
 
 if (!socket) {
-  console.warn("WebSocket未接続");
-  return;
+console.warn("WebSocket未接続");
+return;
 }
+
 const gameDropdown = document.getElementById("gameDropdown");
 
 if (gameDropdown) gameDropdown.style.display = "none";
@@ -244,9 +245,13 @@ const container = document.getElementById("game-container");
 if (type === "quiz") {
 
 if (myName === hostName) {
+
+socket.send(JSON.stringify({
+type: "start_quiz"
+}));
+
 startQuizHost(socket, container);
-} else {
-startQuizPlayer(socket, container);
+
 }
 
 }
@@ -262,17 +267,39 @@ const protocol = location.protocol === "https:" ? "wss" : "ws";
 socket = new WebSocket(`${protocol}://${location.host}/ws/${roomId}`);
 
 socket.onopen = () => {
-  console.log("WebSocket connected");
-  window.socket = socket;
+console.log("WebSocket connected");
+window.socket = socket;
+};
+
+socket.onmessage = (e) => {
+
+let msg;
+
+try {
+msg = JSON.parse(e.data);
+} catch {
+return;
+}
+
+if (msg.type === "start_quiz") {
+
+const container = document.getElementById("game-container");
+
+if (myName !== hostName) {
+startQuizPlayer(socket, container);
+}
+
+}
+
 };
 
 socket.onerror = (e) => {
-  console.error("WebSocket error", e);
+console.error("WebSocket error", e);
 };
 
 socket.onclose = () => {
-  console.log("WebSocket closed, reconnecting...");
-  setTimeout(connectSocket, 2000);
+console.log("WebSocket closed, reconnecting...");
+setTimeout(connectSocket, 2000);
 };
 
 }
