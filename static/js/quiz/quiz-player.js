@@ -14,10 +14,16 @@ console.log("quiz player start");
 
 socket = ws;
 container = uiContainer;
-  
-socket.addEventListener("message", e=>{
 
-const data = JSON.parse(e.data);
+socket.addEventListener("message",(e)=>{
+
+let data;
+
+try{
+data = JSON.parse(e.data);
+}catch{
+return;
+}
 
 if(data.type === "quiz_question"){
 
@@ -53,15 +59,10 @@ function sendAnswer(index){
 const params = new URLSearchParams(location.search);
 const name = params.get("name") || "guest";
 
-btn.onclick = () => {
-
 socket.send(JSON.stringify({
 type:"quiz_answer",
-name: myName,
+name: name,
 choice: index
 }));
 
-btn.disabled = true;
-
-};
 }
