@@ -27,6 +27,9 @@ return;
 
 if(data.type === "quiz_question"){
 
+console.log("choices受信:", data.choices);
+console.log("型:", typeof data.choices);
+
 choices = data.choices;
 
 createQuestionUI(
