@@ -58,8 +58,10 @@ updateVotesFromServer(data.votes);
 
 function sendQuestion(){
 
-const q = document.getElementById("quiz-question").value;
+console.log("出題ボタン押された");
 
+const q = document.getElementById("quiz-question").value;
+  
 const choices = [...document.querySelectorAll(".quiz-choice")]
 .map(i=>i.value);
 
