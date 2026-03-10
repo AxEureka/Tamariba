@@ -32,8 +32,8 @@ choices = data.choices;
 createQuestionUI(
 container,
 data.question,
-choices,
-sendAnswer
+data.choices,
+(index)=>sendAnswer(index)
 );
 
 }
@@ -61,8 +61,8 @@ const name = params.get("name") || "guest";
 
 socket.send(JSON.stringify({
 type:"quiz_answer",
-name: name,
-choice: index
+name:name,
+choice:index
 }));
 
 }
