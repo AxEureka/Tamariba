@@ -120,7 +120,8 @@ async def kick_member(room_id: str, data: dict):
 async def websocket_endpoint(websocket: WebSocket, room_id: str):
 
     await websocket.accept()
-
+    print("WS接続:", room_id)
+    
     if room_id not in rooms:
         rooms[room_id] = {
             "room": "room",
@@ -191,4 +192,5 @@ async def broadcast(room, message):
 
     for socket in room["sockets"]:
         await socket.send_json(message)
+
 
