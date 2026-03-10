@@ -48,9 +48,13 @@ showCorrectAnswer(data.correct);
 
 function sendAnswer(index){
 
+const params = new URLSearchParams(location.search);
+const name = params.get("name") || "guest";
+
 socket.send(JSON.stringify({
 type:"quiz_answer",
-name: playerName,
+name:name,
 choice:index
 }));
+
 }
