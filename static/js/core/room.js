@@ -262,8 +262,14 @@ const protocol = location.protocol === "https:" ? "wss" : "ws";
 socket = new WebSocket(`${protocol}://${location.host}/ws/${roomId}`);
 
 socket.onopen = () => {
-console.log("WebSocket connected");
-window.socket = socket;   // ★これ追加
+  console.log("WebSocket connected");
+
+  window.socket = socket;
+
+  socket.addEventListener("message", e => {
+    console.log("WS MESSAGE:", e.data);
+  });
+
 };
 
 socket.onerror = (e) => {
