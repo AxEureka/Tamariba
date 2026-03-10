@@ -263,25 +263,16 @@ socket = new WebSocket(`${protocol}://${location.host}/ws/${roomId}`);
 
 socket.onopen = () => {
   console.log("WebSocket connected");
-
   window.socket = socket;
-
-  socket.addEventListener("message", e => {
-    console.log("WS MESSAGE:", e.data);
-  });
-
 };
 
 socket.onerror = (e) => {
-console.error("WebSocket error", e);
+  console.error("WebSocket error", e);
 };
 
 socket.onclose = () => {
-
-console.log("WebSocket closed, reconnecting...");
-
-setTimeout(connectSocket, 2000);
-
+  console.log("WebSocket closed, reconnecting...");
+  setTimeout(connectSocket, 2000);
 };
 
 }
