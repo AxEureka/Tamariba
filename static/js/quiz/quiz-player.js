@@ -61,5 +61,7 @@ name: myName,
 choice: index
 }));
 
+btn.disabled = true;
+
 };
 }
