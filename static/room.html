@@ -1,249 +1,169 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>ルーム</title>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-  <style>
-    html, body {
-      margin: 0;
-      height: 100%;
-      font-family: sans-serif;
-      color: white;
-    }
-    body {
-      background-size: cover;
-      background-position: center;
-    }
-    .exit {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 8px 14px;
-      cursor: pointer;
-    }
-    .room-ui {
-      background: rgba(0,0,0,0.75);
-      padding: 28px;
-      margin: 40px;
-      border-radius: 16px;
-      max-width: 720px;
-    }
-    button {
-      cursor: pointer;
-      padding: 6px 12px;
-      margin-left: 6px;
-    }
-    .section {
-      margin-top: 24px;
-      padding-top: 16px;
-      border-top: 1px solid rgba(255,255,255,0.3);
-    }
-    #members {
-      margin-top: 10px;
-    }
-    #popup {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: rgba(0,0,0,0.9);
-      padding: 12px 18px;
-      border-radius: 10px;
-      display: none;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>ルーム</title>
+
+<style>
+
+html, body{
+margin:0;
+height:100%;
+font-family:sans-serif;
+color:white;
+}
+
+body{
+background-size:cover;
+background-position:center;
+}
+
+/* 退出 */
+.exit{
+position:fixed;
+top:20px;
+right:20px;
+padding:8px 14px;
+cursor:pointer;
+}
+
+/* UI */
+.room-ui{
+background:rgba(0,0,0,0.75);
+padding:28px;
+margin:40px;
+border-radius:16px;
+max-width:720px;
+}
+
+/* ボタン */
+button{
+cursor:pointer;
+padding:6px 12px;
+margin-left:6px;
+}
+
+/* セクション */
+.section{
+margin-top:24px;
+padding-top:16px;
+border-top:1px solid rgba(255,255,255,0.3);
+}
+
+/* メンバー */
+#members{
+margin-top:10px;
+}
+
+/* ポップアップ */
+#popup{
+position:fixed;
+top:20px;
+right:20px;
+background:rgba(0,0,0,0.9);
+padding:12px 18px;
+border-radius:10px;
+display:none;
+}
+
+/* ゲームメニュー */
+#gameDropdown{
+display:none;
+position:absolute;
+top:45px;
+left:0;
+background:rgba(0,0,0,0.95);
+padding:10px 14px;
+border-radius:12px;
+min-width:160px;
+z-index:1000;
+}
+
+.gameItem{
+padding:6px 0;
+cursor:pointer;
+}
+
+.gameDisabled{
+padding:6px 0;
+opacity:0.4;
+}
+
+</style>
 </head>
+
+
 <body>
 
-  <!-- 退出ボタン -->
-  <button class="exit" onclick="exitRoom()">退出</button>
+<button class="exit" onclick="exitRoom()">退出</button>
 
-  <!-- ルームUI -->
-  <div class="room-ui">
-    <h1 id="room-title">読み込み中...</h1>
-    <p>
-      ルームID：<strong id="room-id"></strong> /
-      参加人数：<strong id="count">0</strong>人
-      <button onclick="toggleMembers()">メンバーを見る</button>
-    </p>
-    <div id="members" style="display:none;"></div>
 
-    <!-- 親用招待エリア -->
-    <div id="host-area" class="section" style="display:none;">
-      <h3>🔗 招待</h3>
-      <input id="join-url" readonly style="width:75%;">
-      <button onclick="copyURL()">コピー</button>
-      <div id="qrcode" style="margin-top:15px;"></div>
-    </div>
-  </div>
+<div style="position:relative;display:flex;align-items:center;gap:12px;">
 
-  <!-- ポップアップ通知 -->
-  <div id="popup"></div>
+<h1 id="room-title" style="margin:0;">読み込み中...</h1>
 
-  <script>
-    const params = new URLSearchParams(location.search);
-    const roomId = params.get("room");
-    let myName = params.get("name") || "";
-    let hostName = "";
-    let lastMembers = [];
-    let joined = false;
+<button id="gameSelectBtn" style="display:none;">
+🎮 遊びを選ぶ
+</button>
 
-    // ===== 初期ロード =====
-    async function loadRoom() {
-      const res = await fetch(`/room/${roomId}`);
-      if (!res.ok) return;
 
-      const data = await res.json();
-      hostName = data.host;
-      if (!myName) myName = hostName;
+<div id="gameDropdown">
 
-      document.body.style.backgroundImage = `url('/static/themes/${data.theme}.jpg')`;
-      document.getElementById("room-title").textContent = `${data.room}（親：${data.host}さん）`;
-      document.getElementById("room-id").textContent = roomId;
+<div id="quizBtn" class="gameItem">
+クイズ
+</div>
 
-      // 親UI
-      if (myName === hostName) {
-        document.getElementById("host-area").style.display = "block";
-        const joinURL = window.location.origin + "/static/join.html?room=" + roomId;
-        document.getElementById("join-url").value = joinURL;
-        new QRCode(document.getElementById("qrcode"), joinURL);
-      }
+<div class="gameDisabled">
+大喜利（準備中）
+</div>
 
-      // 子はまだ join していなければ一度だけ join
-      if (myName !== hostName && !joined) {
-        joined = true; // ←先にtrueにする
-        try {
-          await fetch(`/room/${roomId}/join`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: myName })
-          });
-        } catch (e) {
-          console.error("参加処理でエラー", e);
-        }
-      }
+<div class="gameDisabled">
+トーク（準備中）
+</div>
 
-      // 初回の lastMembers 初期化
-      if (!joined) lastMembers = [];
-    }
+</div>
 
-    // ===== メンバー更新 =====
-    async function updateMembers() {
-      try {
-        const res = await fetch(`/room/${roomId}/members`);
-        if (!res.ok) return;
+</div>
 
-        const data = await res.json();
 
-        // 自分が消された場合（親に kick された or ルーム閉鎖）
-        if (myName !== hostName && joined && !data.members.includes(myName)) {
-          location.href = "/static/kick.html";
-          return;
-        }
+<p>
+ルームID：
+<strong id="room-id"></strong>
+/
+参加人数：
+<strong id="count">0</strong>人
 
-        document.getElementById("count").textContent = data.count;
+<button onclick="toggleMembers()">
+メンバーを見る
+</button>
+</p>
 
-        const joinedList = data.members.filter(m => !lastMembers.includes(m));
-        const leftList = lastMembers.filter(m => !data.members.includes(m));
 
-        // 入退室通知（親は表示しない）
-        joinedList.forEach(m => {
-          if (m !== myName && m !== hostName) showPopup(`${m}さんが入室しました`);
-        });
-        leftList.forEach(m => {
-          if (m !== myName) showPopup(`${m}さんが退出しました`);
-        });
+<div id="members" style="display:none;"></div>
 
-        lastMembers = [...data.members];
 
-        // メンバーリスト作成
-        const list = [];
-        if (myName === hostName) {
-          list.push(`<strong>${hostName} (親)</strong>`);
-          data.members.forEach(m => {
-            if (m === hostName) return;
-            list.push(`・${m} <button onclick="kickMember('${m}')">退室させる</button>`);
-          });
-        } else {
-          list.push(`<strong>${hostName} (親)</strong>`);
-          data.members.forEach(m => {
-            if (m === hostName || m === myName) return;
-            list.push(`・${m}`);
-          });
-          list.push(`・${myName} (自分)`);
-        }
-        document.getElementById("members").innerHTML = list.join("<br>");
-      } catch (e) {
-        console.error("メンバー更新エラー", e);
-      }
-    }
+<!-- ホスト用 -->
+<div id="host-area" class="section" style="display:none;">
 
-    setInterval(updateMembers, 2000);
+<h3>🔗 招待</h3>
 
-    // ===== 親が子を退室させる =====
-    async function kickMember(name) {
-      if (!confirm(`${name}さんを退室させますか？`)) return;
-      await fetch(`/room/${roomId}/kick`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name })
-      });
-    }
+<input id="join-url" readonly style="width:75%">
 
-    // ===== 自主退室 =====
-    async function exitRoom() {
-      if (!confirm("退室しますか？")) return;
+<button onclick="copyURL()">コピー</button>
 
-      if (myName !== hostName) {
-        await fetch(`/room/${roomId}/kick`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: myName })
-        });
-      } else {
-        // 親退室 → 子全員強制kick
-        const res = await fetch(`/room/${roomId}/members`);
-        if (res.ok) {
-          const data = await res.json();
-          for (const m of data.members) {
-            if (m !== hostName) {
-              await fetch(`/room/${roomId}/kick`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: m })
-              });
-            }
-          }
-        }
-      }
-      location.href = "/static/kick.html";
-    }
+<div id="qrcode" style="margin-top:15px;"></div>
 
-    // ===== メンバーリスト表示切替 =====
-    function toggleMembers() {
-      const box = document.getElementById("members");
-      box.style.display = box.style.display === "none" ? "block" : "none";
-    }
+</div>
 
-    // ===== ポップアップ表示 =====
-    function showPopup(text) {
-      const popup = document.getElementById("popup");
-      popup.textContent = text;
-      popup.style.display = "block";
-      setTimeout(() => popup.style.display = "none", 3000);
-    }
 
-    // ===== コピー機能 =====
-    function copyURL() {
-      const input = document.getElementById("join-url");
-      navigator.clipboard.writeText(input.value);
-      showPopup("参加URLをコピーしました");
-    }
+<div id="popup"></div>
 
-    // ===== 初回ロード =====
-    loadRoom();
-    updateMembers();
-  </script>
+
+<!-- ゲーム表示 -->
+<div id="game-container"></div>
+
+
+<script type="module" src="/static/js/core/room.js"></script>
 
 </body>
 </html>
