@@ -53,10 +53,13 @@ function sendAnswer(index){
 const params = new URLSearchParams(location.search);
 const name = params.get("name") || "guest";
 
+btn.onclick = () => {
+
 socket.send(JSON.stringify({
 type:"quiz_answer",
-name:name,
-choice:index
+name: myName,
+choice: index
 }));
 
+};
 }
