@@ -21,7 +21,7 @@ btnArea.className = "quiz-buttons";
 if (Array.isArray(choices)) {
 
 ```
-choices.forEach((choice, i) => {
+(choices || []).forEach((choice, i) => {
 
   const btn = document.createElement("button");
   btn.textContent = choice ?? "";
