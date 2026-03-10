@@ -59,6 +59,7 @@ updateVotesFromServer(data.votes);
 function sendQuestion(){
 
 console.log("出題ボタン押された");
+console.log("socket状態:", socket.readyState);
 
 const q = document.getElementById("quiz-question").value;
   
