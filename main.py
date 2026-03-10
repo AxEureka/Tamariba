@@ -135,14 +135,15 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
     room["sockets"].append(websocket)
 
     try:
-
         while True:
 
             data = await websocket.receive_json()
 
+            # =========================
             # 新しい問題
+            # =========================
             if data.get("type") == "quiz_question":
-                
+
                 room["answers"] = {}
 
                 await broadcast(room, {
@@ -151,7 +152,9 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     "choices": data.get("choices")
                 })
 
+            # =========================
             # 回答
+            # =========================
             if data.get("type") == "quiz_answer":
 
                 name = data.get("name")
@@ -160,13 +163,14 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 if name:
                     room["answers"][name] = choice
 
-               await broadcast(room, {
+                await broadcast(room, {
                     "type": "quiz_votes",
                     "votes": room["answers"]
-               })
+                })
 
-
+            # =========================
             # 正解発表
+            # =========================
             if data.get("type") == "quiz_correct":
 
                 await broadcast(room, {
@@ -175,7 +179,6 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 })
 
     except WebSocketDisconnect:
-
         room["sockets"].remove(websocket)
 
 
@@ -186,4 +189,3 @@ async def broadcast(room, message):
 
     for socket in room["sockets"]:
         await socket.send_json(message)
-
