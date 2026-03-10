@@ -227,27 +227,26 @@ showPopup("参加URLをコピーしました");
 
 /* ===== 遊び選択 ===== */
 
-function selectGame(type) {
+function selectGame(type){
 
 console.log("quiz clicked");
 
-if (!socket) {
+if (!socket || socket.readyState !== WebSocket.OPEN) {
 console.warn("WebSocket未接続");
 return;
 }
 
 const gameDropdown = document.getElementById("gameDropdown");
-
 if (gameDropdown) gameDropdown.style.display = "none";
 
 const container = document.getElementById("game-container");
 
-if (type === "quiz") {
+if (type === "quiz"){
 
-if (myName === hostName) {
+if (myName === hostName){
 
 socket.send(JSON.stringify({
-type: "start_quiz"
+type:"start_quiz"
 }));
 
 startQuizHost(socket, container);
