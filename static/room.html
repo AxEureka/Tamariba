@@ -1,115 +1,192 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>ルーム</title>
-    <style>
-    html, body {
-      margin: 0;
-      height: 100%;
-      font-family: sans-serif;
-      color: white;
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+import uuid
+import os
+
+app = FastAPI()
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+@app.get("/")
+async def root():
+    return RedirectResponse(url="/static/index.html")
+
+
+rooms = {}
+
+
+# =========================
+# ルーム作成
+# =========================
+@app.post("/create_room")
+async def create_room(data: dict):
+
+    room_id = str(uuid.uuid4())[:8]
+
+    host = data.get("host_name")
+    room_name = data.get("room_name")
+    theme = data.get("theme", "mansion")
+
+    rooms[room_id] = {
+        "room": room_name,
+        "host": host,
+        "theme": theme,
+        "members": [host],
+        "sockets": [],
+        "answers": {}
     }
-    body {
-      background-size: cover;
-      background-position: center;
+
+    return {"room_id": room_id}
+
+
+# =========================
+# ルーム情報取得
+# =========================
+@app.get("/room/{room_id}")
+async def get_room(room_id: str, name: str = ""):
+
+    if room_id not in rooms:
+        return JSONResponse({"error": "room not found"}, status_code=404)
+
+    room = rooms[room_id]
+
+    return {
+        "room": room["room"],
+        "host": room["host"],
+        "theme": room["theme"]
     }
-    .exit {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 8px 14px;
-      cursor: pointer;
+
+
+# =========================
+# 入室
+# =========================
+@app.post("/room/{room_id}/join")
+async def join_room(room_id: str, data: dict):
+
+    if room_id not in rooms:
+        return {"ok": False}
+
+    name = data.get("name")
+
+    if name and name not in rooms[room_id]["members"]:
+        rooms[room_id]["members"].append(name)
+
+    return {"ok": True}
+
+
+# =========================
+# メンバー取得
+# =========================
+@app.get("/room/{room_id}/members")
+async def get_members(room_id: str):
+
+    if room_id not in rooms:
+        return {"members": [], "count": 0}
+
+    members = rooms[room_id]["members"]
+
+    return {
+        "members": members,
+        "count": len(members)
     }
-    .room-ui {
-      background: rgba(0,0,0,0.75);
-      padding: 28px;
-      margin: 40px;
-      border-radius: 16px;
-      max-width: 720px;
-    }
-    button {
-      cursor: pointer;
-      padding: 6px 12px;
-      margin-left: 6px;
-    }
-    .section {
-      margin-top: 24px;
-      padding-top: 16px;
-      border-top: 1px solid rgba(255,255,255,0.3);
-    }
-    #members {
-      margin-top: 10px;
-    }
-    #popup {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: rgba(0,0,0,0.9);
-      padding: 12px 18px;
-      border-radius: 10px;
-      display: none;
-    }
-  </style>
-</head>
-<body>
 
-<button class="exit" onclick="exitRoom()">退出</button>
 
-<div style="position:relative; display:flex; align-items:center; gap:12px;">
-  <h1 id="room-title" style="margin:0;">読み込み中...</h1>
+# =========================
+# キック
+# =========================
+@app.post("/room/{room_id}/kick")
+async def kick_member(room_id: str, data: dict):
 
-  <button id="gameSelectBtn" style="display:none;">🎮 遊びを選ぶ</button>
+    if room_id not in rooms:
+        return {"ok": False}
 
-  <div id="gameDropdown" style="
-  display:none;
-  position:absolute;
-  top:45px;
-  left:0;
-  background:rgba(0,0,0,0.95);
-  padding:10px 14px;
-  border-radius:12px;
-  min-width:160px;
-  z-index:1000;
-  ">
-    
-    <div id="quizBtn" style="
-    padding:6px 0;
-    cursor:pointer;
-    position:relative;
-    z-index:2000;
-    ">
-    クイズ
-</div>
-    <div style="padding:6px 0; opacity:0.4;">
-      大喜利（準備中）
-    </div>
-    <div style="padding:6px 0; opacity:0.4;">
-      トーク（準備中）
-    </div>
-  </div>
-</div>
+    name = data.get("name")
 
-<p>
-  ルームID：<strong id="room-id"></strong> /
-  参加人数：<strong id="count">0</strong>人
-  <button onclick="toggleMembers()">メンバーを見る</button>
-</p>
+    if name in rooms[room_id]["members"]:
+        rooms[room_id]["members"].remove(name)
 
-<div id="members" style="display:none;"></div>
+    return {"ok": True}
 
-<div id="host-area" class="section" style="display:none;">
-  <h3>🔗 招待</h3>
-  <input id="join-url" readonly style="width:75%;">
-  <button onclick="copyURL()">コピー</button>
-  <div id="qrcode" style="margin-top:15px;"></div>
-</div>
 
-<div id="popup"></div>
+# =========================
+# WebSocket
+# =========================
+@app.websocket("/ws/{room_id}")
+async def websocket_endpoint(websocket: WebSocket, room_id: str):
 
-<div id="game-container"></div>
+    await websocket.accept()
 
-<script type="module" src="/static/js/core/room.js"></script>
+    if room_id not in rooms:
+        rooms[room_id] = {
+            "room": "room",
+            "host": "",
+            "theme": "mansion",
+            "members": [],
+            "sockets": [],
+            "answers": {}
+        }
 
-</body>
-</html>
+    room = rooms[room_id]
+    room["sockets"].append(websocket)
+
+    try:
+        while True:
+
+            data = await websocket.receive_json()
+
+            # =========================
+            # 新しい問題
+            # =========================
+            if data.get("type") == "quiz_question":
+
+                room["answers"] = {}
+
+                await broadcast(room, {
+                    "type": "quiz_question",
+                    "question": data.get("question"),
+                    "choices": data.get("choices")
+                })
+
+            # =========================
+            # 回答
+            # =========================
+            if data.get("type") == "quiz_answer":
+
+                name = data.get("name")
+                choice = data.get("choice")
+
+                if name:
+                    room["answers"][name] = choice
+
+                await broadcast(room, {
+                    "type": "quiz_votes",
+                    "votes": room["answers"]
+                })
+
+            # =========================
+            # 正解発表
+            # =========================
+            if data.get("type") == "quiz_correct":
+
+                await broadcast(room, {
+                    "type": "quiz_correct",
+                    "correct": data.get("correct")
+                })
+
+    except WebSocketDisconnect:
+        if websocket in room["sockets"]:
+            room["sockets"].remove(websocket)
+
+
+# =========================
+# broadcast
+# =========================
+async def broadcast(room, message):
+
+    for socket in room["sockets"]:
+        await socket.send_json(message)
