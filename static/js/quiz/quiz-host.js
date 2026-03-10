@@ -31,6 +31,7 @@ container.innerHTML = `
 <br><br>
 
 <button id="send-question">出題</button>
+<button id="show-graph">グラフ表示</button>
 <button id="reveal-answer">正解発表</button>
 
 <h3>投票結果</h3>
@@ -40,6 +41,7 @@ container.innerHTML = `
 `;
 
 document.getElementById("send-question").onclick = sendQuestion;
+document.getElementById("show-graph").onclick = showGraph;
 document.getElementById("reveal-answer").onclick = revealAnswer;
 
 socket.addEventListener("message", e=>{
@@ -80,6 +82,14 @@ choices:choices
 }));
 
 updateVotes();
+
+}
+
+function showGraph(){
+
+socket.send(JSON.stringify({
+type:"quiz_show_graph"
+}));
 
 }
 
