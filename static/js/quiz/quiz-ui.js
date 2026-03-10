@@ -66,11 +66,21 @@ if (!graph) return;
 
 graph.innerHTML = "";
 
-if (!Array.isArray(votes)) return;
+// サーバー形式 → 配列に変換
+if (!Array.isArray(votes)) {
+
+const arr = [0,0,0,0];
+
+Object.values(votes).forEach(v=>{
+if(arr[v] !== undefined) arr[v]++;
+});
+
+votes = arr;
+
+}
 
 votes.forEach((v, i) => {
 
-```
 const row = document.createElement("div");
 row.style.marginBottom = "6px";
 
@@ -92,12 +102,10 @@ row.appendChild(bar);
 row.appendChild(count);
 
 graph.appendChild(row);
-```
 
 });
 
 }
-
 export function showCorrectAnswer(answerIndex) {
 
 const graph = document.getElementById("quiz-graph");
