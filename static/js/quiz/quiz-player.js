@@ -1,5 +1,3 @@
-// quiz-player.js
-
 import {
 createQuestionUI,
 updateGraph,
@@ -40,7 +38,7 @@ updateGraph(data.votes, choices);
 
 if(data.type === "quiz_correct"){
 
-showCorrectAnswer(data.answer);
+showCorrectAnswer(data.correct);
 
 }
 
@@ -52,7 +50,7 @@ function sendAnswer(index){
 
 socket.send(JSON.stringify({
 type:"quiz_answer",
-answer:index
+name: playerName,
+choice:index
 }));
-
 }
