@@ -41,12 +41,16 @@ data.choices,
 
 }
 
+let latestVotes = null;
+let graphVisible = false;
+
 if(data.type === "quiz_votes"){
+  latestVotes = data.votes;
 
-updateGraph(data.votes, choices);
-
+  if(graphVisible){
+    updateGraph(latestVotes, choices);
+  }
 }
-
 if(data.type === "quiz_correct"){
 
 showCorrectAnswer(data.correct);
