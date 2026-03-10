@@ -168,12 +168,19 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 name = data.get("name")
                 choice = data.get("choice")
 
-                if name:
+                if name is not None:
                     room["answers"][name] = choice
 
-                await broadcast(room, {
-                    "type": "quiz_votes",
-                    "votes": room["answers"]
+                # 投票数を集計
+                votes = [0,0,0,0]
+
+                for v in room["answers"].values():
+                    if v is not None and 0 <= v < 4:
+                        votes[v] += 1
+
+                await broadcast(room,{
+                    "type":"quiz_votes",
+                    "votes":votes
                 })
 
             # =========================
@@ -198,6 +205,7 @@ async def broadcast(room, message):
 
     for socket in room["sockets"]:
         await socket.send_json(message)
+
 
 
 
