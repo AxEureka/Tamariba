@@ -49,11 +49,25 @@ graph.style.marginTop = "20px";
 
 wrapper.appendChild(graph);
 
-container.appendChild(wrapper);
 
+// ルームに戻るボタン
+const backBtn = document.createElement("button");
+backBtn.textContent = "ルームに戻る";
+backBtn.style.marginTop = "20px";
+
+backBtn.onclick = ()=>{
+closeQuizUI(container);
+};
+
+wrapper.appendChild(backBtn);
+
+
+// UI表示
+container.appendChild(wrapper);
 container.classList.add("active");
-  
+
 }
+
 
 export function updateGraph(votes, choices) {
 
@@ -99,6 +113,7 @@ graph.appendChild(row);
 
 }
 
+
 export function showCorrectAnswer(answerIndex) {
 
 const graph = document.getElementById("quiz-graph");
@@ -111,6 +126,7 @@ if (!rows || !rows[answerIndex]) return;
 rows[answerIndex].classList.add("correct-bar");
 
 }
+
 
 export function closeQuizUI(container){
 
