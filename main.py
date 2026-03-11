@@ -183,6 +183,12 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     "votes":votes
                 })
 
+            if data.get("type") == "quiz_show_graph":
+
+                await broadcast(room,{
+                    "type":"quiz_show_graph"
+                })
+
             # =========================
             # 正解発表
             # =========================
@@ -205,6 +211,7 @@ async def broadcast(room, message):
 
     for socket in room["sockets"]:
         await socket.send_json(message)
+
 
 
 
