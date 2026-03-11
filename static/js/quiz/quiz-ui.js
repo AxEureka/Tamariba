@@ -1,5 +1,3 @@
-// quiz-ui.js
-
 export function createQuestionUI(container, question, choices, sendAnswer) {
 
 if (!container) return;
@@ -62,7 +60,6 @@ if (!graph) return;
 
 graph.innerHTML = "";
 
-// サーバー形式 → 配列に変換
 if (!Array.isArray(votes)) {
 
 const arr = [0,0,0,0];
@@ -84,11 +81,8 @@ const label = document.createElement("span");
 label.textContent = (choices && choices[i] ? choices[i] : "") + " ";
 
 const bar = document.createElement("div");
-bar.style.display = "inline-block";
-bar.style.height = "20px";
-bar.style.background = "#4CAF50";
+bar.className = "vote-bar";
 bar.style.width = (v * 40) + "px";
-bar.style.margin = "0 6px";
 
 const count = document.createElement("span");
 count.textContent = v ?? 0;
@@ -102,6 +96,7 @@ graph.appendChild(row);
 });
 
 }
+
 export function showCorrectAnswer(answerIndex) {
 
 const graph = document.getElementById("quiz-graph");
@@ -112,6 +107,5 @@ const rows = graph.children;
 if (!rows || !rows[answerIndex]) return;
 
 rows[answerIndex].classList.add("correct-bar");
+
 }
-
-
