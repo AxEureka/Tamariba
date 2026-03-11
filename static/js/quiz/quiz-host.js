@@ -1,5 +1,3 @@
-// quiz-host.js
-
 let socket;
 let votes = [0,0,0,0];
 let correctAnswer = 0;
@@ -55,22 +53,19 @@ return;
 }
 
 if(data.type === "quiz_votes"){
-
 updateVotesFromServer(data.votes);
-
 }
 
 });
 
 }
 
+/* 出題 */
+
 function sendQuestion(){
 
-console.log("出題ボタン押された");
-console.log("socket状態:", socket.readyState);
-
 const q = document.getElementById("quiz-question").value;
-  
+
 const choices = [...document.querySelectorAll(".quiz-choice")]
 .map(i=>i.value);
 
@@ -91,6 +86,8 @@ updateVotes();
 
 }
 
+/* グラフ表示 */
+
 function showGraph(){
 
 socket.send(JSON.stringify({
@@ -98,6 +95,8 @@ type:"quiz_show_graph"
 }));
 
 }
+
+/* 正解発表 */
 
 function revealAnswer(){
 
@@ -108,14 +107,8 @@ correct:correctAnswer
 
 }
 
-btn.onclick = ()=>{
+/* 投票更新 */
 
-socket.send(JSON.stringify({
-type:"quiz_correct",
-answer: correctIndex
-}));
-
-};
 function updateVotesFromServer(serverVotes){
 
 votes = serverVotes;
