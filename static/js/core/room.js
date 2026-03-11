@@ -336,19 +336,6 @@ gameDropdown.style.display = "none";
 
 });
 
-document.getElementById("exitQuizBtn").onclick = ()=>{
-
-socket.send(JSON.stringify({
-type:"end_quiz"
-}));
-
-const container = document.getElementById("game-container");
-container.classList.remove("active");
-container.innerHTML="";
-
-document.getElementById("exitQuizBtn").style.display="none";
-
-};
 
 /* 初期起動 */
 
@@ -356,10 +343,24 @@ window.addEventListener("DOMContentLoaded", () => {
 
 const gameBtn = document.getElementById("gameSelectBtn");
 const gameDropdown = document.getElementById("gameDropdown");
-
 const exitQuizBtn = document.getElementById("exitQuizBtn");
 
-if (exitQuizBtn){
+if (gameBtn) {
+
+gameBtn.onclick = (e) => {
+
+e.stopPropagation();
+
+gameDropdown.style.display =
+gameDropdown.style.display === "none" ? "block" : "none";
+
+};
+
+}
+
+/* ★ここ追加 */
+
+if(exitQuizBtn){
 
 exitQuizBtn.onclick = ()=>{
 
@@ -376,6 +377,7 @@ exitQuizBtn.style.display="none";
 };
 
 }
+
 connectSocket();
 
 loadRoom().then(() => {
@@ -387,7 +389,6 @@ setInterval(updateMembers, 2000);
 });
 
 });
-
 window.copyURL = copyURL;
 window.selectGame = selectGame;
 window.toggleMembers = toggleMembers;
