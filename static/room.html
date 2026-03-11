@@ -20,6 +20,7 @@ background-position:center;
 }
 
 /* 退出 */
+
 .exit{
 position:fixed;
 top:20px;
@@ -28,7 +29,8 @@ padding:8px 14px;
 cursor:pointer;
 }
 
-/* UI */
+/* ルームUI */
+
 .room-ui{
 background:rgba(0,0,0,0.75);
 padding:28px;
@@ -38,6 +40,7 @@ max-width:720px;
 }
 
 /* ボタン */
+
 button{
 cursor:pointer;
 padding:6px 12px;
@@ -45,6 +48,7 @@ margin-left:6px;
 }
 
 /* セクション */
+
 .section{
 margin-top:24px;
 padding-top:16px;
@@ -52,11 +56,13 @@ border-top:1px solid rgba(255,255,255,0.3);
 }
 
 /* メンバー */
+
 #members{
 margin-top:10px;
 }
 
 /* ポップアップ */
+
 #popup{
 position:fixed;
 top:20px;
@@ -68,6 +74,7 @@ display:none;
 }
 
 /* ゲームメニュー */
+
 #gameDropdown{
 display:none;
 position:absolute;
@@ -90,6 +97,10 @@ padding:6px 0;
 opacity:0.4;
 }
 
+/* =========================
+   ゲーム表示レイヤー
+========================= */
+
 #game-container{
 
 position:fixed;
@@ -103,8 +114,16 @@ display:flex;
 align-items:center;
 justify-content:center;
 
+z-index:200;
+
 pointer-events:none;
 
+}
+
+/* クイズUIだけクリック可能 */
+
+.quiz-ui{
+pointer-events:auto;
 }
 
 </style>
@@ -185,6 +204,7 @@ pointer-events:none;
 
 </body>
 </html>
+
 
 
 
