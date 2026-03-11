@@ -78,6 +78,12 @@ showCorrectAnswer(data.correct);
 
 }
 
+if(msg.type === "quiz_correct"){
+
+showCorrectAnswer(msg.answer);
+
+}
+
 function sendAnswer(index){
 
 if(answered) return;
