@@ -331,6 +331,20 @@ gameDropdown.style.display = "none";
 
 });
 
+document.getElementById("exitQuizBtn").onclick = ()=>{
+
+socket.send(JSON.stringify({
+type:"end_quiz"
+}));
+
+const container = document.getElementById("game-container");
+container.classList.remove("active");
+container.innerHTML="";
+
+document.getElementById("exitQuizBtn").style.display="none";
+
+};
+
 /* 初期起動 */
 
 window.addEventListener("DOMContentLoaded", () => {
