@@ -8,6 +8,9 @@ let socket;
 let container;
 let choices = [];
 
+let latestVotes = null;
+let graphVisible = false;
+
 export function startQuizPlayer(ws, uiContainer){
 
 console.log("quiz player start");
@@ -41,9 +44,6 @@ data.choices,
 
 }
 
-let latestVotes = null;
-let graphVisible = false;
-
 if(data.type === "quiz_votes"){
   latestVotes = data.votes;
 
@@ -51,6 +51,17 @@ if(data.type === "quiz_votes"){
     updateGraph(latestVotes, choices);
   }
 }
+
+if(data.type === "quiz_show_graph"){
+
+graphVisible = true;
+
+if(latestVotes){
+updateGraph(latestVotes, choices);
+}
+
+}
+  
 if(data.type === "quiz_correct"){
 
 showCorrectAnswer(data.correct);
