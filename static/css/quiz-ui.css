@@ -1,21 +1,52 @@
 .quiz-ui{
 
-position:fixed;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
+pointer-events:auto;
 
 background:#1e1e1e;
 color:white;
 
-padding:30px;
-border-radius:14px;
+padding:34px;
+border-radius:16px;
 
 width:420px;
+max-width:90%;
 
-box-shadow:0 10px 40px rgba(0,0,0,0.6);
+box-shadow:0 15px 50px rgba(0,0,0,0.7);
 
 text-align:center;
+
+}
+
+.quiz-buttons button{
+
+width:100%;
+margin:8px 0;
+padding:12px;
+
+font-size:16px;
+
+border-radius:8px;
+
+border:none;
+
+background:#3a7cff;
+color:white;
+
+}
+
+.vote-bar{
+
+display:inline-block;
+height:20px;
+background:#4CAF50;
+margin:0 6px;
+
+}
+
+.correct-bar{
+
+background:#FFD700 !important;
+box-shadow:0 0 10px gold;
 
 }
 
