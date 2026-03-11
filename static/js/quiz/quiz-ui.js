@@ -111,43 +111,7 @@ const rows = graph.children;
 
 if (!rows || !rows[answerIndex]) return;
 
-rows[answerIndex].style.background = "#fff3a0";
-
+rows[answerIndex].classList.add("correct-bar");
 }
 
-.quiz-ui{
 
-position:fixed;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-
-background:#1e1e1e;
-color:white;
-
-padding:30px;
-border-radius:14px;
-
-width:420px;
-
-box-shadow:0 10px 40px rgba(0,0,0,0.6);
-
-text-align:center;
-
-}
-
-.quiz-buttons button{
-
-width:100%;
-margin:8px 0;
-padding:12px;
-
-font-size:16px;
-
-border-radius:8px;
-
-border:none;
-background:#3a7cff;
-color:white;
-
-}
