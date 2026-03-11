@@ -18,38 +18,7 @@ animation:quizPop 0.25s ease;
 
 }
 
-.quiz-buttons button{
-
-width:100%;
-margin:8px 0;
-padding:12px;
-
-font-size:16px;
-
-border-radius:8px;
-
-border:none;
-
-background:#3a7cff;
-color:white;
-
-}
-
-.vote-bar{
-
-display:inline-block;
-height:20px;
-background:#4CAF50;
-margin:0 6px;
-
-}
-
-.correct-bar{
-
-background:#FFD700 !important;
-box-shadow:0 0 10px gold;
-
-}
+/* 選択ボタン */
 
 .quiz-buttons button{
 
@@ -62,6 +31,7 @@ font-size:16px;
 border-radius:8px;
 
 border:none;
+
 background:#3a7cff;
 color:white;
 
@@ -69,6 +39,8 @@ cursor:pointer;
 
 }
 
+/* 投票バー */
+
 .vote-bar{
 
 display:inline-block;
@@ -78,12 +50,16 @@ margin:0 6px;
 
 }
 
+/* 正解表示 */
+
 .correct-bar{
 
 background:#FFD700 !important;
 box-shadow:0 0 10px gold;
 
 }
+
+/* クイズ表示時の背景暗転 */
 
 #game-container::before{
 
@@ -99,6 +75,8 @@ height:100%;
 background:rgba(0,0,0,0.55);
 
 }
+
+/* 出現アニメーション */
 
 @keyframes quizPop{
 
