@@ -62,6 +62,10 @@ box-shadow:0 0 10px gold;
 /* クイズ表示時の背景暗転 */
 
 #game-container::before{
+display:none;
+}
+
+#game-container.active::before{
 
 content:"";
 position:absolute;
