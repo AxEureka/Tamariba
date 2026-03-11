@@ -229,8 +229,6 @@ showPopup("参加URLをコピーしました");
 
 function selectGame(type){
 
-console.log("quiz clicked");
-
 if (!socket || socket.readyState !== WebSocket.OPEN) {
 console.warn("WebSocket未接続");
 return;
@@ -240,7 +238,6 @@ const gameDropdown = document.getElementById("gameDropdown");
 if (gameDropdown) gameDropdown.style.display = "none";
 
 const container = document.getElementById("game-container");
-container.classList.add("active");
 
 if (type === "quiz"){
 
@@ -250,16 +247,17 @@ socket.send(JSON.stringify({
 type:"start_quiz"
 }));
 
+container.classList.add("active");
+
 startQuizHost(socket, container);
 
-// ★追加
 document.getElementById("exitQuizBtn").style.display = "inline-block";
 
 }
 
 }
-}
 
+}
 let socket;
 
 function connectSocket() {
