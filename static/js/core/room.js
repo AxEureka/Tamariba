@@ -241,6 +241,8 @@ if (gameDropdown) gameDropdown.style.display = "none";
 
 const container = document.getElementById("game-container");
 
+container.classList.add("active");
+
 if (type === "quiz"){
 
 if (myName === hostName){
@@ -254,7 +256,6 @@ startQuizHost(socket, container);
 }
 
 }
-
 }
 
 let socket;
