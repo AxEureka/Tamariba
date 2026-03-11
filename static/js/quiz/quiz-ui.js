@@ -51,6 +51,8 @@ wrapper.appendChild(graph);
 
 container.appendChild(wrapper);
 
+container.classList.add("active");
+  
 }
 
 export function updateGraph(votes, choices) {
@@ -107,5 +109,14 @@ const rows = graph.children;
 if (!rows || !rows[answerIndex]) return;
 
 rows[answerIndex].classList.add("correct-bar");
+
+}
+
+export function closeQuizUI(container){
+
+if(!container) return;
+
+container.innerHTML = "";
+container.classList.remove("active");
 
 }
