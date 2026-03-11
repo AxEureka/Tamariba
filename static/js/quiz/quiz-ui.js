@@ -1,5 +1,9 @@
 let timerInterval = null;
 
+
+// =========================
+// クイズUI表示
+// =========================
 export function createQuestionUI(container, question, choices, sendAnswer){
 
 if (!container) return;
@@ -37,7 +41,9 @@ btn.textContent = String(choice ?? "");
 
 btn.onclick = ()=>{
 
-sendAnswer?.(i);
+if(sendAnswer){
+sendAnswer(i);
+}
 
 btnArea.querySelectorAll("button").forEach(b=>{
 b.disabled = true;
@@ -64,14 +70,13 @@ wrapper.appendChild(graph);
 // 戻るボタン
 const backBtn = document.createElement("button");
 backBtn.textContent = "ルームに戻る";
-
 backBtn.style.marginTop = "20px";
 
 backBtn.onclick = ()=>{
 closeQuizUI(container);
 };
 
-wrapper.appendChild(backBtn);;
+wrapper.appendChild(backBtn);
 
 
 // UI表示
@@ -81,6 +86,9 @@ container.classList.add("active");
 }
 
 
+// =========================
+// タイマー
+// =========================
 export function startTimer(seconds,onFinish){
 
 const timer = document.getElementById("quiz-timer");
@@ -101,6 +109,7 @@ timer.textContent = `残り ${time} 秒`;
 if(time<=0){
 
 clearInterval(timerInterval);
+
 timer.textContent = "回答締切";
 
 lockAnswers();
@@ -114,14 +123,22 @@ if(onFinish) onFinish();
 }
 
 
+// =========================
+// 回答ロック
+// =========================
 function lockAnswers(){
 
 document.querySelectorAll(".quiz-buttons button")
-.forEach(b=>b.disabled=true);
+.forEach(b=>{
+b.disabled = true;
+});
 
 }
 
 
+// =========================
+// グラフ更新
+// =========================
 export function updateGraph(votes,choices){
 
 const graph = document.getElementById("quiz-graph");
@@ -167,6 +184,9 @@ graph.appendChild(row);
 }
 
 
+// =========================
+// 正解表示
+// =========================
 export function showCorrectAnswer(answerIndex){
 
 const graph=document.getElementById("quiz-graph");
@@ -181,6 +201,9 @@ rows[answerIndex].classList.add("correct-bar");
 }
 
 
+// =========================
+// クイズUI閉じる
+// =========================
 export function closeQuizUI(container){
 
 if(!container) return;
