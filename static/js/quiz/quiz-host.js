@@ -108,6 +108,14 @@ correct:correctAnswer
 
 }
 
+btn.onclick = ()=>{
+
+socket.send(JSON.stringify({
+type:"quiz_correct",
+answer: correctIndex
+}));
+
+};
 function updateVotesFromServer(serverVotes){
 
 votes = serverVotes;
