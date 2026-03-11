@@ -240,7 +240,6 @@ const gameDropdown = document.getElementById("gameDropdown");
 if (gameDropdown) gameDropdown.style.display = "none";
 
 const container = document.getElementById("game-container");
-
 container.classList.add("active");
 
 if (type === "quiz"){
@@ -250,9 +249,6 @@ if (myName === hostName){
 socket.send(JSON.stringify({
 type:"start_quiz"
 }));
-
-const container = document.getElementById("game-container");
-container.classList.add("active");
 
 startQuizHost(socket, container);
 
@@ -294,6 +290,15 @@ const container = document.getElementById("game-container");
 if (myName !== hostName) {
 startQuizPlayer(socket, container);
 }
+
+}
+
+if (msg.type === "end_quiz") {
+
+const container = document.getElementById("game-container");
+
+container.classList.remove("active");
+container.innerHTML="";
 
 }
 
@@ -352,19 +357,25 @@ window.addEventListener("DOMContentLoaded", () => {
 const gameBtn = document.getElementById("gameSelectBtn");
 const gameDropdown = document.getElementById("gameDropdown");
 
-if (gameBtn) {
+const exitQuizBtn = document.getElementById("exitQuizBtn");
 
-gameBtn.onclick = (e) => {
+if (exitQuizBtn){
 
-e.stopPropagation();
+exitQuizBtn.onclick = ()=>{
 
-gameDropdown.style.display =
-gameDropdown.style.display === "none" ? "block" : "none";
+socket.send(JSON.stringify({
+type:"end_quiz"
+}));
+
+const container = document.getElementById("game-container");
+container.classList.remove("active");
+container.innerHTML="";
+
+exitQuizBtn.style.display="none";
 
 };
 
 }
-
 connectSocket();
 
 loadRoom().then(() => {
