@@ -251,7 +251,13 @@ socket.send(JSON.stringify({
 type:"start_quiz"
 }));
 
+const container = document.getElementById("game-container");
+container.classList.add("active");
+
 startQuizHost(socket, container);
+
+// ★追加
+document.getElementById("exitQuizBtn").style.display = "inline-block";
 
 }
 
