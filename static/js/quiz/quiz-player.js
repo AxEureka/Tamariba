@@ -29,14 +29,12 @@ data = JSON.parse(e.data);
 return;
 }
 
-if(data.type === "quiz_question"){
+/* 問題受信 */
 
-console.log("choices受信:", data.choices);
-console.log("型:", typeof data.choices);
+if(data.type === "quiz_question"){
 
 choices = data.choices;
 
-// ★ここ追加
 latestVotes = null;
 graphVisible = false;
 answered = false;
@@ -50,13 +48,19 @@ data.choices,
 
 }
 
-  if(data.type === "quiz_votes"){
-  latestVotes = data.votes;
+/* 投票更新 */
 
-  if(graphVisible){
-    updateGraph(latestVotes, choices);
-  }
+if(data.type === "quiz_votes"){
+
+latestVotes = data.votes;
+
+if(graphVisible){
+updateGraph(latestVotes, choices);
 }
+
+}
+
+/* グラフ表示 */
 
 if(data.type === "quiz_show_graph"){
 
@@ -67,7 +71,9 @@ updateGraph(latestVotes, choices);
 }
 
 }
-  
+
+/* 正解発表 */
+
 if(data.type === "quiz_correct"){
 
 showCorrectAnswer(data.correct);
@@ -75,12 +81,6 @@ showCorrectAnswer(data.correct);
 }
 
 });
-
-}
-
-if(msg.type === "quiz_correct"){
-
-showCorrectAnswer(msg.answer);
 
 }
 
