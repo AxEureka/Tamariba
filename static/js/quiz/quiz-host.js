@@ -46,7 +46,13 @@ document.getElementById("reveal-answer").onclick = revealAnswer;
 
 socket.addEventListener("message", e=>{
 
-const data = JSON.parse(e.data);
+let data;
+
+try{
+data = JSON.parse(e.data);
+}catch{
+return;
+}
 
 if(data.type === "quiz_votes"){
 
