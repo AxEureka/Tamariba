@@ -9,6 +9,7 @@ let container;
 let choices = [];
 
 let latestVotes = null;
+let answered = false;
 let graphVisible = false;
 
 export function startQuizPlayer(ws, uiContainer){
@@ -38,6 +39,7 @@ choices = data.choices;
 // ★ここ追加
 latestVotes = null;
 graphVisible = false;
+answered = false;
 
 createQuestionUI(
 container,
@@ -48,7 +50,7 @@ data.choices,
 
 }
 
-if(data.type === "quiz_votes"){
+  if(data.type === "quiz_votes"){
   latestVotes = data.votes;
 
   if(graphVisible){
@@ -77,6 +79,9 @@ showCorrectAnswer(data.correct);
 }
 
 function sendAnswer(index){
+
+if(answered) return;
+answered = true;
 
 const params = new URLSearchParams(location.search);
 const name = params.get("name") || "guest";
