@@ -35,6 +35,10 @@ console.log("型:", typeof data.choices);
 
 choices = data.choices;
 
+// ★ここ追加
+latestVotes = null;
+graphVisible = false;
+
 createQuestionUI(
 container,
 data.question,
