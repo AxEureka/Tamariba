@@ -1,4 +1,6 @@
-export function createQuestionUI(container, question, choices, sendAnswer) {
+let timerInterval = null;
+
+export function createQuestionUI(container, question, choices, sendAnswer){
 
 if (!container) return;
 
@@ -7,24 +9,33 @@ container.innerHTML = "";
 const wrapper = document.createElement("div");
 wrapper.className = "quiz-ui";
 
+
 // 問題文
 const q = document.createElement("h2");
 q.textContent = question || "";
 wrapper.appendChild(q);
 
+
+// タイマー
+const timer = document.createElement("div");
+timer.id = "quiz-timer";
+timer.style.marginBottom = "12px";
+timer.style.fontSize = "18px";
+wrapper.appendChild(timer);
+
+
 // ボタンエリア
 const btnArea = document.createElement("div");
 btnArea.className = "quiz-buttons";
 
-if (Array.isArray(choices)) {
+if (Array.isArray(choices)){
 
-choices.forEach((choice, i) => {
+choices.forEach((choice,i)=>{
 
 const btn = document.createElement("button");
-
 btn.textContent = String(choice ?? "");
 
-btn.onclick = () => {
+btn.onclick = ()=>{
 
 sendAnswer?.(i);
 
@@ -42,15 +53,15 @@ btnArea.appendChild(btn);
 
 wrapper.appendChild(btnArea);
 
+
 // 投票グラフ
 const graph = document.createElement("div");
 graph.id = "quiz-graph";
 graph.style.marginTop = "20px";
-
 wrapper.appendChild(graph);
 
 
-// ルームに戻るボタン
+// 戻るボタン
 const backBtn = document.createElement("button");
 backBtn.textContent = "ルームに戻る";
 backBtn.style.marginTop = "20px";
@@ -69,39 +80,80 @@ container.classList.add("active");
 }
 
 
-export function updateGraph(votes, choices) {
+export function startTimer(seconds,onFinish){
 
-const graph = document.getElementById("quiz-graph");
-if (!graph) return;
+const timer = document.getElementById("quiz-timer");
+if(!timer) return;
 
-graph.innerHTML = "";
+clearInterval(timerInterval);
 
-if (!Array.isArray(votes)) {
+let time = seconds;
 
-const arr = [0,0,0,0];
+timer.textContent = `残り ${time} 秒`;
 
-Object.values(votes).forEach(v=>{
-if(arr[v] !== undefined) arr[v]++;
-});
+timerInterval = setInterval(()=>{
 
-votes = arr;
+time--;
+
+timer.textContent = `残り ${time} 秒`;
+
+if(time<=0){
+
+clearInterval(timerInterval);
+timer.textContent = "回答締切";
+
+lockAnswers();
+
+if(onFinish) onFinish();
 
 }
 
-votes.forEach((v, i) => {
+},1000);
 
-const row = document.createElement("div");
-row.style.marginBottom = "6px";
+}
 
-const label = document.createElement("span");
-label.textContent = (choices && choices[i] ? choices[i] : "") + " ";
 
-const bar = document.createElement("div");
-bar.className = "vote-bar";
-bar.style.width = (v * 40) + "px";
+function lockAnswers(){
 
-const count = document.createElement("span");
-count.textContent = v ?? 0;
+document.querySelectorAll(".quiz-buttons button")
+.forEach(b=>b.disabled=true);
+
+}
+
+
+export function updateGraph(votes,choices){
+
+const graph = document.getElementById("quiz-graph");
+if(!graph) return;
+
+graph.innerHTML="";
+
+if(!Array.isArray(votes)){
+
+const arr=[0,0,0,0];
+
+Object.values(votes).forEach(v=>{
+if(arr[v]!==undefined) arr[v]++;
+});
+
+votes=arr;
+
+}
+
+votes.forEach((v,i)=>{
+
+const row=document.createElement("div");
+row.style.marginBottom="6px";
+
+const label=document.createElement("span");
+label.textContent=(choices && choices[i] ? choices[i] : "")+" ";
+
+const bar=document.createElement("div");
+bar.className="vote-bar";
+bar.style.width=(v*40)+"px";
+
+const count=document.createElement("span");
+count.textContent=v ?? 0;
 
 row.appendChild(label);
 row.appendChild(bar);
@@ -114,14 +166,14 @@ graph.appendChild(row);
 }
 
 
-export function showCorrectAnswer(answerIndex) {
+export function showCorrectAnswer(answerIndex){
 
-const graph = document.getElementById("quiz-graph");
-if (!graph) return;
+const graph=document.getElementById("quiz-graph");
+if(!graph) return;
 
-const rows = graph.children;
+const rows=graph.children;
 
-if (!rows || !rows[answerIndex]) return;
+if(!rows || !rows[answerIndex]) return;
 
 rows[answerIndex].classList.add("correct-bar");
 
@@ -132,7 +184,9 @@ export function closeQuizUI(container){
 
 if(!container) return;
 
-container.innerHTML = "";
+clearInterval(timerInterval);
+
+container.innerHTML="";
 container.classList.remove("active");
 
 }
