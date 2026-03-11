@@ -16,6 +16,10 @@ text-align:center;
 
 animation:quizPop 0.25s ease;
 
+position:relative;
+z-index:10;
+}
+
 }
 
 /* 選択ボタン */
@@ -77,6 +81,8 @@ width:100%;
 height:100%;
 
 background:rgba(0,0,0,0.55);
+
+pointer-events:none;   /* ←これ追加 */
 
 }
 
