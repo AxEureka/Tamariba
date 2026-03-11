@@ -64,13 +64,14 @@ wrapper.appendChild(graph);
 // 戻るボタン
 const backBtn = document.createElement("button");
 backBtn.textContent = "ルームに戻る";
+
 backBtn.style.marginTop = "20px";
 
 backBtn.onclick = ()=>{
 closeQuizUI(container);
 };
 
-wrapper.appendChild(backBtn);
+wrapper.appendChild(backBtn);;
 
 
 // UI表示
