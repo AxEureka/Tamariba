@@ -19,11 +19,6 @@ text-align:center;
 
 }
 
-.correct-bar{
-background:#FFD700 !important;
-box-shadow:0 0 10px gold;
-}
-
 .quiz-buttons button{
 
 width:100%;
@@ -37,5 +32,23 @@ border-radius:8px;
 border:none;
 background:#3a7cff;
 color:white;
+
+cursor:pointer;
+
+}
+
+.vote-bar{
+
+display:inline-block;
+height:20px;
+background:#4CAF50;
+margin:0 6px;
+
+}
+
+.correct-bar{
+
+background:#FFD700 !important;
+box-shadow:0 0 10px gold;
 
 }
