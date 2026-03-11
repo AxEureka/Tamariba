@@ -1,3 +1,7 @@
+/* =========================
+   クイズUIカード
+========================= */
+
 .quiz-ui{
 
 background:#1e1e1e;
@@ -18,22 +22,54 @@ animation:quizPop 0.25s ease;
 
 position:relative;
 z-index:20;
-}
+
+pointer-events:auto;
 
 }
 
-/* 選択ボタン */
+
+/* =========================
+   問題
+========================= */
+
+.quiz-ui h2{
+
+margin-top:0;
+margin-bottom:12px;
+
+font-size:22px;
+
+}
+
+
+/* =========================
+   タイマー
+========================= */
+
+#quiz-timer{
+
+font-size:20px;
+font-weight:bold;
+
+margin-bottom:12px;
+
+}
+
+
+/* =========================
+   選択肢ボタン
+========================= */
 
 .quiz-buttons button{
 
 width:100%;
+
 margin:8px 0;
 padding:12px;
 
 font-size:16px;
 
 border-radius:8px;
-
 border:none;
 
 background:#3a7cff;
@@ -41,29 +77,67 @@ color:white;
 
 cursor:pointer;
 
+transition:background 0.2s;
+
 }
 
-/* 投票バー */
+.quiz-buttons button:hover{
+
+background:#2f68d9;
+
+}
+
+.quiz-buttons button:disabled{
+
+opacity:0.5;
+cursor:not-allowed;
+
+}
+
+
+/* =========================
+   投票グラフ
+========================= */
+
+#quiz-graph{
+
+margin-top:20px;
+
+}
 
 .vote-bar{
 
 display:inline-block;
+
 height:20px;
+
 background:#4CAF50;
+
 margin:0 6px;
+
+border-radius:4px;
+
+transition:width 0.3s;
 
 }
 
-/* 正解表示 */
 
-.correct-bar{
+/* =========================
+   正解バー
+========================= */
+
+.correct-bar .vote-bar{
 
 background:#FFD700 !important;
+
 box-shadow:0 0 10px gold;
 
 }
 
-/* クイズ表示時の背景暗転 */
+
+/* =========================
+   クイズ表示時の背景暗転
+========================= */
 
 #game-container::before{
 display:none;
@@ -72,6 +146,7 @@ display:none;
 #game-container.active::before{
 
 content:"";
+
 position:absolute;
 
 top:0;
@@ -82,31 +157,25 @@ height:100%;
 
 background:rgba(0,0,0,0.55);
 
-pointer-events:none;   /* ←これ追加 */
+pointer-events:none;
 
 }
 
-/* 出現アニメーション */
+
+/* =========================
+   出現アニメーション
+========================= */
 
 @keyframes quizPop{
 
 from{
-transform:translate(-50%,-60%) scale(0.9);
 opacity:0;
+transform:scale(0.9);
 }
 
 to{
-transform:translate(-50%,-50%) scale(1);
 opacity:1;
+transform:scale(1);
 }
-
-}
-
-#quiz-timer{
-
-font-size:20px;
-font-weight:bold;
-
-margin-bottom:12px;
 
 }
