@@ -348,8 +348,7 @@ gameBtn.onclick = (e) => {
 
 e.stopPropagation();
 
-gameDropdown.style.display =
-gameDropdown.style.display === "none" ? "block" : "none";
+gameDropdown.classList.toggle("open");
 
 };
 
