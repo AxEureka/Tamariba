@@ -315,7 +315,6 @@ setTimeout(connectSocket, 2000);
 
 document.addEventListener("click", (e) => {
 
-const gameBtn = document.getElementById("gameSelectBtn");
 const gameDropdown = document.getElementById("gameDropdown");
 
 if (e.target.closest("#quizBtn")) {
@@ -327,7 +326,7 @@ return;
 if (
 gameDropdown &&
 !gameDropdown.contains(e.target) &&
-e.target !== gameBtn
+!e.target.closest("#gameSelectBtn")
 ) {
 gameDropdown.style.display = "none";
 }
