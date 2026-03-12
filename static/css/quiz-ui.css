@@ -161,6 +161,14 @@ pointer-events:none;
 
 }
 
+#gameDropdown{
+display:none;
+}
+
+#gameDropdown.open{
+display:block;
+}
+
 
 /* =========================
    出現アニメーション
