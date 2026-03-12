@@ -20,13 +20,17 @@ q.textContent = question || "";
 wrapper.appendChild(q);
 
 
-// タイマー
-const timer = document.createElement("div");
-timer.id = "quiz-timer";
-timer.style.marginBottom = "12px";
-timer.style.fontSize = "18px";
-wrapper.appendChild(timer);
+<label>
+<input type="checkbox" id="useTimer">
+タイマー
+</label>
 
+<select id="timerSeconds">
+<option value="5">5秒</option>
+<option value="10" selected>10秒</option>
+<option value="20">20秒</option>
+<option value="30">30秒</option>
+</select>
 
 // ボタンエリア
 const btnArea = document.createElement("div");
