@@ -102,28 +102,19 @@ opacity:0.4;
 ========================= */
 
 #game-container{
-
 position:fixed;
-top:0;
-left:0;
-
-width:100%;
-height:100%;
-
+inset:0;
 display:flex;
 align-items:center;
 justify-content:center;
 
-z-index:200;
-
 pointer-events:none;
-
+z-index:10;
 }
-
-/* クイズ表示時 */
 
 #game-container.active{
 pointer-events:auto;
+z-index:500;
 }
    
 /* クイズUIだけクリック可能 */
@@ -214,6 +205,7 @@ pointer-events:auto;
 
 </body>
 </html>
+
 
 
 
