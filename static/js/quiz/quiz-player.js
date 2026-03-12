@@ -48,6 +48,16 @@ data.choices,
 
 }
 
+if(msg.type === "quiz_question"){
+
+showQuestion(msg.question, msg.choices);
+
+if(msg.timer > 0){
+startTimer(msg.timer);
+}
+
+}
+  
 /* 投票更新 */
 
 if(data.type === "quiz_votes"){
