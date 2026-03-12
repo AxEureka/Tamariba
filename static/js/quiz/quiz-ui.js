@@ -32,6 +32,16 @@ wrapper.appendChild(q);
 <option value="30">30秒</option>
 </select>
 
+const useTimer = document.getElementById("useTimer").checked;
+const seconds = parseInt(document.getElementById("timerSeconds").value);
+
+socket.send(JSON.stringify({
+type:"quiz_question",
+question:question,
+choices:choices,
+timer: useTimer ? seconds : 0
+}));
+  
 // ボタンエリア
 const btnArea = document.createElement("div");
 btnArea.className = "quiz-buttons";
