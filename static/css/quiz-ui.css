@@ -204,3 +204,16 @@ transform:scale(1);
 }
 
 }
+
+.correct-banner{
+position:fixed;
+top:40%;
+left:50%;
+transform:translate(-50%,-50%);
+font-size:40px;
+background:#4caf50;
+padding:20px 40px;
+border-radius:12px;
+z-index:2000;
+box-shadow:0 0 20px #4caf50;
+}
