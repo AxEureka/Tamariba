@@ -31,9 +31,17 @@ export function createQuestionUI(container, question, choices, sendAnswer){
       const btn = document.createElement("button");
       btn.textContent = String(choice ?? "");
       btn.onclick = ()=>{
-        if(sendAnswer) sendAnswer(i);
-        btnArea.querySelectorAll("button").forEach(b=>b.disabled=true);
-      };
+
+  if(sendAnswer) sendAnswer(i);
+
+  btnArea.querySelectorAll("button").forEach(b=>{
+    b.disabled = true;
+  });
+
+  // ★選んだボタンを記録
+  btn.classList.add("selected-answer");
+
+};
       btnArea.appendChild(btn);
     });
   }
