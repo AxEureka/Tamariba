@@ -1,8 +1,9 @@
-// quiz-host.js（完全版、既存ロジック変更なし＋タイマー対応）
+// quiz-host.js（タイマー残り秒数表示付き完全版）
 
 let socket;
 let votes = [0,0,0,0];
 let correctAnswer = 0;
+let timerInterval = null; // タイマー用
 
 export function startQuizHost(ws, container){
 
@@ -38,7 +39,9 @@ export function startQuizHost(ws, container){
       <option value="30">30秒</option>
     </select>
 
-    <br><br>
+    <div id="host-timer" style="margin-top:10px; font-weight:bold;"></div>
+
+    <br>
 
     <button id="send-question">出題</button>
     <button id="show-graph">グラフ表示</button>
@@ -86,22 +89,54 @@ function sendQuestion(){
     document.getElementById("quiz-answer").value
   );
 
-  // タイマー設定を取得
+  // タイマー設定
   const useTimer = document.getElementById("useTimer").checked;
-  const timer = useTimer ? parseInt(document.getElementById("timerSeconds").value) : 0;
+  const seconds = useTimer ? parseInt(document.getElementById("timerSeconds").value) : 0;
 
   votes = [0,0,0,0];
   correctAnswer = answer;
 
+  // タイマーをリセットして開始（ホスト側表示用）
+  clearInterval(timerInterval);
+  const timerDisplay = document.getElementById("host-timer");
+
+  if(seconds > 0){
+    let time = seconds;
+    timerDisplay.textContent = `残り ${time} 秒`;
+
+    timerInterval = setInterval(()=>{
+      time--;
+      timerDisplay.textContent = `残り ${time} 秒`;
+
+      if(time <= 0){
+        clearInterval(timerInterval);
+        timerDisplay.textContent = "回答締切";
+        lockHostAnswers();
+      }
+
+    },1000);
+  } else {
+    timerDisplay.textContent = "";
+  }
+
+  // 出題情報送信
   socket.send(JSON.stringify({
     type:"quiz_question",
     question:q,
     choices:choices,
-    timer: timer   // タイマー情報を送信
+    timer: seconds
   }));
 
   updateVotes();
 
+}
+
+/* =========================
+   回答ロック（ホスト側） 
+========================= */
+function lockHostAnswers(){
+  document.querySelectorAll(".quiz-choice,input#quiz-question,select#quiz-answer,button#send-question")
+  .forEach(el => el.disabled = true);
 }
 
 /* =========================
@@ -125,6 +160,10 @@ function revealAnswer(){
     correct:correctAnswer
   }));
 
+  // タイマー終了表示
+  clearInterval(timerInterval);
+  const timerDisplay = document.getElementById("host-timer");
+  timerDisplay.textContent = "";
 }
 
 /* =========================
