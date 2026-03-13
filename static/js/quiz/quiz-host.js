@@ -1,19 +1,16 @@
-// quiz-host.js（タイマー残り秒数表示付き完全版）
+import { startTimer } from "./quiz-ui.js";
 
 let socket;
 let votes = [0,0,0,0];
 let correctAnswer = 0;
-let timerInterval = null; // タイマー用
+let timerInterval = null;
 
 export function startQuizHost(ws, container){
-
   socket = ws;
 
   container.innerHTML = `
   <div id="quiz-host-ui">
-
     <h2>クイズ出題</h2>
-
     <input id="quiz-question" placeholder="問題文"><br><br>
 
     <input class="quiz-choice" placeholder="選択肢1"><br>
@@ -30,8 +27,7 @@ export function startQuizHost(ws, container){
     </select>
 
     <br><br>
-
-    <label><input type="checkbox" id="useTimer"> タイマー</label>
+    タイマー秒数:
     <select id="timerSeconds">
       <option value="5">5秒</option>
       <option value="10" selected>10秒</option>
@@ -39,17 +35,13 @@ export function startQuizHost(ws, container){
       <option value="30">30秒</option>
     </select>
 
-    <div id="host-timer" style="margin-top:10px; font-weight:bold;"></div>
-
-    <br>
-
+    <br><br>
     <button id="send-question">出題</button>
     <button id="show-graph">グラフ表示</button>
     <button id="reveal-answer">正解発表</button>
 
     <h3>投票結果</h3>
     <div id="vote-result"></div>
-
   </div>
   `;
 
@@ -58,133 +50,69 @@ export function startQuizHost(ws, container){
   document.getElementById("reveal-answer").onclick = revealAnswer;
 
   socket.addEventListener("message", e=>{
-
     let data;
-
-    try{
-      data = JSON.parse(e.data);
-    }catch{
-      return;
-    }
-
-    if(data.type === "quiz_votes"){
-      updateVotesFromServer(data.votes);
-    }
-
+    try{ data = JSON.parse(e.data); }catch{return;}
+    if(data.type === "quiz_votes") updateVotesFromServer(data.votes);
   });
-
 }
 
-/* =========================
-   出題
-========================= */
+// 出題
 function sendQuestion(){
-
   const q = document.getElementById("quiz-question").value;
-
-  const choices = [...document.querySelectorAll(".quiz-choice")]
-    .map(i=>i.value);
-
-  const answer = parseInt(
-    document.getElementById("quiz-answer").value
-  );
-
-  // タイマー設定
-  const useTimer = document.getElementById("useTimer").checked;
-  const seconds = useTimer ? parseInt(document.getElementById("timerSeconds").value) : 0;
+  const choicesArr = [...document.querySelectorAll(".quiz-choice")].map(i=>i.value);
+  const answer = parseInt(document.getElementById("quiz-answer").value);
+  const seconds = parseInt(document.getElementById("timerSeconds").value);
 
   votes = [0,0,0,0];
   correctAnswer = answer;
 
-  // タイマーをリセットして開始（ホスト側表示用）
-  clearInterval(timerInterval);
-  const timerDisplay = document.getElementById("host-timer");
-
-  if(seconds > 0){
-    let time = seconds;
-    timerDisplay.textContent = `残り ${time} 秒`;
-
-    timerInterval = setInterval(()=>{
-      time--;
-      timerDisplay.textContent = `残り ${time} 秒`;
-
-      if(time <= 0){
-        clearInterval(timerInterval);
-        timerDisplay.textContent = "回答締切";
-        lockHostAnswers();
-      }
-
-    },1000);
-  } else {
-    timerDisplay.textContent = "";
-  }
-
-  // 出題情報送信
   socket.send(JSON.stringify({
     type:"quiz_question",
     question:q,
-    choices:choices,
+    choices:choicesArr,
     timer: seconds
   }));
 
   updateVotes();
 
+  // タイマー自動締切
+  if(seconds > 0){
+    let time = seconds;
+    const timerDisplay = document.getElementById("timerSeconds"); // UI表示用は必要なら別要素に
+    clearInterval(timerInterval);
+    timerInterval = setInterval(()=>{
+      time--;
+      if(time <= 0){
+        clearInterval(timerInterval);
+        // 全員に締切通知
+        socket.send(JSON.stringify({type:"quiz_timer_end"}));
+      }
+    },1000);
+  }
 }
 
-/* =========================
-   回答ロック（ホスト側） 
-========================= */
-function lockHostAnswers(){
-  document.querySelectorAll(".quiz-choice,input#quiz-question,select#quiz-answer,button#send-question")
-  .forEach(el => el.disabled = true);
-}
-
-/* =========================
-   グラフ表示
-========================= */
+// グラフ表示
 function showGraph(){
-
-  socket.send(JSON.stringify({
-    type:"quiz_show_graph"
-  }));
-
+  socket.send(JSON.stringify({type:"quiz_show_graph"}));
 }
 
-/* =========================
-   正解発表
-========================= */
+// 正解発表
 function revealAnswer(){
-
-  socket.send(JSON.stringify({
-    type:"quiz_correct",
-    correct:correctAnswer
-  }));
-
-  // タイマー終了表示
-  clearInterval(timerInterval);
-  const timerDisplay = document.getElementById("host-timer");
-  timerDisplay.textContent = "";
+  socket.send(JSON.stringify({type:"quiz_correct", correct:correctAnswer}));
 }
 
-/* =========================
-   投票更新
-========================= */
+// 投票更新
 function updateVotesFromServer(serverVotes){
-
   votes = serverVotes;
   updateVotes();
-
 }
 
 function updateVotes(){
-
   const box = document.getElementById("vote-result");
   if(!box) return;
-
   box.innerHTML =
     "1: "+votes[0]+"票<br>"+
     "2: "+votes[1]+"票<br>"+
     "3: "+votes[2]+"票<br>"+
     "4: "+votes[3]+"票";
-
 }
