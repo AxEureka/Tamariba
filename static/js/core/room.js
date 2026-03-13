@@ -346,9 +346,10 @@ if (gameBtn) {
 
 gameBtn.onclick = (e) => {
 
-e.stopPropagation();
+  e.stopPropagation();
 
-gameDropdown.classList.toggle("open");
+  gameDropdown.style.display =
+    gameDropdown.style.display === "block" ? "none" : "block";
 
 };
 
