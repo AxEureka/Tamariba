@@ -139,7 +139,13 @@ export function showCorrectAnswer(answerIndex){
   if(!graph) return;
   const rows=graph.children;
   if(!rows || !rows[answerIndex]) return;
-  rows[answerIndex].classList.add("correct-bar");
+ rows[answerIndex].classList.add("correct-bar");
+
+// ★選択肢ボタンも光る
+const buttons = document.querySelectorAll(".quiz-buttons button");
+if(buttons[answerIndex]){
+  buttons[answerIndex].classList.add("correct-button");
+}
 }
 
 // =========================
