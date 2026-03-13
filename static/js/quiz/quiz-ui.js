@@ -1,14 +1,13 @@
-// quiz-ui.js（完全版、既存ロジック変更なし、タイマー追加済み）
-
 let timerInterval = null;
 
 // =========================
 // クイズUI表示
 // =========================
 export function createQuestionUI(container, question, choices, sendAnswer){
-  if (!container) return;
 
+  if (!container) return;
   container.innerHTML = "";
+
   const wrapper = document.createElement("div");
   wrapper.className = "quiz-ui";
 
@@ -17,36 +16,13 @@ export function createQuestionUI(container, question, choices, sendAnswer){
   q.textContent = question || "";
   wrapper.appendChild(q);
 
-  // =========================
-  // タイマーON/OFFと秒数選択UI
-  // =========================
-  const timerWrapper = document.createElement("div");
-  timerWrapper.style.marginBottom = "12px";
+  // タイマーUI
+  const timer = document.createElement("div");
+  timer.id = "quiz-timer";
+  timer.style.margin = "10px 0";
+  wrapper.appendChild(timer);
 
-  const timerLabel = document.createElement("label");
-  const timerCheckbox = document.createElement("input");
-  timerCheckbox.type = "checkbox";
-  timerCheckbox.id = "useTimer";
-  timerLabel.appendChild(timerCheckbox);
-  timerLabel.appendChild(document.createTextNode(" タイマー"));
-  timerWrapper.appendChild(timerLabel);
-
-  const timerSelect = document.createElement("select");
-  timerSelect.id = "timerSeconds";
-  [5,10,20,30].forEach(s => {
-    const opt = document.createElement("option");
-    opt.value = s;
-    opt.textContent = s + "秒";
-    if(s===10) opt.selected = true;
-    timerSelect.appendChild(opt);
-  });
-  timerWrapper.appendChild(timerSelect);
-
-  wrapper.appendChild(timerWrapper);
-
-  // =========================
   // ボタンエリア
-  // =========================
   const btnArea = document.createElement("div");
   btnArea.className = "quiz-buttons";
 
@@ -56,9 +32,7 @@ export function createQuestionUI(container, question, choices, sendAnswer){
       btn.textContent = String(choice ?? "");
       btn.onclick = ()=>{
         if(sendAnswer) sendAnswer(i);
-        btnArea.querySelectorAll("button").forEach(b=>{
-          b.disabled = true;
-        });
+        btnArea.querySelectorAll("button").forEach(b=>b.disabled=true);
       };
       btnArea.appendChild(btn);
     });
@@ -66,38 +40,13 @@ export function createQuestionUI(container, question, choices, sendAnswer){
 
   wrapper.appendChild(btnArea);
 
-  // =========================
   // 投票グラフ
-  // =========================
   const graph = document.createElement("div");
   graph.id = "quiz-graph";
   graph.style.marginTop = "20px";
   wrapper.appendChild(graph);
 
-  // =========================
-  // 出題ボタン（タイマー情報も送信）
-  // =========================
-  const sendBtn = document.createElement("button");
-  sendBtn.textContent = "出題";
-  sendBtn.style.marginTop = "12px";
-  sendBtn.onclick = ()=>{
-    const useTimer = document.getElementById("useTimer").checked;
-    const seconds = parseInt(document.getElementById("timerSeconds").value);
-
-    if(typeof socket !== "undefined" && socket.readyState === WebSocket.OPEN){
-      socket.send(JSON.stringify({
-        type:"quiz_question",
-        question:question,
-        choices:choices,
-        timer: useTimer ? seconds : 0
-      }));
-    }
-  };
-  wrapper.appendChild(sendBtn);
-
-  // =========================
   // 戻るボタン
-  // =========================
   const backBtn = document.createElement("button");
   backBtn.textContent = "ルームに戻る";
   backBtn.style.marginTop = "20px";
@@ -106,15 +55,13 @@ export function createQuestionUI(container, question, choices, sendAnswer){
   };
   wrapper.appendChild(backBtn);
 
-  // =========================
   // UI表示
-  // =========================
   container.appendChild(wrapper);
   container.classList.add("active");
 }
 
 // =========================
-// タイマー開始
+// タイマー
 // =========================
 export function startTimer(seconds,onFinish){
   const timer = document.getElementById("quiz-timer");
@@ -127,6 +74,7 @@ export function startTimer(seconds,onFinish){
   timerInterval = setInterval(()=>{
     time--;
     timer.textContent = `残り ${time} 秒`;
+
     if(time<=0){
       clearInterval(timerInterval);
       timer.textContent = "回答締切";
@@ -139,10 +87,9 @@ export function startTimer(seconds,onFinish){
 // =========================
 // 回答ロック
 // =========================
-function lockAnswers(){
-  document.querySelectorAll(".quiz-buttons button").forEach(b=>{
-    b.disabled = true;
-  });
+export function lockAnswers(){
+  document.querySelectorAll(".quiz-buttons button")
+    .forEach(b=>{b.disabled=true;});
 }
 
 // =========================
@@ -152,7 +99,6 @@ export function updateGraph(votes,choices){
   const graph = document.getElementById("quiz-graph");
   if(!graph) return;
   graph.innerHTML="";
-
   if(!Array.isArray(votes)){
     const arr=[0,0,0,0];
     Object.values(votes).forEach(v=>{
@@ -160,25 +106,19 @@ export function updateGraph(votes,choices){
     });
     votes=arr;
   }
-
   votes.forEach((v,i)=>{
     const row=document.createElement("div");
     row.style.marginBottom="6px";
-
     const label=document.createElement("span");
     label.textContent=(choices && choices[i] ? choices[i] : "")+" ";
-
     const bar=document.createElement("div");
     bar.className="vote-bar";
     bar.style.width=(v*40)+"px";
-
     const count=document.createElement("span");
     count.textContent=v ?? 0;
-
     row.appendChild(label);
     row.appendChild(bar);
     row.appendChild(count);
-
     graph.appendChild(row);
   });
 }
