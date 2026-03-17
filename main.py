@@ -205,14 +205,14 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     "correct": data.get("correct")
                 })
 
-           # =========================
-           # クイズ終了
-           # =========================
-           if data.get("type") == "end_quiz":
+            # =========================
+            # クイズ終了
+            # =========================
+            if data.get("type") == "end_quiz":
 
-               await broadcast(room,{
-                   "type":"end_quiz"
-               })
+                await broadcast(room,{
+                    "type":"end_quiz"
+                })
 
             # =========================
             # NASA開始
