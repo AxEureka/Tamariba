@@ -26,32 +26,34 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
         while True:
 
             data = await websocket.receive_json()
+            msg_type = data.get("type")
+
             print("WS受信:", data)
 
             # =========================
-            # NASA問題設定
+            # NASA開始（問題設定）
             # =========================
-            if data.get("type") == "nasa_start":
+            if msg_type == "nasa_start":
 
                 room["nasa"] = {
-                    "items": data.get("items"),
-                    "correct": data.get("correct")
+                    "items": data.get("items", []),
+                    "correct": data.get("correct", [])
                 }
 
                 room["nasa_answers"] = {}
 
                 await broadcast(room, {
                     "type": "nasa_start",
-                    "items": data.get("items")
+                    "items": room["nasa"]["items"]
                 })
 
             # =========================
             # NASA個人回答
             # =========================
-            elif data.get("type") == "nasa_personal":
+            elif msg_type == "nasa_personal":
 
                 name = data.get("name")
-                ranks = data.get("ranks")
+                ranks = data.get("ranks", [])
 
                 if name:
                     room["nasa_answers"][name] = {
@@ -61,11 +63,11 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             # =========================
             # NASAチーム回答
             # =========================
-            elif data.get("type") == "nasa_team":
+            elif msg_type == "nasa_team":
 
                 name = data.get("name")
-                team = data.get("team")
-                ranks = data.get("ranks")
+                team = data.get("team", "チーム")
+                ranks = data.get("ranks", [])
 
                 if name:
                     if name not in room["nasa_answers"]:
@@ -77,32 +79,36 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             # =========================
             # NASA結果発表
             # =========================
-            elif data.get("type") == "nasa_show_result":
+            elif msg_type == "nasa_show_result":
 
                 await broadcast(room, {
                     "type": "nasa_result",
-                    "correct": room["nasa"].get("correct")
+                    "correct": room["nasa"].get("correct", [])
                 })
 
             # =========================
             # ランキング取得
             # =========================
-            elif data.get("type") == "nasa_get_ranking":
+            elif msg_type == "nasa_get_ranking":
 
                 correct = room["nasa"].get("correct", [])
 
-                def calc(a):
-                    return sum(abs(a[i] - correct[i]) for i in range(len(a)))
+                def calc(arr):
+                    if not arr or not correct:
+                        return 0
+                    return sum(abs(arr[i] - correct[i]) for i in range(min(len(arr), len(correct))))
 
                 personal_scores = []
                 team_scores = {}
 
                 for name, a in room["nasa_answers"].items():
 
+                    # 個人
                     if "personal" in a:
                         s = calc(a["personal"])
                         personal_scores.append((name, s))
 
+                    # チーム
                     if "team" in a:
                         t = a.get("team_name", "チーム")
                         s = calc(a["team"])
@@ -131,16 +137,22 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
 
                 await broadcast(room, {
                     "type": "nasa_ranking",
-                    "personal_top": [{"name": n, "score": s} for n, s in personal_scores[:3]],
+                    "personal_top": [
+                        {"name": n, "score": s}
+                        for n, s in personal_scores[:3]
+                    ],
                     "personal_avg": round(personal_avg, 1),
-                    "team_top": [{"name": n, "score": round(s, 1)} for n, s in team_top],
+                    "team_top": [
+                        {"name": n, "score": round(s, 1)}
+                        for n, s in team_top
+                    ],
                     "team_avg": round(team_avg, 1)
                 })
 
             # =========================
             # NASA終了
             # =========================
-            elif data.get("type") == "end_nasa":
+            elif msg_type == "end_nasa":
 
                 await broadcast(room, {
                     "type": "end_nasa"
