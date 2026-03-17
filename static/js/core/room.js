@@ -381,9 +381,6 @@ gameDropdown.style.display = "none";
 
 });
 
-});
-
-
 /* 初期起動 */
 
 window.addEventListener("DOMContentLoaded", () => {
