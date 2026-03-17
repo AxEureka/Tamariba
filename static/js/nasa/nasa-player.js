@@ -45,12 +45,16 @@ function startTeam() {
   });
 }
 
-function calcScore(answer) {
-  let score = 0;
-  for (let i = 0; i < answer.length; i++) {
-    score += Math.abs(answer[i] - (correct[i] || 0));
-  }
-  return score;
+function calcScore(answer){
+
+let score=0;
+
+for(let i=0;i<answer.length;i++){
+score += Math.abs(answer[i] - (correct[i] ?? 0));
+}
+
+return score;
+
 }
 
 function showResult() {
