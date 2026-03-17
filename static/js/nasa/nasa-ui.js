@@ -30,6 +30,7 @@ const n=parseInt(countInput.value);
 for(let i=0;i<n;i++){
 
 const row=document.createElement("div");
+row.className="rank-row";
 
 const name=document.createElement("input");
 name.placeholder="品目"+(i+1);
