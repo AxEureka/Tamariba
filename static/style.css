@@ -28,6 +28,12 @@ body {
   background-position: center;
 }
 
+.theme-moon {
+  background-image: url("/static/themes/moon.jpg");
+  background-size: cover;
+  background-position: center;
+}
+
 /* UIを見やすく */
 .room-ui {
   background: rgba(0,0,0,0.5);
