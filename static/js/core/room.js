@@ -415,6 +415,10 @@ socket.send(JSON.stringify({
 type:"end_quiz"
 }));
 
+socket.send(JSON.stringify({
+type:"end_nasa"
+}));
+
 const container = document.getElementById("game-container");
 container.classList.remove("active");
 container.innerHTML="";
