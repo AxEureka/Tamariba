@@ -2,6 +2,8 @@
 
 import { startQuizHost } from "/static/js/quiz/quiz-host.js";
 import { startQuizPlayer } from "/static/js/quiz/quiz-player.js";
+import { startNASAHost } from "/static/js/nasa/nasa-host.js";
+import { startNASAPlayer } from "/static/js/nasa/nasa-player.js";
 
 const params = new URLSearchParams(location.search);
 const roomId = params.get("room");
@@ -247,6 +249,21 @@ socket.send(JSON.stringify({
 type:"start_quiz"
 }));
 
+if(type==="nasa"){
+
+if(myName===hostName){
+
+socket.send(JSON.stringify({
+type:"start_nasa"
+}));
+
+container.classList.add("active");
+
+startNASAHost(socket,container);
+
+}
+
+
 container.classList.add("active");
 
 startQuizHost(socket, container);
@@ -300,6 +317,16 @@ container.innerHTML="";
 
 }
 
+if (msg.type === "start_nasa") {
+
+const container = document.getElementById("game-container");
+
+if (myName !== hostName) {
+startNASAPlayer(socket, container);
+}
+
+}
+  
 };
 
 socket.onerror = (e) => {
