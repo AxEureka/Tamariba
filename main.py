@@ -38,7 +38,9 @@ async def create_room(data: dict):
         "theme": theme,
         "members": [host],
         "sockets": [],
-        "answers": {}
+        "answers": {},
+        "nasa_answers": {},
+        "nasa": {}
     }
 
     return {"room_id": room_id}
@@ -121,7 +123,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
 
     await websocket.accept()
     print("WS接続:", room_id)
-    
+
     if room_id not in rooms:
         rooms[room_id] = {
             "room": "room",
@@ -129,7 +131,9 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             "theme": "mansion",
             "members": [],
             "sockets": [],
-            "answers": {}
+            "answers": {},
+            "nasa_answers": {},
+            "nasa": {}
         }
 
     room = rooms[room_id]
@@ -141,12 +145,15 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             data = await websocket.receive_json()
             print("WS受信:", data)
 
+            # =========================
+            # クイズ開始
+            # =========================
             if data.get("type") == "start_quiz":
 
                 await broadcast(room,{
                     "type":"start_quiz"
                 })
-            
+
             # =========================
             # 新しい問題
             # =========================
@@ -171,7 +178,6 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 if name is not None:
                     room["answers"][name] = choice
 
-                # 投票数を集計
                 votes = [0,0,0,0]
 
                 for v in room["answers"].values():
@@ -199,26 +205,72 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     "correct": data.get("correct")
                 })
 
+           # =========================
+           # クイズ終了
+           # =========================
+           if data.get("type") == "end_quiz":
 
+               await broadcast(room,{
+                   "type":"end_quiz"
+               })
+
+            # =========================
+            # NASA開始
+            # =========================
             if data.get("type") == "start_nasa":
 
-    await broadcast(room,{
-        "type":"start_nasa"
-    })
+                await broadcast(room,{
+                    "type":"start_nasa"
+                })
 
+            # =========================
+            # NASA問題設定
+            # =========================
+            if data.get("type") == "nasa_start":
 
-if data.get("type") == "nasa_start":
+                room["nasa"]={
+                    "items":data.get("items"),
+                    "correct":data.get("correct")
+                }
 
-    room["nasa"]={
-        "items":data.get("items"),
-        "correct":data.get("correct")
-    }
+                room["nasa_answers"] = {}
 
-    await broadcast(room,{
-        "type":"nasa_start",
-        "items":data.get("items"),
-        "correct":data.get("correct")
-    })
+                await broadcast(room,{
+                    "type":"nasa_start",
+                    "items":data.get("items")
+                })
+
+            # =========================
+            # NASA回答
+            # =========================
+            if data.get("type") == "nasa_answer":
+
+                name = data.get("name")
+                ranking = data.get("ranking")
+
+                if name:
+                    room["nasa_answers"][name] = ranking
+
+            # =========================
+            # NASA結果発表
+            # =========================
+            if data.get("type") == "nasa_show_result":
+
+                await broadcast(room,{
+                    "type":"nasa_result",
+                    "answers":room["nasa_answers"],
+                    "correct":room["nasa"].get("correct")
+                })
+
+            # =========================
+            # NASA終了
+            # =========================
+            if data.get("type") == "end_nasa":
+
+                await broadcast(room,{
+                    "type":"end_nasa"
+                })
+
     except WebSocketDisconnect:
         if websocket in room["sockets"]:
             room["sockets"].remove(websocket)
@@ -231,8 +283,3 @@ async def broadcast(room, message):
 
     for socket in room["sockets"]:
         await socket.send_json(message)
-
-
-
-
-
