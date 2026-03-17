@@ -1,6 +1,125 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+import uuid
+import os
 
 app = FastAPI()
+
+# =========================
+# 静的ファイル
+# =========================
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+@app.get("/")
+async def root():
+    return RedirectResponse(url="/static/index.html")
+
+
+# =========================
+# ルーム管理
+# =========================
+rooms = {}
+
+
+# =========================
+# ルーム作成
+# =========================
+@app.post("/create_room")
+async def create_room(data: dict):
+
+    room_id = str(uuid.uuid4())[:8]
+
+    host = data.get("host_name")
+    room_name = data.get("room_name")
+    theme = data.get("theme", "mansion")
+
+    rooms[room_id] = {
+        "room": room_name,
+        "host": host,
+        "theme": theme,
+        "members": [host],
+        "sockets": [],
+        "answers": {},
+        "nasa_answers": {},
+        "nasa": {}
+    }
+
+    return {"room_id": room_id}
+
+
+# =========================
+# ルーム情報取得
+# =========================
+@app.get("/room/{room_id}")
+async def get_room(room_id: str):
+
+    if room_id not in rooms:
+        return JSONResponse({"error": "room not found"}, status_code=404)
+
+    room = rooms[room_id]
+
+    return {
+        "room": room["room"],
+        "host": room["host"],
+        "theme": room["theme"]
+    }
+
+
+# =========================
+# 入室
+# =========================
+@app.post("/room/{room_id}/join")
+async def join_room(room_id: str, data: dict):
+
+    if room_id not in rooms:
+        return {"ok": False}
+
+    name = data.get("name")
+
+    if name and name not in rooms[room_id]["members"]:
+        rooms[room_id]["members"].append(name)
+
+    return {"ok": True}
+
+
+# =========================
+# メンバー取得
+# =========================
+@app.get("/room/{room_id}/members")
+async def get_members(room_id: str):
+
+    if room_id not in rooms:
+        return {"members": [], "count": 0}
+
+    members = rooms[room_id]["members"]
+
+    return {
+        "members": members,
+        "count": len(members)
+    }
+
+
+# =========================
+# キック
+# =========================
+@app.post("/room/{room_id}/kick")
+async def kick_member(room_id: str, data: dict):
+
+    if room_id not in rooms:
+        return {"ok": False}
+
+    name = data.get("name")
+
+    if name in rooms[room_id]["members"]:
+        rooms[room_id]["members"].remove(name)
+
+    return {"ok": True}
+
 
 # =========================
 # WebSocket
@@ -35,9 +154,60 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             print("WS受信:", data)
 
             # =========================
-            # NASA開始（問題設定）
+            # クイズ
             # =========================
-            if msg_type == "nasa_start":
+            if msg_type == "start_quiz":
+                await broadcast(room, {"type": "start_quiz"})
+
+            elif msg_type == "quiz_question":
+                room["answers"] = {}
+
+                await broadcast(room, {
+                    "type": "quiz_question",
+                    "question": data.get("question"),
+                    "choices": data.get("choices")
+                })
+
+            elif msg_type == "quiz_answer":
+                name = data.get("name")
+                choice = data.get("choice")
+
+                if name is not None:
+                    room["answers"][name] = choice
+
+                votes = [0, 0, 0, 0]
+
+                for v in room["answers"].values():
+                    if v is not None and 0 <= v < 4:
+                        votes[v] += 1
+
+                await broadcast(room, {
+                    "type": "quiz_votes",
+                    "votes": votes
+                })
+
+            elif msg_type == "quiz_show_graph":
+                await broadcast(room, {"type": "quiz_show_graph"})
+
+            elif msg_type == "quiz_correct":
+                await broadcast(room, {
+                    "type": "quiz_correct",
+                    "correct": data.get("correct")
+                })
+
+            elif msg_type == "end_quiz":
+                await broadcast(room, {"type": "end_quiz"})
+
+            # =========================
+            # NASA開始
+            # =========================
+            elif msg_type == "start_nasa":
+                await broadcast(room, {"type": "start_nasa"})
+
+            # =========================
+            # NASA問題設定
+            # =========================
+            elif msg_type == "nasa_start":
 
                 room["nasa"] = {
                     "items": data.get("items", []),
@@ -91,7 +261,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 })
 
             # =========================
-            # ランキング取得
+            # ランキング
             # =========================
             elif msg_type == "nasa_get_ranking":
 
@@ -107,18 +277,15 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
 
                 for name, a in room["nasa_answers"].items():
 
-                    # 個人
                     if "personal" in a:
                         s = calc(a["personal"])
                         personal_scores.append((name, s))
 
-                    # チーム
                     if "team" in a:
                         t = a.get("team_name", "チーム")
                         s = calc(a["team"])
                         team_scores.setdefault(t, []).append(s)
 
-                # 個人ランキング
                 personal_scores.sort(key=lambda x: x[1])
 
                 personal_avg = (
@@ -126,7 +293,6 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     if personal_scores else 0
                 )
 
-                # チーム平均
                 team_avg_dict = {
                     t: sum(v) / len(v)
                     for t, v in team_scores.items()
@@ -141,15 +307,9 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
 
                 await broadcast(room, {
                     "type": "nasa_ranking",
-                    "personal_top": [
-                        {"name": n, "score": s}
-                        for n, s in personal_scores[:3]
-                    ],
+                    "personal_top": [{"name": n, "score": s} for n, s in personal_scores[:3]],
                     "personal_avg": round(personal_avg, 1),
-                    "team_top": [
-                        {"name": n, "score": round(s, 1)}
-                        for n, s in team_top
-                    ],
+                    "team_top": [{"name": n, "score": round(s, 1)} for n, s in team_top],
                     "team_avg": round(team_avg, 1)
                 })
 
@@ -157,11 +317,16 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             # NASA終了
             # =========================
             elif msg_type == "end_nasa":
-
-                await broadcast(room, {
-                    "type": "end_nasa"
-                })
+                await broadcast(room, {"type": "end_nasa"})
 
     except WebSocketDisconnect:
         if websocket in room["sockets"]:
             room["sockets"].remove(websocket)
+
+
+# =========================
+# broadcast
+# =========================
+async def broadcast(room, message):
+    for socket in room["sockets"]:
+        await socket.send_json(message)
