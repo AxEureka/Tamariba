@@ -50,7 +50,11 @@ function calcScore(answer){
 let score=0;
 
 for(let i=0;i<answer.length;i++){
-score += Math.abs(answer[i] - (correct[i] ?? 0));
+
+const c = correct && correct[i] !== undefined ? correct[i] : 0;
+
+score += Math.abs(answer[i] - c);
+
 }
 
 return score;
