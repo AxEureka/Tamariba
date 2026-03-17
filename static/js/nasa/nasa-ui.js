@@ -1,3 +1,5 @@
+console.log("nasa-ui loaded");
+
 export function createRankingUI(container,items,onSubmit,title,isTeam=false){
 
 container.innerHTML="";
