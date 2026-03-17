@@ -1,75 +1,83 @@
-export function createItemEditor(container, onSubmit) {
-  container.innerHTML = "";
-  const box = document.createElement("div");
-  box.className = "nasa-ui";
+export function createItemEditor(container,onSubmit){
 
-  const title = document.createElement("h2");
-  title.textContent = "品目設定";
-  box.appendChild(title);
+container.innerHTML="";
 
-  const countInput = document.createElement("input");
-  countInput.type = "number";
-  countInput.value = 5;
-  countInput.min = 2;
-  countInput.max = 20;
+const box=document.createElement("div");
+box.className="nasa-ui";
 
-  box.appendChild(document.createTextNode("品目数: "));
-  box.appendChild(countInput);
+const title=document.createElement("h2");
+title.textContent="品目設定";
+box.appendChild(title);
 
-  const itemArea = document.createElement("div");
-  box.appendChild(itemArea);
+const countInput=document.createElement("input");
+countInput.type="number";
+countInput.value=5;
+countInput.min=2;
+countInput.max=20;
 
-  function buildItems() {
-    itemArea.innerHTML = "";
-    const n = parseInt(countInput.value);
-    for (let i = 0; i < n; i++) {
-      const row = document.createElement("div");
+box.appendChild(document.createTextNode("品目数: "));
+box.appendChild(countInput);
 
-      const name = document.createElement("input");
-      name.placeholder = "品目" + (i + 1);
+const itemArea=document.createElement("div");
+box.appendChild(itemArea);
 
-      const rank = document.createElement("input");
-      rank.type = "number";
-      rank.placeholder = "正解順位";
+function buildItems(){
 
-      row.appendChild(name);
-      row.appendChild(rank);
-      itemArea.appendChild(row);
-    }
-  }
+itemArea.innerHTML="";
 
-  countInput.onchange = buildItems;
-  buildItems();
+const n=parseInt(countInput.value);
 
-  const btn = document.createElement("button");
-  btn.textContent = "出題";
-  btn.onclick = () => {
-    const items = [];
-    const correct = [];
-    itemArea.querySelectorAll("div").forEach(row => {
-      const inputs = row.querySelectorAll("input");
-      items.push(inputs[0].value);
-      correct.push(parseInt(inputs[1].value));
-    });
-    onSubmit(items, correct);
-  };
+for(let i=0;i<n;i++){
 
-  btn.onclick=()=>{
+const row=document.createElement("div");
 
-const ranks=selects.map(s=>parseInt(s.value));
+const name=document.createElement("input");
+name.placeholder="品目"+(i+1);
 
-if(ranks.some(v=>!v)){
-alert("すべて順位を選んでください");
-return;
+const rank=document.createElement("input");
+rank.type="number";
+rank.placeholder="正解順位";
+
+row.appendChild(name);
+row.appendChild(rank);
+
+itemArea.appendChild(row);
+
 }
 
-onSubmit(ranks);
+}
+
+countInput.onchange=buildItems;
+
+buildItems();
+
+const btn=document.createElement("button");
+btn.textContent="出題";
+
+btn.onclick=()=>{
+
+const items=[];
+const correct=[];
+
+itemArea.querySelectorAll("div").forEach(row=>{
+
+const inputs=row.querySelectorAll("input");
+
+items.push(inputs[0].value);
+correct.push(parseInt(inputs[1].value));
+
+});
+
+onSubmit(items,correct);
 
 };
-  
-  box.appendChild(btn);
-  container.appendChild(box);
+
+box.appendChild(btn);
+
+container.appendChild(box);
+
 }
+
 
 export function createRankingUI(container,items,onSubmit,title){
 
@@ -79,9 +87,11 @@ const box=document.createElement("div");
 box.className="nasa-ui";
 
 if(title){
+
 const h=document.createElement("h2");
 h.textContent=title;
 box.appendChild(h);
+
 }
 
 const selects=[];
@@ -100,6 +110,7 @@ first.value="";
 first.textContent="選択";
 first.disabled=true;
 first.selected=true;
+
 select.appendChild(first);
 
 for(let i=1;i<=items.length;i++){
@@ -126,7 +137,12 @@ btn.textContent="OK";
 
 btn.onclick=()=>{
 
-const ranks=selects.map(s=>parseInt(s.value)||0);
+const ranks=selects.map(s=>parseInt(s.value));
+
+if(ranks.some(v=>!v)){
+alert("すべて順位を選んでください");
+return;
+}
 
 onSubmit(ranks);
 
@@ -138,28 +154,41 @@ container.appendChild(box);
 
 }
 
-export function showCorrect(container, items, correct) {
-  container.innerHTML = "<h2>正解順位</h2>";
-  items.forEach((item, i) => {
-    const div = document.createElement("div");
-    div.textContent = item + " : " + correct[i];
-    container.appendChild(div);
-  });
+
+export function showCorrect(container,items,correct){
+
+container.innerHTML="<h2>正解順位</h2>";
+
+items.forEach((item,i)=>{
+
+const div=document.createElement("div");
+
+div.textContent=item+" : "+correct[i];
+
+container.appendChild(div);
+
+});
+
 }
 
-export function showScore(container, pScore, tScore) {
-  const diff = pScore - tScore;
-  let comment = "";
-  if (diff > 20) comment = "チームの知恵がすごい！";
-  else if (diff > 5) comment = "チームで改善！";
-  else if (diff > -5) comment = "いい議論！";
-  else comment = "あなた優秀！";
 
-  container.innerHTML = `
-    <h2>結果</h2>
-    個人スコア: ${pScore}<br>
-    チームスコア: ${tScore}<br>
-    差: ${diff}<br><br>
-    ${comment}
-  `;
+export function showScore(container,pScore,tScore){
+
+const diff=pScore-tScore;
+
+let comment="";
+
+if(diff>20) comment="チームの知恵がすごい！";
+else if(diff>5) comment="チームで改善！";
+else if(diff>-5) comment="いい議論！";
+else comment="あなた優秀！";
+
+container.innerHTML=`
+<h2>結果</h2>
+個人スコア: ${pScore}<br>
+チームスコア: ${tScore}<br>
+差: ${diff}<br><br>
+${comment}
+`;
+
 }
