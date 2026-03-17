@@ -31,8 +31,21 @@ startPersonal();
 
 if(data.type==="nasa_result"){
 showCorrect(container,items,data.correct,()=>{
+
 socket.send(JSON.stringify({type:"nasa_get_ranking"}));
+
 });
+
+// ★ 追加：いつでも押せるボタン
+const btn = document.createElement("button");
+btn.textContent = "ランキングを見る";
+
+btn.onclick = ()=>{
+socket.send(JSON.stringify({type:"nasa_get_ranking"}));
+};
+
+container.appendChild(btn);
+
 }
 
 if(data.type==="nasa_ranking"){
