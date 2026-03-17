@@ -7,8 +7,8 @@ export function startNASAHost(ws, uiContainer) {
   socket = ws;
   container = uiContainer;
 
-  // 親画面で品目と正解設定
   createItemEditor(container, (items, correct) => {
+    // 親が品目と正解順位を設定したら送信
     socket.send(JSON.stringify({
       type: "nasa_start",
       items: items,
