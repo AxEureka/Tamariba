@@ -13,6 +13,12 @@ export function startNASAPlayer(ws,uiContainer){
 socket=ws;
 container=uiContainer;
 
+// ★ 名前の保険（undefined対策）
+if(!window.myName){
+const params = new URLSearchParams(location.search);
+window.myName = params.get("name") || "名無し";
+}
+
 socket.addEventListener("message",(e)=>{
 
 let data;
@@ -51,7 +57,7 @@ ranks:r
 
 startTeam();
 
-},`${window.myName} の回答`);
+},`${window.myName} の回答`, false); // ← 重複チェックON
 
 }
 
@@ -70,6 +76,6 @@ team:teamName,
 ranks:r
 }));
 
-},`${teamName} の回答`);
+},`${teamName} の回答`, true); // ← ★チームは重複OK
 
 }
