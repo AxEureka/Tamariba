@@ -2,6 +2,7 @@ import { createRankingUI, showCorrect, showScore } from "./nasa-ui.js";
 
 let socket;
 let container;
+
 let items = [];
 let correct = [];
 let personal = [];
@@ -21,8 +22,9 @@ export function startNASAPlayer(ws, uiContainer) {
       startPersonal();
     }
 
-    if (data.type === "nasa_show_correct") {
-      showCorrect(container, items, correct);
+    if (data.type === "nasa_result") {
+      showCorrect(container, items, data.correct);
+      showScore(container, calcScore(data.answers), calcScore(data.correct));
     }
   });
 }
@@ -30,12 +32,7 @@ export function startNASAPlayer(ws, uiContainer) {
 function startPersonal() {
   createRankingUI(container, items, (r) => {
     personal = r;
-
-    socket.send(JSON.stringify({
-      type: "nasa_personal",
-      ranks: r
-    }));
-
+    socket.send(JSON.stringify({ type: "nasa_personal", ranks: r }));
     startTeam();
   });
 }
@@ -43,12 +40,7 @@ function startPersonal() {
 function startTeam() {
   createRankingUI(container, items, (r) => {
     team = r;
-
-    socket.send(JSON.stringify({
-      type: "nasa_team",
-      ranks: r
-    }));
-
+    socket.send(JSON.stringify({ type: "nasa_team", ranks: r }));
     showResult();
   });
 }
@@ -56,7 +48,7 @@ function startTeam() {
 function calcScore(answer) {
   let score = 0;
   for (let i = 0; i < answer.length; i++) {
-    score += Math.abs(answer[i] - correct[i]);
+    score += Math.abs(answer[i] - (correct[i] || 0));
   }
   return score;
 }
