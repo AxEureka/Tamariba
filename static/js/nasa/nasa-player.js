@@ -69,6 +69,7 @@ createRankingUI(container,items,(r)=>{
 
 team=r;
 
+// ★ 送信
 socket.send(JSON.stringify({
 type:"nasa_team",
 name:window.myName,
@@ -76,6 +77,12 @@ team:teamName,
 ranks:r
 }));
 
-},`${teamName} の回答`, true); // ← ★チームは重複OK
+// ★ ここ追加（超重要）
+container.innerHTML = `
+<h2>${teamName} の回答送信完了！</h2>
+<p>結果発表をお待ちください…</p>
+`;
+
+},`${teamName} の回答`, true);
 
 }
