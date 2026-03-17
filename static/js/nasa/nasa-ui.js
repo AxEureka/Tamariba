@@ -205,32 +205,68 @@ container.appendChild(btn);
 // =========================
 export function showRanking(container,data,isHost){
 
-container.innerHTML="<h2>ランキング</h2>";
+container.innerHTML = "";
 
-let html="<h3>個人トップ3</h3>";
+// ラッパー
+const wrap = document.createElement("div");
+wrap.className = "ranking-wrap";
+
+// ===================
+// 個人ランキング
+// ===================
+const personal = document.createElement("div");
+personal.className = "ranking-box";
+
+let personalHTML = `<h2>🏆 個人ランキング</h2>`;
 
 data.personal_top.forEach((p,i)=>{
-html+=`${i+1}. ${p.name} (${p.score})<br>`;
+personalHTML += `
+<div class="rank-line ${i===0?"rank-1":""}">
+${i+1}位：${p.name}（${p.score}）
+</div>`;
 });
 
-html+=`<br>個人平均: ${data.personal_avg}<br>`;
+personalHTML += `<hr>
+<div>平均：${data.personal_avg}</div>`;
 
 if(!isHost){
-html+=`あなたの得点: ${data.my_personal ?? "未計算"}<br>`;
+personalHTML += `<div>あなた：${data.my_personal ?? "-"}</div>`;
 }
 
-html+="<hr><h3>チームトップ3</h3>";
+personal.innerHTML = personalHTML;
+
+
+// ===================
+// チームランキング
+// ===================
+const team = document.createElement("div");
+team.className = "ranking-box";
+
+let teamHTML = `<h2>👥 チームランキング</h2>`;
 
 data.team_top.forEach((t,i)=>{
-html+=`${i+1}. ${t.name} (${t.score})<br>`;
+teamHTML += `
+<div class="rank-line ${i===0?"rank-1":""}">
+${i+1}位：${t.name}（${t.score}）
+</div>`;
 });
 
-html+=`<br>チーム平均: ${data.team_avg}<br>`;
+teamHTML += `<hr>
+<div>平均：${data.team_avg}</div>`;
 
 if(!isHost){
-html+=`あなたのチーム: ${data.my_team ?? "不明"}<br>`;
+teamHTML += `<div>あなたのチーム：${data.my_team ?? "-"}</div>`;
 }
 
-container.innerHTML+=html;
+team.innerHTML = teamHTML;
+
+
+// ===================
+// 結合
+// ===================
+wrap.appendChild(personal);
+wrap.appendChild(team);
+
+container.appendChild(wrap);
 
 }
