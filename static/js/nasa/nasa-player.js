@@ -8,33 +8,47 @@ let correct = [];
 let personal = [];
 let team = [];
 
+let teamName = "";
+
 export function startNASAPlayer(ws, uiContainer) {
-  socket = ws;
-  container = uiContainer;
 
-  socket.addEventListener("message", (e) => {
-    let data;
-    try { data = JSON.parse(e.data); } catch { return; }
+socket = ws;
+container = uiContainer;
 
-    if (data.type === "nasa_start") {
-      items = data.items;
-      correct = data.correct;
-      startPersonal();
-    }
+socket.addEventListener("message", (e) => {
 
-    if (data.type === "nasa_result") {
-      showCorrect(container, items, data.correct);
-      showScore(container, calcScore(data.answers), calcScore(data.correct));
-    }
-  });
+let data;
+try { data = JSON.parse(e.data); } catch { return; }
+
+if (data.type === "nasa_start") {
+
+items = data.items;
+correct = data.correct;
+
+startPersonal();
+
 }
 
-function startPersonal() {
-  createRankingUI(
+if (data.type === "nasa_result") {
+
+showCorrect(container, items, data.correct);
+showScore(container, calcScore(data.answers), calcScore(data.correct));
+
+}
+
+});
+
+}
+
+
+function startPersonal(){
+
+createRankingUI(
 container,
 items,
 (r)=>{
-personal=r;
+
+personal = r;
 
 socket.send(JSON.stringify({
 type:"nasa_personal",
@@ -46,13 +60,20 @@ startTeam();
 },
 `${window.myName} の回答`
 );
+
 }
+
+
+function startTeam(){
+
+teamName = prompt("チーム名を入力してください","チームA") || "チーム";
 
 createRankingUI(
 container,
 items,
 (r)=>{
-team=r;
+
+team = r;
 
 socket.send(JSON.stringify({
 type:"nasa_team",
@@ -62,15 +83,11 @@ ranks:r
 showResult();
 
 },
-`${teamName} チームの回答`
+`${teamName} の回答`
 );
-function startTeam() {
-  createRankingUI(container, items, (r) => {
-    team = r;
-    socket.send(JSON.stringify({ type: "nasa_team", ranks: r }));
-    showResult();
-  });
+
 }
+
 
 function calcScore(answer){
 
@@ -88,8 +105,12 @@ return score;
 
 }
 
-function showResult() {
-  const p = calcScore(personal);
-  const t = calcScore(team);
-  showScore(container, p, t);
+
+function showResult(){
+
+const p = calcScore(personal);
+const t = calcScore(team);
+
+showScore(container,p,t);
+
 }
