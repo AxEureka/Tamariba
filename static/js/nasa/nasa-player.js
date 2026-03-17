@@ -30,13 +30,40 @@ export function startNASAPlayer(ws, uiContainer) {
 }
 
 function startPersonal() {
-  createRankingUI(container, items, (r) => {
-    personal = r;
-    socket.send(JSON.stringify({ type: "nasa_personal", ranks: r }));
-    startTeam();
-  });
+  createRankingUI(
+container,
+items,
+(r)=>{
+personal=r;
+
+socket.send(JSON.stringify({
+type:"nasa_personal",
+ranks:r
+}));
+
+startTeam();
+
+},
+`${window.myName} の回答`
+);
 }
 
+createRankingUI(
+container,
+items,
+(r)=>{
+team=r;
+
+socket.send(JSON.stringify({
+type:"nasa_team",
+ranks:r
+}));
+
+showResult();
+
+},
+`${teamName} チームの回答`
+);
 function startTeam() {
   createRankingUI(container, items, (r) => {
     team = r;
