@@ -1,18 +1,52 @@
-import { createItemEditor } from "./nasa-ui.js";
+import { createItemEditor, showRanking } from "./nasa-ui.js";
 
 let socket;
 let container;
 
-export function startNASAHost(ws, uiContainer) {
-  socket = ws;
-  container = uiContainer;
+export function startNASAHost(ws,uiContainer){
 
-  createItemEditor(container, (items, correct) => {
-    // 親が品目と正解順位を設定したら送信
-    socket.send(JSON.stringify({
-      type: "nasa_start",
-      items: items,
-      correct: correct
-    }));
-  });
+socket=ws;
+container=uiContainer;
+
+createItemEditor(container,(items,correct)=>{
+
+socket.send(JSON.stringify({
+type:"nasa_start",
+items:items,
+correct:correct
+}));
+
+showControl();
+
+});
+
+socket.addEventListener("message",(e)=>{
+
+let data;
+try{data=JSON.parse(e.data);}catch{return;}
+
+if(data.type==="nasa_ranking"){
+showRanking(container,data,true);
+}
+
+});
+
+}
+
+function showControl(){
+
+container.innerHTML=`
+<h2>NASAゲーム進行</h2>
+<button id="showResult">正解発表</button>
+<button id="showRanking">ランキング</button>
+`;
+
+document.getElementById("showResult").onclick=()=>{
+socket.send(JSON.stringify({type:"nasa_show_result"}));
+};
+
+document.getElementById("showRanking").onclick=()=>{
+socket.send(JSON.stringify({type:"nasa_get_ranking"}));
+};
+
 }
