@@ -181,11 +181,17 @@ export function showCorrect(container,items,correct,onRanking){
 
 container.innerHTML="<h2>正解順位</h2>";
 
+const box = document.createElement("div");
+box.className = "result-box";
+
 items.forEach((item,i)=>{
 const div=document.createElement("div");
-div.textContent=item+" : "+correct[i];
-container.appendChild(div);
+div.className="result-item";
+div.textContent=`${item} ： ${correct[i]}`;
+box.appendChild(div);
 });
+
+container.appendChild(box);
 
 const btn=document.createElement("button");
 btn.textContent="ランキングを見る";
@@ -193,7 +199,6 @@ btn.onclick=onRanking;
 container.appendChild(btn);
 
 }
-
 
 // =========================
 // ランキング表示
