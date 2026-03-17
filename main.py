@@ -199,6 +199,26 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     "correct": data.get("correct")
                 })
 
+
+            if data.get("type") == "start_nasa":
+
+    await broadcast(room,{
+        "type":"start_nasa"
+    })
+
+
+if data.get("type") == "nasa_start":
+
+    room["nasa"]={
+        "items":data.get("items"),
+        "correct":data.get("correct")
+    }
+
+    await broadcast(room,{
+        "type":"nasa_start",
+        "items":data.get("items"),
+        "correct":data.get("correct")
+    })
     except WebSocketDisconnect:
         if websocket in room["sockets"]:
             room["sockets"].remove(websocket)
