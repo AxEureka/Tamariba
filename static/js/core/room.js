@@ -332,6 +332,15 @@ startNASAPlayer(socket, container);
 }
 
 }
+
+if (msg.type === "end_nasa") {
+
+const container = document.getElementById("game-container");
+
+container.classList.remove("active");
+container.innerHTML="";
+
+}
   
 };
 
