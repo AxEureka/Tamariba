@@ -5,164 +5,132 @@
 <title>ルーム</title>
 <link rel="stylesheet" href="/static/css/quiz-ui.css">
 <link rel="stylesheet" href="/static/css/nasa-ui.css">
-<style>
 
+<style>
 html, body{
-margin:0;
-height:100%;
-font-family:sans-serif;
-color:white;
+  margin:0;
+  height:100%;
+  font-family:sans-serif;
+  color:white;
 }
 
 body{
-background-size:cover;
-background-position:center;
+  background-size:cover;
+  background-position:center;
 }
 
-/* 退出 */
-
+/* 退出ボタン */
 .exit{
-position:fixed;
-top:20px;
-right:20px;
-padding:8px 14px;
-cursor:pointer;
+  position:fixed;
+  top:20px;
+  right:20px;
+  padding:8px 14px;
+  cursor:pointer;
 }
 
 /* ルームUI */
-
 .room-ui{
-background:rgba(0,0,0,0.75);
-padding:28px;
-margin:40px;
-border-radius:16px;
-max-width:720px;
+  background:rgba(0,0,0,0.75);
+  padding:28px;
+  margin:40px;
+  border-radius:16px;
+  max-width:720px;
 }
 
-/* ボタン */
-
+/* ボタン共通 */
 button{
-cursor:pointer;
-padding:6px 12px;
-margin-left:6px;
+  cursor:pointer;
+  padding:6px 12px;
+  margin-left:6px;
 }
 
 /* セクション */
-
 .section{
-margin-top:24px;
-padding-top:16px;
-border-top:1px solid rgba(255,255,255,0.3);
+  margin-top:24px;
+  padding-top:16px;
+  border-top:1px solid rgba(255,255,255,0.3);
 }
 
 /* メンバー */
-
 #members{
-margin-top:10px;
+  margin-top:10px;
 }
 
 /* ポップアップ */
-
 #popup{
-position:fixed;
-top:20px;
-right:20px;
-background:rgba(0,0,0,0.9);
-padding:12px 18px;
-border-radius:10px;
-display:none;
+  position:fixed;
+  top:20px;
+  right:20px;
+  background:rgba(0,0,0,0.9);
+  padding:12px 18px;
+  border-radius:10px;
+  display:none;
 }
 
-/* ゲームメニュー */
-
+/* ゲーム選択メニュー */
 #gameDropdown{
-display:none;
-position:absolute;
-top:45px;
-left:0;
-background:rgba(0,0,0,0.95);
-padding:10px 14px;
-border-radius:12px;
-min-width:160px;
-z-index:1000;
+  display:none;
+  position:absolute;
+  top:45px;
+  left:0;
+  background:rgba(0,0,0,0.95);
+  padding:10px 14px;
+  border-radius:12px;
+  min-width:160px;
+  z-index:1000;
 }
-
 .gameItem{
-padding:6px 0;
-cursor:pointer;
+  padding:6px 0;
+  cursor:pointer;
 }
-
 .gameDisabled{
-padding:6px 0;
-opacity:0.4;
+  padding:6px 0;
+  opacity:0.4;
+  pointer-events:none;
 }
 
 /* =========================
-   ゲーム表示レイヤー
+   ゲーム表示レイヤー（全ゲーム共通）
 ========================= */
-
 #game-container{
-position:fixed;
-inset:0;
-display:flex;
-align-items:center;
-justify-content:center;
-
-pointer-events:none;
-z-index:10;
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+  z-index:10;
 }
-
 #game-container.active{
-pointer-events:auto;
-z-index:500;
-}
-   
-/* クイズUIだけクリック可能 */
-
-.quiz-ui{
-pointer-events:auto;
+  pointer-events:auto;
+  z-index:500;
 }
 
+/* ゲームUI共通クリック許可 */
+.quiz-ui, .nasa-ui{
+  pointer-events:auto;
+}
 </style>
 </head>
-
 
 <body>
 
 <button class="exit" onclick="exitRoom()">退出</button>
 
-
 <div style="position:relative;display:flex;align-items:center;gap:12px;">
+  <h1 id="room-title" style="margin:0;">読み込み中...</h1>
 
-<h1 id="room-title" style="margin:0;">読み込み中...</h1>
+  <button id="gameSelectBtn" style="display:none;">
+    🎮 遊びを選ぶ
+  </button>
 
-<button id="gameSelectBtn" style="display:none;">
-🎮 遊びを選ぶ
-</button>
-
-
-<div id="gameDropdown">
-
-<div id="quizBtn" class="gameItem">
-クイズ
+  <div id="gameDropdown">
+    <div id="quizBtn" class="gameItem">クイズ</div>
+    <div id="nasaBtn" class="gameItem">NASAゲーム</div>
+    <div class="gameDisabled">大喜利（準備中）</div>
+    <div class="gameDisabled">トーク（準備中）</div>
+  </div>
 </div>
-
-<div id="nasaBtn" class="gameItem">
-NASAゲーム
-</div>
-
-<div class="gameDisabled">
-大喜利（準備中）
-</div>
-
-<div class="gameDisabled">
-トーク（準備中）
-</div>
-
-</div>
-
-</div>
-
 
 <p>
 ルームID：
@@ -171,47 +139,25 @@ NASAゲーム
 参加人数：
 <strong id="count">0</strong>人
 
-<button onclick="toggleMembers()">
-メンバーを見る
-</button>
+<button onclick="toggleMembers()">メンバーを見る</button>
 </p>
-
 
 <div id="members" style="display:none;"></div>
 
-
 <!-- ホスト用 -->
 <div id="host-area" class="section" style="display:none;">
-
-<h3>🔗 招待</h3>
-
-<input id="join-url" readonly style="width:75%">
-
-<button onclick="copyURL()">コピー</button>
-
-<div id="qrcode" style="margin-top:15px;"></div>
-
-<button id="exitQuizBtn" style="display:none;">
-クイズ終了
-</button>
-   
+  <h3>🔗 招待</h3>
+  <input id="join-url" readonly style="width:75%">
+  <button onclick="copyURL()">コピー</button>
+  <div id="qrcode" style="margin-top:15px;"></div>
+  <button id="exitQuizBtn" style="display:none;">クイズ終了</button>
 </div>
-
 
 <div id="popup"></div>
 
-
-<!-- ゲーム表示 -->
+<!-- ゲーム表示コンテナ（共通） -->
 <div id="game-container"></div>
 
-
 <script type="module" src="/static/js/core/room.js"></script>
-
 </body>
 </html>
-
-
-
-
-
-
