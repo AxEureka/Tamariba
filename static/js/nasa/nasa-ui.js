@@ -216,7 +216,7 @@ html+=`${i+1}. ${p.name} (${p.score})<br>`;
 html+=`<br>個人平均: ${data.personal_avg}<br>`;
 
 if(!isHost){
-html+=`あなたの得点: ${data.my_personal}<br>`;
+html+=`あなたの得点: ${data.my_personal ?? "未計算"}<br>`;
 }
 
 html+="<hr><h3>チームトップ3</h3>";
@@ -228,7 +228,7 @@ html+=`${i+1}. ${t.name} (${t.score})<br>`;
 html+=`<br>チーム平均: ${data.team_avg}<br>`;
 
 if(!isHost){
-html+=`あなたのチーム: ${data.my_team}<br>`;
+html+=`あなたのチーム: ${data.my_team ?? "不明"}<br>`;
 }
 
 container.innerHTML+=html;
