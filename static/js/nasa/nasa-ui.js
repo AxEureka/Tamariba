@@ -53,51 +53,89 @@ export function createItemEditor(container, onSubmit) {
     });
     onSubmit(items, correct);
   };
+
+  btn.onclick=()=>{
+
+const ranks=selects.map(s=>parseInt(s.value));
+
+if(ranks.some(v=>!v)){
+alert("すべて順位を選んでください");
+return;
+}
+
+onSubmit(ranks);
+
+};
+  
   box.appendChild(btn);
   container.appendChild(box);
 }
 
-export function createRankingUI(container, items, onSubmit) {
-  container.innerHTML = "";
-  const box = document.createElement("div");
-  box.className = "nasa-ui";
+export function createRankingUI(container,items,onSubmit,title){
 
-  const selects = [];
-  items.forEach(item => {
-    const row = document.createElement("div");
+container.innerHTML="";
 
-    const label = document.createElement("span");
-    label.textContent = item + " ";
+const box=document.createElement("div");
+box.className="nasa-ui";
 
-    const select = document.createElement("select");
-    const defaultOption = document.createElement("option");
-    defaultOption.value = "";
-    defaultOption.textContent = "選択";
-    defaultOption.disabled = true;
-    defaultOption.selected = true;
-    select.appendChild(defaultOption);
+if(title){
+const h=document.createElement("h2");
+h.textContent=title;
+box.appendChild(h);
+}
 
-    for (let i = 1; i <= items.length; i++) {
-      const op = document.createElement("option");
-      op.value = i;
-      op.textContent = i;
-      select.appendChild(op);
-    }
+const selects=[];
 
-    row.appendChild(label);
-    row.appendChild(select);
-    box.appendChild(row);
-    selects.push(select);
-  });
+items.forEach(item=>{
 
-  const btn = document.createElement("button");
-  btn.textContent = "OK";
-  btn.onclick = () => {
-    const ranks = selects.map(s => parseInt(s.value) || 0);
-    onSubmit(ranks);
-  };
-  box.appendChild(btn);
-  container.appendChild(box);
+const row=document.createElement("div");
+
+const label=document.createElement("span");
+label.textContent=item+" ";
+
+const select=document.createElement("select");
+
+const first=document.createElement("option");
+first.value="";
+first.textContent="選択";
+first.disabled=true;
+first.selected=true;
+select.appendChild(first);
+
+for(let i=1;i<=items.length;i++){
+
+const op=document.createElement("option");
+op.value=i;
+op.textContent=i;
+
+select.appendChild(op);
+
+}
+
+row.appendChild(label);
+row.appendChild(select);
+
+box.appendChild(row);
+
+selects.push(select);
+
+});
+
+const btn=document.createElement("button");
+btn.textContent="OK";
+
+btn.onclick=()=>{
+
+const ranks=selects.map(s=>parseInt(s.value)||0);
+
+onSubmit(ranks);
+
+};
+
+box.appendChild(btn);
+
+container.appendChild(box);
+
 }
 
 export function showCorrect(container, items, correct) {
