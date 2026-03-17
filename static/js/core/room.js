@@ -228,7 +228,6 @@ showPopup("参加URLをコピーしました");
 }
 
 /* ===== 遊び選択 ===== */
-
 function selectGame(type){
 
 if (!socket || socket.readyState !== WebSocket.OPEN) {
@@ -241,6 +240,8 @@ if (gameDropdown) gameDropdown.style.display = "none";
 
 const container = document.getElementById("game-container");
 
+/* ===== クイズ ===== */
+
 if (type === "quiz"){
 
 if (myName === hostName){
@@ -248,6 +249,18 @@ if (myName === hostName){
 socket.send(JSON.stringify({
 type:"start_quiz"
 }));
+
+container.classList.add("active");
+
+startQuizHost(socket, container);
+
+document.getElementById("exitQuizBtn").style.display = "inline-block";
+
+}
+
+}
+
+/* ===== NASA ===== */
 
 if(type==="nasa"){
 
@@ -260,13 +273,6 @@ type:"start_nasa"
 container.classList.add("active");
 
 startNASAHost(socket,container);
-
-}
-
-
-container.classList.add("active");
-
-startQuizHost(socket, container);
 
 document.getElementById("exitQuizBtn").style.display = "inline-block";
 
@@ -350,6 +356,12 @@ selectGame("quiz");
 return;
 }
 
+if (e.target.closest("#nasaBtn")) {
+e.stopPropagation();
+selectGame("nasa");
+return;
+}
+
 if (
 gameDropdown &&
 !gameDropdown.contains(e.target) &&
@@ -357,6 +369,8 @@ gameDropdown &&
 ) {
 gameDropdown.style.display = "none";
 }
+
+});
 
 });
 
