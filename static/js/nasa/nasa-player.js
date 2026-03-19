@@ -4,9 +4,6 @@ let socket;
 let container;
 
 let items=[];
-let personal = [];
-let team = [];
-let teamName = "";
 let lastCorrect=null;
 let lastRanking=null;
 
@@ -44,17 +41,10 @@ name:window.myName
 if(data.type==="nasa_ranking"){
 lastRanking=data;
 showRanking(container,data,false);
-
-// ★ 追加：ランキング→正解に戻るボタン
-addBackToCorrectButton();
 }
 
 });
 
-
-// =========================
-// ★ 正解再表示
-// =========================
 window.showCorrectAgain=()=>{
 if(lastCorrect){
 showCorrect(container,items,lastCorrect,()=>{
@@ -66,27 +56,13 @@ name:window.myName
 }
 };
 
-// =========================
-// ★ ランキング再表示
-// =========================
-window.showRankingAgain=()=>{
-if(lastRanking){
-showRanking(container,lastRanking,false);
-}
-};
-
 }
 
-// =========================
-// 個人回答
-// =========================
 function startPersonal(){
 
 createRankingUI(container,items,(r)=>{
 
 if(!confirm("個人回答を確定しますか？")) return;
-
-personal=r;
 
 socket.send(JSON.stringify({
 type:"nasa_personal",
@@ -100,12 +76,9 @@ startTeam();
 
 }
 
-// =========================
-// チーム回答
-// =========================
 function startTeam(){
 
-teamName = prompt("チーム名","チームA") || "チーム";
+const teamName=prompt("チーム名","チームA")||"チーム";
 
 createRankingUI(container,items,(r)=>{
 
@@ -118,16 +91,8 @@ team:teamName,
 ranks:r
 }));
 
-container.innerHTML=`
-<h2>${teamName} の回答送信完了！</h2>
-<p>結果発表をお待ちください…</p>
-`;
+container.innerHTML=`<h2>送信完了</h2>`;
 
 },`${teamName} の回答`,true);
-
-}
-
-
-container.appendChild(btn);
 
 }
