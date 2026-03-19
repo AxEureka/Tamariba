@@ -4,19 +4,17 @@ let socket;
 let container;
 
 let items=[];
-let personal=[];
-let team=[];
-let teamName="";
+let lastCorrect=null;
+let lastRanking=null;
 
 export function startNASAPlayer(ws,uiContainer){
 
 socket=ws;
 container=uiContainer;
 
-// ★ 名前の保険（undefined対策）
 if(!window.myName){
-const params = new URLSearchParams(location.search);
-window.myName = params.get("name") || "名無し";
+const params=new URLSearchParams(location.search);
+window.myName=params.get("name")||"名無し";
 }
 
 socket.addEventListener("message",(e)=>{
@@ -30,29 +28,33 @@ startPersonal();
 }
 
 if(data.type==="nasa_result"){
+lastCorrect=data.correct;
+
 showCorrect(container,items,data.correct,()=>{
-
-socket.send(JSON.stringify({type:"nasa_get_ranking"}));
-
+socket.send(JSON.stringify({
+type:"nasa_get_ranking",
+name:window.myName
+}));
 });
-
-// ★ 追加：いつでも押せるボタン
-const btn = document.createElement("button");
-btn.textContent = "ランキングを見る";
-
-btn.onclick = ()=>{
-socket.send(JSON.stringify({type:"nasa_get_ranking"}));
-};
-
-container.appendChild(btn);
-
 }
 
 if(data.type==="nasa_ranking"){
+lastRanking=data;
 showRanking(container,data,false);
 }
 
 });
+
+window.showCorrectAgain=()=>{
+if(lastCorrect){
+showCorrect(container,items,lastCorrect,()=>{
+socket.send(JSON.stringify({
+type:"nasa_get_ranking",
+name:window.myName
+}));
+});
+}
+};
 
 }
 
@@ -70,19 +72,18 @@ ranks:r
 
 startTeam();
 
-},`${window.myName} の回答`, false); // ← 重複チェックON
+},`${window.myName} の回答`,false);
 
 }
 
 function startTeam(){
 
-teamName=prompt("チーム名","チームA")||"チーム";
+const teamName=prompt("チーム名","チームA")||"チーム";
 
 createRankingUI(container,items,(r)=>{
 
-team=r;
+if(!confirm("チーム回答を確定しますか？")) return;
 
-// ★ 送信
 socket.send(JSON.stringify({
 type:"nasa_team",
 name:window.myName,
@@ -90,12 +91,11 @@ team:teamName,
 ranks:r
 }));
 
-// ★ ここ追加（超重要）
-container.innerHTML = `
+container.innerHTML=`
 <h2>${teamName} の回答送信完了！</h2>
 <p>結果発表をお待ちください…</p>
 `;
 
-},`${teamName} の回答`, true);
+},`${teamName} の回答`,true);
 
 }
