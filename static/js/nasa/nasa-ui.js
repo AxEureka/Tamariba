@@ -232,9 +232,8 @@ container.appendChild(btn);
 // =========================
 export function showRanking(container,data,isHost){
 
-// ★ ここに追加（これが最重要）
-const old = document.querySelector(".ranking-wrap");
-if(old) old.remove();
+// ★ 完全除去
+document.querySelectorAll(".ranking-wrap").forEach(el => el.remove());
 
 container.innerHTML="";
 
