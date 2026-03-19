@@ -4,7 +4,6 @@ let socket;
 let container;
 
 let items=[];
-let items = [];
 let personal = [];
 let team = [];
 let teamName = "";
@@ -82,7 +81,7 @@ startTeam();
 
 function startTeam(){
 
-const teamName=prompt("チーム名","チームA")||"チーム";
+teamName = prompt("チーム名","チームA") || "チーム";
 
 createRankingUI(container,items,(r)=>{
 
