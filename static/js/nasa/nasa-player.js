@@ -44,10 +44,17 @@ name:window.myName
 if(data.type==="nasa_ranking"){
 lastRanking=data;
 showRanking(container,data,false);
+
+// ★ 追加：ランキング→正解に戻るボタン
+addBackToCorrectButton();
 }
 
 });
 
+
+// =========================
+// ★ 正解再表示
+// =========================
 window.showCorrectAgain=()=>{
 if(lastCorrect){
 showCorrect(container,items,lastCorrect,()=>{
@@ -59,11 +66,26 @@ name:window.myName
 }
 };
 
+// =========================
+// ★ ランキング再表示
+// =========================
+window.showRankingAgain=()=>{
+if(lastRanking){
+showRanking(container,lastRanking,false);
+addBackToCorrectButton();
+}
+};
+
 }
 
+// =========================
+// 個人回答
+// =========================
 function startPersonal(){
 
 createRankingUI(container,items,(r)=>{
+
+if(!confirm("個人回答を確定しますか？")) return;
 
 personal=r;
 
@@ -79,6 +101,9 @@ startTeam();
 
 }
 
+// =========================
+// チーム回答
+// =========================
 function startTeam(){
 
 teamName = prompt("チーム名","チームA") || "チーム";
@@ -100,5 +125,22 @@ container.innerHTML=`
 `;
 
 },`${teamName} の回答`,true);
+
+}
+
+
+// =========================
+// ★ 追加：ランキング→正解ボタン
+// =========================
+function addBackToCorrectButton(){
+
+const btn=document.createElement("button");
+btn.textContent="正解を見る";
+
+btn.onclick=()=>{
+window.showCorrectAgain();
+};
+
+container.appendChild(btn);
 
 }
