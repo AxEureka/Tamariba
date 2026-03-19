@@ -247,12 +247,13 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     if name not in room["nasa_answers"]:
                         room["nasa_answers"][name] = {}
 
-                    t = team
-
-                    room.setdefault("team_answers", {})
-                    room["team_answers"][t] = ranks
+                    # チーム名だけ保存（個人には回答持たせない）
                     room["nasa_answers"][name]["team_name"] = team
 
+                    # ★ チーム回答はここで一元管理
+                    room.setdefault("team_answers", {})
+                    room["team_answers"][team] = ranks
+            
             # =========================
             # NASA結果発表
             # =========================
@@ -280,17 +281,18 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     )
 
                 personal_scores = []
+        
+                # チームスコア（チーム単位）
                 team_scores = {}
 
                 for t, ranks in room.get("team_answers", {}).items():
                     s = calc(ranks)
                     team_scores[t] = [s]
-                my_personal = None
+
                 my_team = None
 
                 for name, a in room["nasa_answers"].items():
 
-                    # 個人
                     if "personal" in a:
                         s = calc(a["personal"])
                         personal_scores.append((name, s))
@@ -298,12 +300,10 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                         if name == my_name:
                             my_personal = s
 
-                    # チーム
-                    if "team" in a:
-                        t = a.get("team_name", "チーム")
-                        s = calc(a["team"])
-                        team_scores.setdefault(t, []).append(s)
-
+                    # ★ チーム名だけ拾う
+                    if name == my_name:
+                        my_team = a.get("team_name")
+                        
                         if name == my_name:
                             my_team = t
 
