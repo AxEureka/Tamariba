@@ -408,13 +408,9 @@ if(exitQuizBtn){
 
 exitQuizBtn.onclick = ()=>{
 
-socket.send(JSON.stringify({
-type:"end_quiz"
-}));
-
-socket.send(JSON.stringify({
-type:"end_nasa"
-}));
+// 全ゲーム終了（共通化）
+socket.send(JSON.stringify({ type:"end_quiz" }));
+socket.send(JSON.stringify({ type:"end_nasa" }));
 
 const container = document.getElementById("game-container");
 container.classList.remove("active");
