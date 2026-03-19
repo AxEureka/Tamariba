@@ -139,7 +139,7 @@
   gap: 40px;
 
   z-index: 999;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .ranking-box{
