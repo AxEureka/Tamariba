@@ -31,6 +31,8 @@ function buildItems(){
 itemArea.innerHTML="";
 const n=parseInt(countInput.value);
 
+const selects=[];
+
 for(let i=0;i<n;i++){
 
 const row=document.createElement("div");
@@ -39,7 +41,6 @@ row.className="rank-row";
 const name=document.createElement("input");
 name.placeholder="品目"+(i+1);
 
-// ★ ドロップダウン（子と統一）
 const rank=document.createElement("select");
 
 // 初期選択
@@ -59,10 +60,28 @@ rank.appendChild(op);
 
 row.appendChild(name);
 row.appendChild(rank);
-
 itemArea.appendChild(row);
 
+selects.push(rank);
 }
+
+// ★ 親も重複チェック
+function checkDuplicate(){
+
+const values=selects.map(s=>s.value).filter(v=>v!="");
+
+let dup=[];
+
+values.forEach(v=>{
+if(values.filter(x=>x===v).length>1) dup.push(v);
+});
+
+selects.forEach(s=>{
+s.style.background = dup.includes(s.value) ? "#ff6b6b" : "";
+});
+}
+
+selects.forEach(s=>s.onchange=checkDuplicate);
 
 }
 
@@ -74,7 +93,6 @@ btn.textContent="出題";
 
 btn.onclick=()=>{
 
-// ★ 確認ポップアップ（1回だけ）
 if(!confirm("出題しますか？")) return;
 
 const items=[];
@@ -123,7 +141,6 @@ label.textContent=item;
 
 const select=document.createElement("select");
 
-// 初期選択
 const first=document.createElement("option");
 first.value="";
 first.textContent="選択";
@@ -160,16 +177,10 @@ values.forEach(v=>{
 if(values.filter(x=>x===v).length>1) dup.push(v);
 });
 
-// ハイライト
 selects.forEach(s=>{
-if(dup.includes(s.value)){
-s.style.background="#ff6b6b";
-}else{
-s.style.background="";
-}
+s.style.background = dup.includes(s.value) ? "#ff6b6b" : "";
 });
 
-// ボタン制御
 if(isTeam){
 btn.disabled = values.length!=items.length;
 }else{
@@ -180,7 +191,6 @@ btn.disabled = dup.length>0 || values.length!=items.length;
 
 selects.forEach(s=>s.onchange=checkDuplicate);
 
-// ★ OK処理（ここが抜けてた）
 btn.onclick=()=>{
 const ranks=selects.map(s=>parseInt(s.value));
 onSubmit(ranks);
@@ -210,12 +220,10 @@ box.appendChild(div);
 
 container.appendChild(box);
 
-// ★ ボタン1つだけ
 const btn=document.createElement("button");
 btn.textContent="ランキングを見る";
 btn.onclick=onRanking;
 container.appendChild(btn);
-
 }
 
 
@@ -229,64 +237,41 @@ container.innerHTML="";
 const wrap=document.createElement("div");
 wrap.className="ranking-wrap";
 
-// ===================
-// 個人
-// ===================
 const personal=document.createElement("div");
 personal.className="ranking-box";
 
 let html1=`<h2>🏆 個人ランキング</h2>`;
-
 data.personal_top.forEach((p,i)=>{
 html1+=`<div class="rank-line ${i===0?"rank-1":""}">
 ${i+1}位：${p.name}（${p.score}）
 </div>`;
 });
-
 html1+=`<hr><div>平均：${data.personal_avg}</div>`;
-
 if(!isHost){
 html1+=`<div>あなた：${data.my_personal ?? "-"}</div>`;
 }
-
 personal.innerHTML=html1;
 
-
-// ===================
-// チーム
-// ===================
 const team=document.createElement("div");
 team.className="ranking-box";
 
 let html2=`<h2>👥 チームランキング</h2>`;
-
 data.team_top.forEach((t,i)=>{
 html2+=`<div class="rank-line ${i===0?"rank-1":""}">
 ${i+1}位：${t.name}（${t.score}）
 </div>`;
 });
-
 html2+=`<hr><div>平均：${data.team_avg}</div>`;
-
 if(!isHost){
 html2+=`<div>あなたのチーム：${data.my_team ?? "-"}</div>`;
 }
-
 team.innerHTML=html2;
 
-
-// ===================
-// 横並び
-// ===================
 wrap.appendChild(personal);
 wrap.appendChild(team);
-
 container.appendChild(wrap);
 
-
-// ===================
-// ★ 正解に戻るボタン（見える位置に出す）
-// ===================
+// ★ ボタン（1個だけ）
 const btnArea=document.createElement("div");
 btnArea.style.textAlign="center";
 btnArea.style.marginTop="20px";
@@ -302,5 +287,4 @@ window.showCorrectAgain();
 
 btnArea.appendChild(backBtn);
 container.appendChild(btnArea);
-
 }
