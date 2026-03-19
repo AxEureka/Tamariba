@@ -1,7 +1,7 @@
 console.log("nasa-ui loaded");
 
 // =========================
-// ★ 追加：問題作成UI（これが抜けてた）
+// 問題作成UI
 // =========================
 export function createItemEditor(container,onSubmit){
 
@@ -39,15 +39,15 @@ row.className="rank-row";
 const name=document.createElement("input");
 name.placeholder="品目"+(i+1);
 
+// ★ ドロップダウン
 const rank=document.createElement("select");
 
 for(let j=1;j<=n;j++){
-  const op=document.createElement("option");
-  op.value=j;
-  op.textContent=j;
-  rank.appendChild(op);
+const op=document.createElement("option");
+op.value=j;
+op.textContent=j;
+rank.appendChild(op);
 }
-rank.placeholder="正解順位";
 
 row.appendChild(name);
 row.appendChild(rank);
@@ -66,11 +66,13 @@ btn.textContent="出題";
 
 btn.onclick=()=>{
 
+if(!confirm("出題しますか？")) return;
+
 const items=[];
 const correct=[];
 
 itemArea.querySelectorAll(".rank-row").forEach(row=>{
-const inputs=row.querySelectorAll("input");
+const inputs=row.querySelectorAll("input, select");
 items.push(inputs[0].value);
 correct.push(parseInt(inputs[1].value));
 });
@@ -81,12 +83,11 @@ onSubmit(items,correct);
 
 box.appendChild(btn);
 container.appendChild(box);
-
 }
 
 
 // =========================
-// ★ 回答UI（修正版）
+// 回答UI
 // =========================
 export function createRankingUI(container,items,onSubmit,title,isTeam=false){
 
@@ -149,7 +150,6 @@ values.forEach(v=>{
 if(values.filter(x=>x===v).length>1) dup.push(v);
 });
 
-// ハイライト
 selects.forEach(s=>{
 if(dup.includes(s.value)){
 s.style.background="#ff6b6b";
@@ -158,7 +158,6 @@ s.style.background="";
 }
 });
 
-// ボタン制御
 if(isTeam){
 btn.disabled = values.length!=items.length;
 }else{
@@ -170,17 +169,13 @@ btn.disabled = dup.length>0 || values.length!=items.length;
 selects.forEach(s=>s.onchange=checkDuplicate);
 
 btn.onclick=()=>{
+
+if(!confirm("回答を確定しますか？")) return;
+
 const ranks=selects.map(s=>parseInt(s.value));
 onSubmit(ranks);
 };
 
-btn.onclick=()=>{
-
-if(!confirm("出題しますか？")) return;
-
-onSubmit(items,correct);
-};
-  
 box.appendChild(btn);
 container.appendChild(box);
 
@@ -194,8 +189,8 @@ export function showCorrect(container,items,correct,onRanking){
 
 container.innerHTML="<h2>正解順位</h2>";
 
-const box = document.createElement("div");
-box.className = "result-box";
+const box=document.createElement("div");
+box.className="result-box";
 
 items.forEach((item,i)=>{
 const div=document.createElement("div");
@@ -206,6 +201,7 @@ box.appendChild(div);
 
 container.appendChild(box);
 
+// ランキングボタン（1つだけ）
 const btn=document.createElement("button");
 btn.textContent="ランキングを見る";
 btn.onclick=onRanking;
@@ -213,73 +209,65 @@ container.appendChild(btn);
 
 }
 
+
 // =========================
 // ランキング表示
 // =========================
 export function showRanking(container,data,isHost){
 
-container.innerHTML = "";
+container.innerHTML="";
 
-// ラッパー
-const wrap = document.createElement("div");
-wrap.className = "ranking-wrap";
+const wrap=document.createElement("div");
+wrap.className="ranking-wrap";
 
-// ===================
-// 個人ランキング
-// ===================
-const personal = document.createElement("div");
-personal.className = "ranking-box";
+// 個人
+const personal=document.createElement("div");
+personal.className="ranking-box";
 
-let personalHTML = `<h2>🏆 個人ランキング</h2>`;
+let html1=`<h2>🏆 個人ランキング</h2>`;
 
 data.personal_top.forEach((p,i)=>{
-personalHTML += `
-<div class="rank-line ${i===0?"rank-1":""}">
+html1+=`<div class="rank-line ${i===0?"rank-1":""}">
 ${i+1}位：${p.name}（${p.score}）
 </div>`;
 });
 
-personalHTML += `<hr>
-<div>平均：${data.personal_avg}</div>`;
+html1+=`<hr><div>平均：${data.personal_avg}</div>`;
 
 if(!isHost){
-personalHTML += `<div>あなた：${data.my_personal ?? "-"}</div>`;
+html1+=`<div>あなた：${data.my_personal ?? "-"}</div>`;
 }
 
-personal.innerHTML = personalHTML;
+personal.innerHTML=html1;
 
+// チーム
+const team=document.createElement("div");
+team.className="ranking-box";
 
-// ===================
-// チームランキング
-// ===================
-const team = document.createElement("div");
-team.className = "ranking-box";
-
-let teamHTML = `<h2>👥 チームランキング</h2>`;
+let html2=`<h2>👥 チームランキング</h2>`;
 
 data.team_top.forEach((t,i)=>{
-teamHTML += `
-<div class="rank-line ${i===0?"rank-1":""}">
+html2+=`<div class="rank-line ${i===0?"rank-1":""}">
 ${i+1}位：${t.name}（${t.score}）
 </div>`;
 });
 
-teamHTML += `<hr>
-<div>平均：${data.team_avg}</div>`;
+html2+=`<hr><div>平均：${data.team_avg}</div>`;
 
 if(!isHost){
-teamHTML += `<div>あなたのチーム：${data.my_team ?? "-"}</div>`;
+html2+=`<div>あなたのチーム：${data.my_team ?? "-"}</div>`;
 }
 
-team.innerHTML = teamHTML;
+team.innerHTML=html2;
 
-
-// ===================
-// 結合
-// ===================
 wrap.appendChild(personal);
 wrap.appendChild(team);
-
 container.appendChild(wrap);
+
+// ★ 戻るボタン
+const btn=document.createElement("button");
+btn.textContent="正解を見る";
+btn.onclick=()=>window.showCorrectAgain && window.showCorrectAgain();
+container.appendChild(btn);
 
 }
