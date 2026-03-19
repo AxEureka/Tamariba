@@ -139,6 +139,7 @@
   gap: 40px;
 
   z-index: 999;
+  pointer-events: none;
 }
 
 .ranking-box{
@@ -152,6 +153,7 @@
   box-shadow: 0 0 20px rgba(0,0,0,0.5);
 
   text-align: center;
+  pointer-events: auto;
 }
 
 .rank-line{
@@ -164,3 +166,4 @@
   font-weight: bold;
   font-size: 1.1em;
 }
+
