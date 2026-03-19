@@ -60,7 +60,6 @@ socket.send(JSON.stringify({type:"nasa_get_ranking"}));
 window.showRankingAgain=()=>{
 if(lastRanking){
 showRanking(container,lastRanking,true);
-addBackToCorrectButton();
 }
 };
 
@@ -88,18 +87,6 @@ socket.send(JSON.stringify({type:"nasa_get_ranking"}));
 
 }
 
-
-// =========================
-// ★ 追加：ランキング→正解ボタン
-// =========================
-function addBackToCorrectButton(){
-
-const btn=document.createElement("button");
-btn.textContent="正解を見る";
-
-btn.onclick=()=>{
-window.showCorrectAgain();
-};
 
 container.appendChild(btn);
 
