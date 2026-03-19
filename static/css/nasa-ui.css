@@ -131,15 +131,16 @@
 
 .ranking-wrap{
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-
+  inset: 0;               /* ← これが重要 */
   display: flex;
+  justify-content: center;
+  align-items: center;
+
   gap: 40px;
 
   z-index: 999;
-  pointer-events: auto;
+
+  pointer-events: none;   /* ← 全体はクリック無効 */
 }
 
 .ranking-box{
@@ -153,6 +154,10 @@
   box-shadow: 0 0 20px rgba(0,0,0,0.5);
 
   text-align: center;
+  pointer-events: auto;
+}
+
+.ranking-wrap button{
   pointer-events: auto;
 }
 
