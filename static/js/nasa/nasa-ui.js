@@ -39,8 +39,14 @@ row.className="rank-row";
 const name=document.createElement("input");
 name.placeholder="品目"+(i+1);
 
-const rank=document.createElement("input");
-rank.type="number";
+const rank=document.createElement("select");
+
+for(let j=1;j<=n;j++){
+  const op=document.createElement("option");
+  op.value=j;
+  op.textContent=j;
+  rank.appendChild(op);
+}
 rank.placeholder="正解順位";
 
 row.appendChild(name);
@@ -168,6 +174,13 @@ const ranks=selects.map(s=>parseInt(s.value));
 onSubmit(ranks);
 };
 
+btn.onclick=()=>{
+
+if(!confirm("出題しますか？")) return;
+
+onSubmit(items,correct);
+};
+  
 box.appendChild(btn);
 container.appendChild(box);
 
