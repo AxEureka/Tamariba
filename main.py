@@ -45,7 +45,8 @@ async def create_room(data: dict):
         "sockets": [],
         "answers": {},
         "nasa_answers": {},
-        "nasa": {}
+        "nasa": {},
+        "team_answers": {}  # ★ 安全に初期化
     }
 
     return {"room_id": room_id}
@@ -138,7 +139,8 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             "sockets": [],
             "answers": {},
             "nasa_answers": {},
-            "nasa": {}
+            "nasa": {},
+            "team_answers": {}
         }
 
     room = rooms[room_id]
@@ -198,14 +200,11 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 await broadcast(room, {"type": "end_quiz"})
 
             # =========================
-            # NASA開始
+            # NASA
             # =========================
             elif msg_type == "start_nasa":
                 await broadcast(room, {"type": "start_nasa"})
 
-            # =========================
-            # NASA問題設定
-            # =========================
             elif msg_type == "nasa_start":
 
                 room["nasa"] = {
@@ -214,15 +213,13 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 }
 
                 room["nasa_answers"] = {}
+                room["team_answers"] = {}
 
                 await broadcast(room, {
                     "type": "nasa_start",
                     "items": room["nasa"]["items"]
                 })
 
-            # =========================
-            # NASA個人回答
-            # =========================
             elif msg_type == "nasa_personal":
 
                 name = data.get("name")
@@ -233,9 +230,6 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                         "personal": ranks
                     }
 
-            # =========================
-            # NASAチーム回答
-            # =========================
             elif msg_type == "nasa_team":
 
                 name = data.get("name")
@@ -246,16 +240,9 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     if name not in room["nasa_answers"]:
                         room["nasa_answers"][name] = {}
 
-                    # チーム名だけ保存（個人には回答持たせない）
                     room["nasa_answers"][name]["team_name"] = team
-
-                    # ★ チーム回答はここで一元管理
-                    room.setdefault("team_answers", {})
                     room["team_answers"][team] = ranks
-            
-            # =========================
-            # NASA結果発表
-            # =========================
+
             elif msg_type == "nasa_show_result":
 
                 await broadcast(room, {
@@ -264,7 +251,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 })
 
             # =========================
-            # ランキング
+            # ★ ランキング（修正済み）
             # =========================
             elif msg_type == "nasa_get_ranking":
 
@@ -280,15 +267,11 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     )
 
                 personal_scores = []
-        
-                # チームスコア（チーム単位）
                 team_scores = {}
 
-                for t, ranks in room.get("team_answers", {}).items():
-                    s = calc(ranks)
-                    team_scores[t] = [s]
+                for t, ranks in room["team_answers"].items():
+                    team_scores[t] = [calc(ranks)]
 
-               # 初期化（これも念のため追加）
                 my_personal = None
                 my_team = None
 
@@ -301,10 +284,9 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                         if name == my_name:
                             my_personal = s
 
-                    # ★ チーム名だけ取得（これでOK）
                     if name == my_name:
                         my_team = a.get("team_name")
-                        
+
                 personal_scores.sort(key=lambda x: x[1])
 
                 personal_avg = (
@@ -324,6 +306,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     if team_avg_dict else 0
                 )
 
+                # ★ 個別送信（重要）
                 await websocket.send_json({
                     "type": "nasa_ranking",
                     "personal_top": [
@@ -340,9 +323,6 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     "my_team": my_team
                 })
 
-            # =========================
-            # NASA終了
-            # =========================
             elif msg_type == "end_nasa":
                 await broadcast(room, {"type": "end_nasa"})
 
