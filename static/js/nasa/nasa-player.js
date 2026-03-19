@@ -72,7 +72,6 @@ name:window.myName
 window.showRankingAgain=()=>{
 if(lastRanking){
 showRanking(container,lastRanking,false);
-addBackToCorrectButton();
 }
 };
 
@@ -128,18 +127,6 @@ container.innerHTML=`
 
 }
 
-
-// =========================
-// ★ 追加：ランキング→正解ボタン
-// =========================
-function addBackToCorrectButton(){
-
-const btn=document.createElement("button");
-btn.textContent="正解を見る";
-
-btn.onclick=()=>{
-window.showCorrectAgain();
-};
 
 container.appendChild(btn);
 
