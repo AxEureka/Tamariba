@@ -168,13 +168,6 @@ btn.disabled = dup.length>0 || values.length!=items.length;
 
 selects.forEach(s=>s.onchange=checkDuplicate);
 
-btn.onclick=()=>{
-
-if(!confirm("回答を確定しますか？")) return;
-
-const ranks=selects.map(s=>parseInt(s.value));
-onSubmit(ranks);
-};
 
 box.appendChild(btn);
 container.appendChild(box);
@@ -260,14 +253,29 @@ html2+=`<div>あなたのチーム：${data.my_team ?? "-"}</div>`;
 
 team.innerHTML=html2;
 
+// ===================
+// 結合
+// ===================
 wrap.appendChild(personal);
 wrap.appendChild(team);
+
+// ★ ここから修正
+const btnArea=document.createElement("div");
+btnArea.style.marginTop="20px";
+
+const backBtn=document.createElement("button");
+backBtn.textContent="正解を見る";
+
+// 安全に存在チェック
+backBtn.onclick=()=>{
+if(window.showCorrectAgain){
+window.showCorrectAgain();
+}
+};
+
+btnArea.appendChild(backBtn);
+wrap.appendChild(btnArea);
+// ★ ここまで
+
 container.appendChild(wrap);
-
-// ★ 戻るボタン
-const btn=document.createElement("button");
-btn.textContent="正解を見る";
-btn.onclick=()=>window.showCorrectAgain && window.showCorrectAgain();
-container.appendChild(btn);
-
 }
