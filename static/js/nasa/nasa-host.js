@@ -3,71 +3,103 @@ import { createItemEditor, showRanking, showCorrect } from "./nasa-ui.js";
 let socket;
 let container;
 
-let lastCorrect=null;
-let lastItems=null;
-let lastRanking=null;
+let lastCorrect = null;
+let lastItems = null;
+let lastRanking = null;
 
-export function startNASAHost(ws,uiContainer){
+export function startNASAHost(ws, uiContainer) {
 
-socket=ws;
-container=uiContainer;
+  socket = ws;
+  container = uiContainer;
 
-createItemEditor(container,(items,correct)=>{
+  createItemEditor(container, (items, correct) => {
 
-lastItems=items;
-lastCorrect=correct;
+    lastItems = items;
+    lastCorrect = correct;
 
-socket.send(JSON.stringify({
-type:"nasa_start",
-items:items,
-correct:correct
-}));
+    socket.send(JSON.stringify({
+      type: "nasa_start",
+      items: items,
+      correct: correct
+    }));
 
-showControl();
+    showControl();
 
-});
+  });
 
-socket.addEventListener("message",(e)=>{
+  socket.addEventListener("message", (e) => {
 
-let data;
-try{data=JSON.parse(e.data);}catch{return;}
+    let data;
+    try { data = JSON.parse(e.data); } catch { return; }
 
-if(data.type==="nasa_ranking"){
-lastRanking=data;
-showRanking(container,data,true);
+    if (data.type === "nasa_ranking") {
+      lastRanking = data;
+      showRanking(container, data, true);
+      addBackToCorrectButton(); // ← 戻るボタン復活
+    }
+
+    if (data.type === "nasa_result") {
+      showCorrect(container, lastItems, data.correct, () => {
+        socket.send(JSON.stringify({ type: "nasa_get_ranking" }));
+      });
+    }
+
+  });
+
+  // =========================
+  // 正解再表示
+  // =========================
+  window.showCorrectAgain = () => {
+    if (lastCorrect) {
+      showCorrect(container, lastItems, lastCorrect, () => {
+        socket.send(JSON.stringify({ type: "nasa_get_ranking" }));
+      });
+    }
+  };
+
 }
 
-});
+// =========================
+// コントロール画面
+// =========================
+function showControl() {
 
-window.showCorrectAgain=()=>{
-if(lastCorrect){
-showCorrect(container,lastItems,lastCorrect,()=>{
-socket.send(JSON.stringify({type:"nasa_get_ranking"}));
-});
+  container.innerHTML = `
+    <h2>NASAゲーム進行</h2>
+    <button id="showResult">正解発表</button>
+    <button id="showRanking">ランキング</button>
+  `;
+
+  const resultBtn = document.getElementById("showResult");
+  const rankingBtn = document.getElementById("showRanking");
+
+  if (resultBtn) {
+    resultBtn.onclick = () => {
+      socket.send(JSON.stringify({ type: "nasa_show_result" }));
+    };
+  }
+
+  if (rankingBtn) {
+    rankingBtn.onclick = () => {
+      socket.send(JSON.stringify({ type: "nasa_get_ranking" }));
+    };
+  }
+
 }
-};
 
-}
+// =========================
+// ランキング→正解ボタン
+// =========================
+function addBackToCorrectButton() {
 
-function showControl(){
+  const btn = document.createElement("button");
+  btn.textContent = "正解を見る";
 
-container.innerHTML=`
-<h2>NASAゲーム進行</h2>
-<button id="showResult">正解発表</button>
-<button id="showRanking">ランキング</button>
-<button id="endGame">遊びを終わる</button>
-`;
+  btn.onclick = () => {
+    if (window.showCorrectAgain) {
+      window.showCorrectAgain();
+    }
+  };
 
-document.getElementById("showResult").onclick=()=>{
-socket.send(JSON.stringify({type:"nasa_show_result"}));
-};
-
-document.getElementById("showRanking").onclick=()=>{
-socket.send(JSON.stringify({type:"nasa_get_ranking"}));
-};
-
-document.getElementById("endGame").onclick=()=>{
-location.href="/";
-};
-
+  container.appendChild(btn);
 }
