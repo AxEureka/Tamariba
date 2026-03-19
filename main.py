@@ -247,7 +247,10 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     if name not in room["nasa_answers"]:
                         room["nasa_answers"][name] = {}
 
-                    room["nasa_answers"][name]["team"] = ranks
+                    t = team
+
+                    room.setdefault("team_answers", {})
+                    room["team_answers"][t] = ranks
                     room["nasa_answers"][name]["team_name"] = team
 
             # =========================
@@ -279,6 +282,9 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 personal_scores = []
                 team_scores = {}
 
+                for t, ranks in room.get("team_answers", {}).items():
+                    s = calc(ranks)
+                    team_scores[t] = [s]
                 my_personal = None
                 my_team = None
 
