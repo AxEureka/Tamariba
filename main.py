@@ -25,7 +25,6 @@ async def root():
 # =========================
 rooms = {}
 
-
 # =========================
 # ルーム作成
 # =========================
@@ -289,6 +288,8 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     s = calc(ranks)
                     team_scores[t] = [s]
 
+               # 初期化（これも念のため追加）
+                my_personal = None
                 my_team = None
 
                 for name, a in room["nasa_answers"].items():
@@ -300,13 +301,10 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                         if name == my_name:
                             my_personal = s
 
-                    # ★ チーム名だけ拾う
+                    # ★ チーム名だけ取得（これでOK）
                     if name == my_name:
                         my_team = a.get("team_name")
                         
-                        if name == my_name:
-                            my_team = t
-
                 personal_scores.sort(key=lambda x: x[1])
 
                 personal_avg = (
