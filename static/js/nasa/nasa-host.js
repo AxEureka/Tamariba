@@ -3,12 +3,18 @@ import { createItemEditor, showRanking } from "./nasa-ui.js";
 let socket;
 let container;
 
+let lastCorrect=null;
+let lastItems=null;
+
 export function startNASAHost(ws,uiContainer){
 
 socket=ws;
 container=uiContainer;
 
 createItemEditor(container,(items,correct)=>{
+
+lastItems=items;
+lastCorrect=correct;
 
 socket.send(JSON.stringify({
 type:"nasa_start",
@@ -30,6 +36,17 @@ showRanking(container,data,true);
 }
 
 });
+
+window.showCorrectAgain=()=>{
+if(lastCorrect){
+container.innerHTML="";
+import("./nasa-ui.js").then(mod=>{
+mod.showCorrect(container,lastItems,lastCorrect,()=>{
+socket.send(JSON.stringify({type:"nasa_get_ranking"}));
+});
+});
+}
+};
 
 }
 
