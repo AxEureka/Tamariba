@@ -324,7 +324,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     if team_avg_dict else 0
                 )
 
-                await broadcast(room, {
+                await websocket.send_json({
                     "type": "nasa_ranking",
                     "personal_top": [
                         {"name": n, "score": s}
