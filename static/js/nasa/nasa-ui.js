@@ -206,32 +206,37 @@ container.appendChild(box);
 // =========================
 export function showCorrect(container,items,correct,onRanking){
 
-// ★ これ追加（超重要）
-const old = document.querySelector(".ranking-wrap");
-if(old) old.remove();
+document.querySelectorAll(".ranking-wrap").forEach(el => el.remove());
 
-container.innerHTML="<h2>正解順位</h2>";
+container.innerHTML="";
 
 const box=document.createElement("div");
-box.className="result-box";
+box.className="nasa-ui"; // ★これが超重要
+
+const title=document.createElement("h2");
+title.textContent="正解順位";
+box.appendChild(title);
+
+const resultBox=document.createElement("div");
+resultBox.className="result-box";
 
 items.forEach((item,i)=>{
-const div=document.createElement("div");
-div.className="result-item";
-div.textContent=`${item} ： ${correct[i]}`;
-box.appendChild(div);
+  const div=document.createElement("div");
+  div.className="result-item";
+  div.textContent=`${item} ： ${correct[i]}`;
+  resultBox.appendChild(div);
 });
 
-container.appendChild(box);
+box.appendChild(resultBox);
 
-// ランキングボタン
 const btn=document.createElement("button");
 btn.textContent="ランキングを見る";
 btn.onclick=onRanking;
-container.appendChild(btn);
+
+box.appendChild(btn);
+container.appendChild(box);
 
 }
-
 // =========================
 // ランキング表示
 // =========================
@@ -294,6 +299,6 @@ window.showCorrectAgain();
 }
 };
 
-btnArea.appendChild(backBtn);
 wrap.appendChild(btnArea);
+btnArea.appendChild(backBtn);
 }
