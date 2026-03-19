@@ -211,7 +211,7 @@ document.querySelectorAll(".ranking-wrap").forEach(el => el.remove());
 container.innerHTML="";
 
 const box=document.createElement("div");
-box.className="nasa-ui"; // ★これが超重要
+box.className="nasa-ui"; // ★最重要
 
 const title=document.createElement("h2");
 title.textContent="正解順位";
@@ -231,12 +231,17 @@ box.appendChild(resultBox);
 
 const btn=document.createElement("button");
 btn.textContent="ランキングを見る";
-btn.onclick=onRanking;
+
+btn.onclick=()=>{
+  console.log("ランキング押された"); // デバッグ用
+  onRanking();
+};
 
 box.appendChild(btn);
 container.appendChild(box);
 
 }
+
 // =========================
 // ランキング表示
 // =========================
