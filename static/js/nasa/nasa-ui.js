@@ -39,8 +39,16 @@ row.className="rank-row";
 const name=document.createElement("input");
 name.placeholder="品目"+(i+1);
 
-// ★ ドロップダウン
+// ★ ドロップダウン（子と統一）
 const rank=document.createElement("select");
+
+// 初期選択
+const first=document.createElement("option");
+first.value="";
+first.textContent="選択";
+first.disabled=true;
+first.selected=true;
+rank.appendChild(first);
 
 for(let j=1;j<=n;j++){
 const op=document.createElement("option");
@@ -66,6 +74,7 @@ btn.textContent="出題";
 
 btn.onclick=()=>{
 
+// ★ 確認ポップアップ（1回だけ）
 if(!confirm("出題しますか？")) return;
 
 const items=[];
@@ -114,6 +123,7 @@ label.textContent=item;
 
 const select=document.createElement("select");
 
+// 初期選択
 const first=document.createElement("option");
 first.value="";
 first.textContent="選択";
@@ -150,6 +160,7 @@ values.forEach(v=>{
 if(values.filter(x=>x===v).length>1) dup.push(v);
 });
 
+// ハイライト
 selects.forEach(s=>{
 if(dup.includes(s.value)){
 s.style.background="#ff6b6b";
@@ -158,6 +169,7 @@ s.style.background="";
 }
 });
 
+// ボタン制御
 if(isTeam){
 btn.disabled = values.length!=items.length;
 }else{
@@ -168,10 +180,14 @@ btn.disabled = dup.length>0 || values.length!=items.length;
 
 selects.forEach(s=>s.onchange=checkDuplicate);
 
+// ★ OK処理（ここが抜けてた）
+btn.onclick=()=>{
+const ranks=selects.map(s=>parseInt(s.value));
+onSubmit(ranks);
+};
 
 box.appendChild(btn);
 container.appendChild(box);
-
 }
 
 
@@ -194,7 +210,7 @@ box.appendChild(div);
 
 container.appendChild(box);
 
-// ランキングボタン（1つだけ）
+// ★ ボタン1つだけ
 const btn=document.createElement("button");
 btn.textContent="ランキングを見る";
 btn.onclick=onRanking;
@@ -213,7 +229,9 @@ container.innerHTML="";
 const wrap=document.createElement("div");
 wrap.className="ranking-wrap";
 
+// ===================
 // 個人
+// ===================
 const personal=document.createElement("div");
 personal.className="ranking-box";
 
@@ -233,7 +251,10 @@ html1+=`<div>あなた：${data.my_personal ?? "-"}</div>`;
 
 personal.innerHTML=html1;
 
+
+// ===================
 // チーム
+// ===================
 const team=document.createElement("div");
 team.className="ranking-box";
 
@@ -253,20 +274,26 @@ html2+=`<div>あなたのチーム：${data.my_team ?? "-"}</div>`;
 
 team.innerHTML=html2;
 
+
 // ===================
-// 結合
+// 横並び
 // ===================
 wrap.appendChild(personal);
 wrap.appendChild(team);
 
-// ★ ここから修正
+container.appendChild(wrap);
+
+
+// ===================
+// ★ 正解に戻るボタン（見える位置に出す）
+// ===================
 const btnArea=document.createElement("div");
+btnArea.style.textAlign="center";
 btnArea.style.marginTop="20px";
 
 const backBtn=document.createElement("button");
 backBtn.textContent="正解を見る";
 
-// 安全に存在チェック
 backBtn.onclick=()=>{
 if(window.showCorrectAgain){
 window.showCorrectAgain();
@@ -274,8 +301,6 @@ window.showCorrectAgain();
 };
 
 btnArea.appendChild(backBtn);
-wrap.appendChild(btnArea);
-// ★ ここまで
+container.appendChild(btnArea);
 
-container.appendChild(wrap);
 }
