@@ -62,23 +62,25 @@ export function startNASAHost(ws, uiContainer) {
 // =========================
 // コントロール画面
 // =========================
-function showControl() {
+function showControl(){
 
-  container.innerHTML = `
+container.innerHTML=`
+  <div class="nasa-ui">
     <h2>NASAゲーム進行</h2>
     <button id="showResult">正解発表</button>
     <button id="showRanking">ランキング</button>
-  `;
+  </div>
+`;
 
-  const resultBtn = document.getElementById("showResult");
-  const rankingBtn = document.getElementById("showRanking");
+document.getElementById("showResult").onclick=()=>{
+  socket.send(JSON.stringify({type:"nasa_show_result"}));
+};
 
-  if (resultBtn) {
-    resultBtn.onclick = () => {
-      socket.send(JSON.stringify({ type: "nasa_show_result" }));
-    };
-  }
+document.getElementById("showRanking").onclick=()=>{
+  socket.send(JSON.stringify({type:"nasa_get_ranking"}));
+};
 
+}
   if (rankingBtn) {
     rankingBtn.onclick = () => {
       socket.send(JSON.stringify({ type: "nasa_get_ranking" }));
