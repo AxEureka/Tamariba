@@ -4,6 +4,10 @@ let socket;
 let container;
 
 let items=[];
+let items = [];
+let personal = [];
+let team = [];
+let teamName = "";
 let lastCorrect=null;
 let lastRanking=null;
 
