@@ -271,10 +271,11 @@ wrap.appendChild(personal);
 wrap.appendChild(team);
 container.appendChild(wrap);
 
-// ★ ボタン（1個だけ）
+// ★ 完全にこれだけにする
 const btnArea=document.createElement("div");
-btnArea.style.textAlign="center";
-btnArea.style.marginTop="20px";
+btnArea.style.display="flex";
+btnArea.style.justifyContent="flex-end";
+btnArea.style.marginTop="10px";
 
 const backBtn=document.createElement("button");
 backBtn.textContent="正解を見る";
@@ -286,5 +287,5 @@ window.showCorrectAgain();
 };
 
 btnArea.appendChild(backBtn);
-container.appendChild(btnArea);
+wrap.appendChild(btnArea);
 }
