@@ -206,6 +206,10 @@ container.appendChild(box);
 // =========================
 export function showCorrect(container,items,correct,onRanking){
 
+// ★ これ追加（超重要）
+const old = document.querySelector(".ranking-wrap");
+if(old) old.remove();
+
 container.innerHTML="<h2>正解順位</h2>";
 
 const box=document.createElement("div");
@@ -220,12 +224,13 @@ box.appendChild(div);
 
 container.appendChild(box);
 
+// ランキングボタン
 const btn=document.createElement("button");
 btn.textContent="ランキングを見る";
 btn.onclick=onRanking;
 container.appendChild(btn);
-}
 
+}
 
 // =========================
 // ランキング表示
