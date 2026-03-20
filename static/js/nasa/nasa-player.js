@@ -34,23 +34,12 @@ startPersonal();
 }
 
 // =========================
-// ★ 追加：チーム数決定 → チーム選択開始
-// =========================
-if(data.type==="team_count_set"){
-teams = {};
-data.teams.forEach(t=>{
-teams[t]=[];
-});
-startTeamSelect();
-}
-
-// =========================
-// チームフェーズ開始（親トリガー）
+// チームフェーズ開始
 // =========================
 if(data.type==="team_phase_start"){
 teams=data.teams;
 leaders=data.leaders;
-startTeamAnswer();
+startTeamSelect();
 }
 
 // =========================
@@ -58,7 +47,12 @@ startTeamAnswer();
 // =========================
 if(data.type==="team_update"){
 teams=data.teams;
+
+if(!myTeam){
 renderTeamSelect();
+}else{
+showWaiting("チーム登録完了。他メンバーを待っています...");
+}
 }
 
 // =========================
@@ -66,7 +60,10 @@ renderTeamSelect();
 // =========================
 if(data.type==="team_leader_set"){
 leaders[data.team]=data.leader;
+
+if(data.team===myTeam){
 startTeamAnswer();
+}
 }
 
 // =========================
@@ -150,7 +147,7 @@ name:window.myName,
 team:team
 }));
 
-startLeaderSelect();
+showWaiting("チーム登録完了。他メンバーを待っています...");
 };
 
 container.appendChild(btn);
@@ -159,26 +156,23 @@ container.appendChild(btn);
 }
 
 // =========================
-// リーダー選択
+// 待機UI（追加）
 // =========================
-function startLeaderSelect(){
+function showWaiting(msg){
 
-container.innerHTML=`<h2>${myTeam} のメンバー</h2>`;
+container.innerHTML="";
 
-(teams[myTeam]||[]).forEach(member=>{
-const btn=document.createElement("button");
-btn.textContent=member;
+const h=document.createElement("h2");
+h.textContent=msg;
+container.appendChild(h);
 
-btn.onclick=()=>{
-socket.send(JSON.stringify({
-type:"set_team_leader",
-team:myTeam,
-leader:member
-}));
-};
-
-container.appendChild(btn);
+if(myTeam && teams[myTeam]){
+teams[myTeam].forEach(m=>{
+const div=document.createElement("div");
+div.textContent=m;
+container.appendChild(div);
 });
+}
 
 }
 
@@ -189,14 +183,25 @@ function startTeamAnswer(){
 
 const leader=leaders[myTeam];
 
-const isLeader = leader===window.myName;
-
-createRankingUI(container,items,(r)=>{
-
-if(!isLeader){
-alert("リーダーのみ回答できます");
+if(!leader){
+showWaiting("リーダー未決定...");
 return;
 }
+
+const isLeader = leader===window.myName;
+
+// ★ 非リーダー
+if(!isLeader){
+
+container.innerHTML=`
+<h2>${myTeam} の回答（リーダー: ${leader}）</h2>
+<p>リーダーが回答中です...</p>
+`;
+return;
+}
+
+// ★ リーダーのみ入力
+createRankingUI(container,items,(r)=>{
 
 if(!confirm("チーム回答を確定しますか？")) return;
 
