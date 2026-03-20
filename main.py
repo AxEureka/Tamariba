@@ -227,9 +227,12 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 })
             elif msg_type == "start_nasa":
 
+                if not room["nasa"].get("items"):
+                    return  # ★データ未設定なら何もしない
+            
                 await broadcast(room, {
                     "type": "nasa_start",
-                    "items": room["nasa"].get("items", [])
+                    "items": room["nasa"]["items"]
                 })
             
             
