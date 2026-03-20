@@ -51,7 +51,7 @@ teams=data.teams;
 if(!myTeam){
 renderTeamSelect();
 }else{
-showWaiting("チーム登録完了。他メンバーを待っています...");
+renderLeaderSelect(); // ★変更：待機 → リーダー選択
 }
 }
 
@@ -62,7 +62,7 @@ if(data.type==="team_leader_set"){
 leaders[data.team]=data.leader;
 
 if(data.team===myTeam){
-startTeamAnswer();
+startTeamAnswer(); // ★ここで初めて回答へ
 }
 }
 
@@ -156,7 +156,35 @@ container.appendChild(btn);
 }
 
 // =========================
-// 待機UI（追加）
+// ★追加：リーダー選択UI
+// =========================
+function renderLeaderSelect(){
+
+container.innerHTML="<h2>リーダーを選択</h2>";
+
+const members = teams[myTeam] || [];
+
+members.forEach(m=>{
+const btn=document.createElement("button");
+btn.textContent=m;
+
+btn.onclick=()=>{
+socket.send(JSON.stringify({
+type:"set_leader",
+team:myTeam,
+leader:m
+}));
+
+showWaiting(`${m} をリーダーに設定中...`);
+};
+
+container.appendChild(btn);
+});
+
+}
+
+// =========================
+// 待機UI
 // =========================
 function showWaiting(msg){
 
