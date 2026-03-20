@@ -225,6 +225,12 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     "type": "nasa_start",
                     "items": room["nasa"]["items"]
                 })
+            elif msg_type == "start_nasa":
+
+                await broadcast(room, {
+                    "type": "nasa_start",
+                    "items": room["nasa"].get("items", [])
+                })
             
             
             # =========================
