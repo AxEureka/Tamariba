@@ -7,23 +7,34 @@ let lastCorrect = null;
 let lastItems = null;
 let lastRanking = null;
 
+// ★ 追加
+let teamCount = 2;
+
 export function startNASAHost(ws, uiContainer) {
 
   socket = ws;
   container = uiContainer;
 
-  createItemEditor(container, (items, correct) => {
+  // =========================
+  // ★ 先にチーム数選択UI
+  // =========================
+  showTeamSetup(() => {
 
-    lastItems = items;
-    lastCorrect = correct;
+    // 元の処理（完全維持）
+    createItemEditor(container, (items, correct) => {
 
-    socket.send(JSON.stringify({
-      type: "nasa_start",
-      items: items,
-      correct: correct
-    }));
+      lastItems = items;
+      lastCorrect = correct;
 
-    showControl();
+      socket.send(JSON.stringify({
+        type: "nasa_start",
+        items: items,
+        correct: correct
+      }));
+
+      showControl();
+
+    });
 
   });
 
@@ -46,7 +57,7 @@ export function startNASAHost(ws, uiContainer) {
 
   });
 
-  // 正解再表示
+  // 正解再表示（そのまま）
   window.showCorrectAgain = () => {
     if (lastCorrect) {
       showCorrect(container, lastItems, lastCorrect, () => {
@@ -58,13 +69,49 @@ export function startNASAHost(ws, uiContainer) {
 }
 
 // =========================
-// コントロール画面
+// ★ チーム設定UI（追加）
+// =========================
+function showTeamSetup(onNext){
+
+  container.innerHTML=`
+    <div class="nasa-ui">
+      <h2>チーム設定</h2>
+      <label>チーム数：</label>
+      <input id="teamCount" type="number" min="2" max="10" value="2">
+      <br><br>
+      <button id="nextBtn">次へ</button>
+    </div>
+  `;
+
+  const input = document.getElementById("teamCount");
+  const btn = document.getElementById("nextBtn");
+
+  btn.onclick=()=>{
+
+    teamCount = parseInt(input.value) || 2;
+
+    socket.send(JSON.stringify({
+      type:"set_team_count",
+      count: teamCount
+    }));
+
+    onNext();
+  };
+
+}
+
+// =========================
+// コントロール画面（既存＋追加）
 // =========================
 function showControl(){
 
   container.innerHTML=`
     <div class="nasa-ui">
       <h2>NASAゲーム進行</h2>
+
+      <!-- ★ 追加 -->
+      <button id="startTeam">チーム回答開始</button>
+
       <button id="showResult">正解発表</button>
       <button id="showRanking">ランキング</button>
     </div>
@@ -72,6 +119,19 @@ function showControl(){
 
   const resultBtn = document.getElementById("showResult");
   const rankingBtn = document.getElementById("showRanking");
+
+  // ★ 追加
+  const teamBtn = document.getElementById("startTeam");
+
+  if (teamBtn) {
+    teamBtn.onclick=()=>{
+      socket.send(JSON.stringify({
+        type:"start_team_phase"
+      }));
+    };
+  }
+
+  // ↓↓↓ここ完全に元のまま↓↓↓
 
   if (resultBtn) {
     resultBtn.onclick=()=>{
@@ -91,7 +151,7 @@ function showControl(){
 }
 
 // =========================
-// ランキング→正解ボタン
+// ランキング→正解ボタン（そのまま）
 // =========================
 function addBackToCorrectButton() {
 
