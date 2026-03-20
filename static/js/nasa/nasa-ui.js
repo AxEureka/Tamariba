@@ -341,4 +341,3 @@ window.showCorrectAgain();
 wrap.appendChild(btnArea);
 btnArea.appendChild(backBtn);
 }
-```
