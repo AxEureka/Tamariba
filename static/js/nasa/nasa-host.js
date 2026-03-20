@@ -81,7 +81,10 @@ function showControl(){
 
   if (rankingBtn) {
     rankingBtn.onclick=()=>{
-      socket.send(JSON.stringify({type:"nasa_get_ranking"}));
+     socket.send(JSON.stringify({
+      type:"nasa_get_ranking",
+      name: window.myName || "host"
+    }));
     };
   }
 
