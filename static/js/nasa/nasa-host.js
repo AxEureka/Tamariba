@@ -21,12 +21,14 @@ export function startNASAHost(ws, uiContainer) {
       lastItems = items;
       lastCorrect = correct;
 
+      // ✅ 個人回答開始
       socket.send(JSON.stringify({
         type: "nasa_start",
         items: items,
         correct: correct
       }));
 
+      // 個人回答が終わったらボタンでチーム・リーダーフェーズ進行
       showControl();
 
     });
@@ -110,7 +112,7 @@ function showControl(){
     }));
   };
 
-  // ★追加
+  // ★リーダーフェーズ開始
   document.getElementById("startLeader").onclick=()=>{
     socket.send(JSON.stringify({
       type:"start_leader_phase"
