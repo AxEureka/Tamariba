@@ -222,8 +222,6 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 room["team_answers"] = {}
 
                 # ★ 安全リセット
-                room["teams"] = {}
-                room["team_leaders"] = {}
                 room["team_count"] = 0
 
                 await broadcast(room, {
