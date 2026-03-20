@@ -1,11 +1,10 @@
 console.log("nasa-ui loaded");
 
 // =========================
-// 問題作成UI
+// 問題作成UI（変更なし）
 // =========================
 export function createItemEditor(container,onSubmit){
 
-// ★ デフォルト問題（追加）
 const DEFAULT_SET = {
   items: ["パラシュート", "箱に入ったマッチ", "宇宙食", "45口径ピストル2丁", "粉ミルク1ケース", "酸素ボンベ2本", "15mのナイロン製ロープ", "ソーラー発電式の携帯用ヒーター", "月面用の星図表", "自動的に膨らむ救命ボート", "方位磁石", "水19L", "注射器の入った救急箱", "太陽電池のFM送受信器", "照明弾"],
   correct: [8, 15, 4, 11, 12, 1, 6, 13, 3, 9, 14, 2, 7, 5, 10]
@@ -49,7 +48,6 @@ name.placeholder="品目"+(i+1);
 
 const rank=document.createElement("select");
 
-// 初期選択
 const first=document.createElement("option");
 first.value="";
 first.textContent="選択";
@@ -71,17 +69,12 @@ itemArea.appendChild(row);
 selects.push(rank);
 }
 
-// ★ 親も重複チェック
 function checkDuplicate(){
-
 const values=selects.map(s=>s.value).filter(v=>v!="");
-
 let dup=[];
-
 values.forEach(v=>{
 if(values.filter(x=>x===v).length>1) dup.push(v);
 });
-
 selects.forEach(s=>{
 s.style.background = dup.includes(s.value) ? "#ff6b6b" : "";
 });
@@ -94,53 +87,35 @@ selects.forEach(s=>s.onchange=checkDuplicate);
 countInput.onchange=buildItems;
 buildItems();
 
-
-// =========================
-// ★ デフォルトボタン（追加）
-// =========================
 const defaultBtn=document.createElement("button");
 defaultBtn.textContent="デフォルトを使う";
 
 defaultBtn.onclick=()=>{
-
 countInput.value = DEFAULT_SET.items.length;
 buildItems();
-
 const rows = itemArea.querySelectorAll(".rank-row");
-
 rows.forEach((row,i)=>{
 const inputs=row.querySelectorAll("input, select");
-
 inputs[0].value = DEFAULT_SET.items[i];
 inputs[1].value = DEFAULT_SET.correct[i];
 });
-
 };
 
 box.appendChild(defaultBtn);
 
-
-// =========================
-// 出題ボタン
-// =========================
 const btn=document.createElement("button");
 btn.textContent="出題";
 
 btn.onclick=()=>{
-
 if(!confirm("出題しますか？")) return;
-
 const items=[];
 const correct=[];
-
 itemArea.querySelectorAll(".rank-row").forEach(row=>{
 const inputs=row.querySelectorAll("input, select");
 items.push(inputs[0].value);
 correct.push(parseInt(inputs[1].value));
 });
-
 onSubmit(items,correct);
-
 };
 
 box.appendChild(btn);
@@ -149,9 +124,16 @@ container.appendChild(box);
 
 
 // =========================
-// 回答UI
+// 回答UI（★ここだけ拡張）
 // =========================
-export function createRankingUI(container,items,onSubmit,title,isTeam=false){
+export function createRankingUI(
+  container,
+  items,
+  onSubmit,
+  title,
+  isTeam=false,
+  isLeader=true   // ★追加
+){
 
 container.innerHTML="";
 
@@ -175,6 +157,11 @@ const label=document.createElement("span");
 label.textContent=item;
 
 const select=document.createElement("select");
+
+// ★ リーダー以外は操作不可
+if(!isLeader){
+select.disabled=true;
+}
 
 const first=document.createElement("option");
 first.value="";
@@ -200,7 +187,11 @@ selects.push(select);
 
 const btn=document.createElement("button");
 btn.textContent="OK";
+
+// ★ リーダー以外は押せない
+if(!isLeader){
 btn.disabled=true;
+}
 
 function checkDuplicate(){
 
@@ -217,7 +208,7 @@ s.style.background = dup.includes(s.value) ? "#ff6b6b" : "";
 });
 
 if(isTeam){
-btn.disabled = values.length!=items.length;
+btn.disabled = !isLeader || values.length!=items.length;
 }else{
 btn.disabled = dup.length>0 || values.length!=items.length;
 }
@@ -227,6 +218,10 @@ btn.disabled = dup.length>0 || values.length!=items.length;
 selects.forEach(s=>s.onchange=checkDuplicate);
 
 btn.onclick=()=>{
+if(!isLeader){
+alert("リーダーのみ操作できます");
+return;
+}
 const ranks=selects.map(s=>parseInt(s.value));
 onSubmit(ranks);
 };
@@ -237,7 +232,7 @@ container.appendChild(box);
 
 
 // =========================
-// 正解表示
+// 正解表示（変更なし）
 // =========================
 export function showCorrect(container,items,correct,onRanking){
 
@@ -279,7 +274,7 @@ container.appendChild(box);
 
 
 // =========================
-// ランキング表示
+// ランキング表示（変更なし）
 // =========================
 export function showRanking(container,data,isHost){
 
@@ -316,7 +311,8 @@ ${i+1}位：${t.name}（${t.score}）
 });
 html2+=`<hr><div>平均：${data.team_avg}</div>`;
 if(!isHost){
-html2+=`<div>あなたのチーム得点：${data.my_team_score ?? "-"}</div>`;}
+html2+=`<div>あなたのチーム得点：${data.my_team_score ?? "-"}</div>`;
+}
 team.innerHTML=html2;
 
 wrap.appendChild(personal);
