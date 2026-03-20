@@ -51,7 +51,20 @@ teams=data.teams;
 if(!myTeam){
 renderTeamSelect();
 }else{
-renderLeaderSelect(); // ★変更：待機 → リーダー選択
+showWaiting("チーム登録完了。他メンバーを待っています...");
+}
+}
+
+// =========================
+// ★リーダーフェーズ開始
+// =========================
+if(data.type==="leader_phase_start"){
+teams=data.teams;
+
+if(myTeam){
+renderLeaderSelect();
+}else{
+showWaiting("リーダー選択フェーズ待機中...");
 }
 }
 
@@ -62,7 +75,7 @@ if(data.type==="team_leader_set"){
 leaders[data.team]=data.leader;
 
 if(data.team===myTeam){
-startTeamAnswer(); // ★ここで初めて回答へ
+startTeamAnswer();
 }
 }
 
@@ -89,6 +102,7 @@ showRanking(container,data,false);
 
 });
 
+// 再表示
 window.showCorrectAgain=()=>{
 if(lastCorrect){
 showCorrect(container,items,lastCorrect,()=>{
@@ -124,7 +138,7 @@ container.innerHTML="<h2>しばらくお待ちください...</h2>";
 }
 
 // =========================
-// チーム選択
+// チーム選択（ドロップダウン）
 // =========================
 function startTeamSelect(){
 renderTeamSelect();
@@ -139,17 +153,14 @@ const title=document.createElement("h2");
 title.textContent="チームを選択";
 container.appendChild(title);
 
-// セレクト作成
 const select=document.createElement("select");
 
-// 初期表示
-const defaultOpt=document.createElement("option");
-defaultOpt.textContent="選択してください";
-defaultOpt.disabled=true;
-defaultOpt.selected=true;
-select.appendChild(defaultOpt);
+const def=document.createElement("option");
+def.textContent="選択してください";
+def.disabled=true;
+def.selected=true;
+select.appendChild(def);
 
-// チーム一覧
 Object.keys(teams).forEach(team=>{
 const opt=document.createElement("option");
 opt.value=team;
@@ -159,7 +170,6 @@ select.appendChild(opt);
 
 container.appendChild(select);
 
-// 決定ボタン
 const btn=document.createElement("button");
 btn.textContent="決定";
 
@@ -183,7 +193,7 @@ container.appendChild(btn);
 }
 
 // =========================
-// ★追加：リーダー選択UI
+// ★リーダー選択（ドロップダウン）
 // =========================
 function renderLeaderSelect(){
 
@@ -191,22 +201,40 @@ container.innerHTML="<h2>リーダーを選択</h2>";
 
 const members = teams[myTeam] || [];
 
+const select=document.createElement("select");
+
+const def=document.createElement("option");
+def.textContent="選択してください";
+def.disabled=true;
+def.selected=true;
+select.appendChild(def);
+
 members.forEach(m=>{
+const opt=document.createElement("option");
+opt.value=m;
+opt.textContent=m;
+select.appendChild(opt);
+});
+
+container.appendChild(select);
+
 const btn=document.createElement("button");
-btn.textContent=m;
+btn.textContent="決定";
 
 btn.onclick=()=>{
+const leader=select.value;
+if(!leader) return;
+
 socket.send(JSON.stringify({
-type:"set_leader",
+type:"set_team_leader",
 team:myTeam,
-leader:m
+leader:leader
 }));
 
-showWaiting(`${m} をリーダーに設定中...`);
+showWaiting(`${leader} をリーダーに設定中...`);
 };
 
 container.appendChild(btn);
-});
 
 }
 
@@ -245,9 +273,7 @@ return;
 
 const isLeader = leader===window.myName;
 
-// ★ 非リーダー
 if(!isLeader){
-
 container.innerHTML=`
 <h2>${myTeam} の回答（リーダー: ${leader}）</h2>
 <p>リーダーが回答中です...</p>
@@ -255,7 +281,6 @@ container.innerHTML=`
 return;
 }
 
-// ★ リーダーのみ入力
 createRankingUI(container,items,(r)=>{
 
 if(!confirm("チーム回答を確定しますか？")) return;
