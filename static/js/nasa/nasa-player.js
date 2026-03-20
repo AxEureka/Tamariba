@@ -132,13 +132,41 @@ renderTeamSelect();
 
 function renderTeamSelect(){
 
-container.innerHTML="<h2>チームを選択</h2>";
+container.innerHTML="";
+container.style.pointerEvents="auto";
 
+const title=document.createElement("h2");
+title.textContent="チームを選択";
+container.appendChild(title);
+
+// セレクト作成
+const select=document.createElement("select");
+
+// 初期表示
+const defaultOpt=document.createElement("option");
+defaultOpt.textContent="選択してください";
+defaultOpt.disabled=true;
+defaultOpt.selected=true;
+select.appendChild(defaultOpt);
+
+// チーム一覧
 Object.keys(teams).forEach(team=>{
+const opt=document.createElement("option");
+opt.value=team;
+opt.textContent=team;
+select.appendChild(opt);
+});
+
+container.appendChild(select);
+
+// 決定ボタン
 const btn=document.createElement("button");
-btn.textContent=team;
+btn.textContent="決定";
 
 btn.onclick=()=>{
+const team=select.value;
+if(!team) return;
+
 myTeam=team;
 
 socket.send(JSON.stringify({
@@ -151,7 +179,6 @@ showWaiting("チーム登録完了。他メンバーを待っています...");
 };
 
 container.appendChild(btn);
-});
 
 }
 
