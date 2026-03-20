@@ -46,7 +46,10 @@ async def create_room(data: dict):
         "answers": {},
         "nasa_answers": {},
         "nasa": {},
-        "team_answers": {}  # ★ 安全に初期化
+        "team_answers": {},# ★ 安全に初期化
+        "teams": {},          # {チーム名: [メンバー]}
+        "team_count": 0,      # チーム数
+        "team_leaders": {}    # {チーム名: リーダー名}
     }
 
     return {"room_id": room_id}
@@ -131,18 +134,21 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
     print("WS接続:", room_id)
 
     if room_id not in rooms:
-        rooms[room_id] = {
-            "room": "room",
-            "host": "",
-            "theme": "mansion",
-            "members": [],
-            "sockets": [],
-            "answers": {},
-            "nasa_answers": {},
-            "nasa": {},
-            "team_answers": {}
-        }
-
+    rooms[room_id] = {
+        "room": "room",
+        "host": "",
+        "theme": "mansion",
+        "members": [],
+        "sockets": [],
+        "answers": {},
+        "nasa_answers": {},
+        "nasa": {},
+        "team_answers": {},
+        "teams": {},
+        "team_count": 0,
+        "team_leaders": {}
+    }
+    
     room = rooms[room_id]
     room["sockets"].append(websocket)
 
@@ -215,6 +221,11 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 room["nasa_answers"] = {}
                 room["team_answers"] = {}
 
+                # ★ 追加（安全リセット）
+                room["teams"] = {}
+                room["team_leaders"] = {}
+                room["team_count"] = 0
+
                 await broadcast(room, {
                     "type": "nasa_start",
                     "items": room["nasa"]["items"]
@@ -248,6 +259,61 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 await broadcast(room, {
                     "type": "nasa_result",
                     "correct": room["nasa"].get("correct", [])
+                })
+                
+            elif msg_type == "set_team_count":
+
+                count = data.get("count", 2)
+                room["team_count"] = count
+
+                # チーム初期化
+                room["teams"] = {f"チーム{i+1}": [] for i in range(count)}
+                room["team_leaders"] = {}
+
+                await broadcast(room, {
+                    "type": "team_count_set",
+                    "teams": list(room["teams"].keys())
+                })
+            
+            elif msg_type == "select_team":
+
+                name = data.get("name")
+                team = data.get("team")
+
+                # 全チームから一旦削除
+                for t in room["teams"]:
+                    if name in room["teams"][t]:
+                        room["teams"][t].remove(name)
+
+                # 新しいチームへ
+                if team in room["teams"]:
+                    room["teams"][team].append(name)
+
+                await broadcast(room, {
+                    "type": "team_update",
+                    "teams": room["teams"]
+                })
+
+            elif msg_type == "set_team_leader":
+
+                team = data.get("team")
+                leader = data.get("leader")
+
+                if team in room["teams"] and leader in room["teams"][team]:
+                    room["team_leaders"][team] = leader
+
+                await broadcast(room, {
+                    "type": "team_leader_set",
+                    "team": team,
+                    "leader": leader
+                })
+
+            elif msg_type == "start_team_phase":
+
+                await broadcast(room, {
+                    "type": "team_phase_start",
+                    "teams": room["teams"],
+                    "leaders": room["team_leaders"]
                 })
 
             # =========================
