@@ -5,7 +5,10 @@ let container;
 
 let items=[];
 let lastCorrect=null;
-let lastRanking=null;
+
+let myTeam=null;
+let teams={};
+let leaders={};
 
 export function startNASAPlayer(ws,uiContainer){
 
@@ -22,11 +25,42 @@ socket.addEventListener("message",(e)=>{
 let data;
 try{data=JSON.parse(e.data);}catch{return;}
 
+// =========================
+// 開始
+// =========================
 if(data.type==="nasa_start"){
 items=data.items;
 startPersonal();
 }
 
+// =========================
+// チームフェーズ開始（親トリガー）
+// =========================
+if(data.type==="team_phase_start"){
+teams=data.teams;
+leaders=data.leaders;
+startTeamSelect();
+}
+
+// =========================
+// チーム更新
+// =========================
+if(data.type==="team_update"){
+teams=data.teams;
+renderTeamSelect();
+}
+
+// =========================
+// リーダー確定
+// =========================
+if(data.type==="team_leader_set"){
+leaders[data.team]=data.leader;
+startTeamAnswer();
+}
+
+// =========================
+// 結果
+// =========================
 if(data.type==="nasa_result"){
 lastCorrect=data.correct;
 
@@ -38,8 +72,10 @@ name:window.myName
 });
 }
 
+// =========================
+// ランキング
+// =========================
 if(data.type==="nasa_ranking"){
-lastRanking=data;
 showRanking(container,data,false);
 }
 
@@ -58,6 +94,9 @@ name:window.myName
 
 }
 
+// =========================
+// 個人回答
+// =========================
 function startPersonal(){
 
 createRankingUI(container,items,(r)=>{
@@ -70,29 +109,95 @@ name:window.myName,
 ranks:r
 }));
 
-startTeam();
+container.innerHTML="<h2>しばらくお待ちください...</h2>";
 
 },`${window.myName} の回答`,false);
 
 }
 
-function startTeam(){
+// =========================
+// チーム選択
+// =========================
+function startTeamSelect(){
+renderTeamSelect();
+}
 
-const teamName=prompt("チーム名","チームA")||"チーム";
+function renderTeamSelect(){
+
+container.innerHTML="<h2>チームを選択</h2>";
+
+Object.keys(teams).forEach(team=>{
+const btn=document.createElement("button");
+btn.textContent=team;
+
+btn.onclick=()=>{
+myTeam=team;
+
+socket.send(JSON.stringify({
+type:"select_team",
+name:window.myName,
+team:team
+}));
+
+startLeaderSelect();
+};
+
+container.appendChild(btn);
+});
+
+}
+
+// =========================
+// リーダー選択
+// =========================
+function startLeaderSelect(){
+
+container.innerHTML=`<h2>${myTeam} のメンバー</h2>`;
+
+(teams[myTeam]||[]).forEach(member=>{
+const btn=document.createElement("button");
+btn.textContent=member;
+
+btn.onclick=()=>{
+socket.send(JSON.stringify({
+type:"set_team_leader",
+team:myTeam,
+leader:member
+}));
+};
+
+container.appendChild(btn);
+});
+
+}
+
+// =========================
+// チーム回答
+// =========================
+function startTeamAnswer(){
+
+const leader=leaders[myTeam];
+
+const isLeader = leader===window.myName;
 
 createRankingUI(container,items,(r)=>{
+
+if(!isLeader){
+alert("リーダーのみ回答できます");
+return;
+}
 
 if(!confirm("チーム回答を確定しますか？")) return;
 
 socket.send(JSON.stringify({
 type:"nasa_team",
 name:window.myName,
-team:teamName,
+team:myTeam,
 ranks:r
 }));
 
-container.innerHTML=`<h2>送信完了</h2>`;
+container.innerHTML="<h2>送信完了</h2>";
 
-},`${teamName} の回答`,true);
+},`${myTeam} の回答（リーダー: ${leader}）`,true);
 
 }
