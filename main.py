@@ -217,24 +217,13 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             
                 room["nasa_answers"] = {}
                 room["team_answers"] = {}
-            
-                # ★チームは消さない
                 room["team_leaders"] = {}
             
                 await broadcast(room, {
                     "type": "nasa_start",
                     "items": room["nasa"]["items"]
                 })
-            elif msg_type == "start_nasa":
-
-                if not room["nasa"].get("items"):
-                    return  # ★データ未設定なら何もしない
-            
-                await broadcast(room, {
-                    "type": "nasa_start",
-                    "items": room["nasa"]["items"]
-                })
-            
+           
             
             # =========================
             # チーム機能
