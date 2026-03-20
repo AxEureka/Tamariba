@@ -1,9 +1,16 @@
+```js
 console.log("nasa-ui loaded");
 
 // =========================
 // 問題作成UI
 // =========================
 export function createItemEditor(container,onSubmit){
+
+// ★ デフォルト問題（追加）
+const DEFAULT_SET = {
+  items: ["パラシュート", "箱に入ったマッチ", "宇宙食", "45口径ピストル2丁", "粉ミルク1ケース", "酸素ボンベ2本", "15mのナイロン製ロープ", "ソーラー発電式の携帯用ヒーター", "月面用の星図表", "自動的に膨らむ救命ボート", "方位磁石", "水19L", "注射器の入った救急箱", "太陽電池のFM送受信器", "照明弾"],
+  correct: [8, 15, 4, 11, 12, 1, 6, 13, 3, 14, 2, 7, 5, 10]
+};
 
 container.innerHTML="";
 
@@ -88,6 +95,35 @@ selects.forEach(s=>s.onchange=checkDuplicate);
 countInput.onchange=buildItems;
 buildItems();
 
+
+// =========================
+// ★ デフォルトボタン（追加）
+// =========================
+const defaultBtn=document.createElement("button");
+defaultBtn.textContent="デフォルトを使う";
+
+defaultBtn.onclick=()=>{
+
+countInput.value = DEFAULT_SET.items.length;
+buildItems();
+
+const rows = itemArea.querySelectorAll(".rank-row");
+
+rows.forEach((row,i)=>{
+const inputs=row.querySelectorAll("input, select");
+
+inputs[0].value = DEFAULT_SET.items[i];
+inputs[1].value = DEFAULT_SET.correct[i];
+});
+
+};
+
+box.appendChild(defaultBtn);
+
+
+// =========================
+// 出題ボタン
+// =========================
 const btn=document.createElement("button");
 btn.textContent="出題";
 
@@ -211,7 +247,7 @@ document.querySelectorAll(".ranking-wrap").forEach(el => el.remove());
 container.innerHTML="";
 
 const box=document.createElement("div");
-box.className="nasa-ui"; // ★最重要
+box.className="nasa-ui";
 
 const title=document.createElement("h2");
 title.textContent="正解順位";
@@ -233,7 +269,7 @@ const btn=document.createElement("button");
 btn.textContent="ランキングを見る";
 
 btn.onclick=()=>{
-  console.log("ランキング押された"); // デバッグ用
+  console.log("ランキング押された");
   onRanking();
 };
 
@@ -242,12 +278,12 @@ container.appendChild(box);
 
 }
 
+
 // =========================
 // ランキング表示
 // =========================
 export function showRanking(container,data,isHost){
 
-// ★ 完全除去
 document.querySelectorAll(".ranking-wrap").forEach(el => el.remove());
 
 container.innerHTML="";
@@ -289,7 +325,6 @@ wrap.appendChild(personal);
 wrap.appendChild(team);
 container.appendChild(wrap);
 
-// ★ 完全にこれだけにする
 const btnArea=document.createElement("div");
 btnArea.style.display="flex";
 btnArea.style.justifyContent="flex-end";
@@ -307,3 +342,4 @@ window.showCorrectAgain();
 wrap.appendChild(btnArea);
 btnArea.appendChild(backBtn);
 }
+```
