@@ -1,4 +1,3 @@
-```js
 console.log("nasa-ui loaded");
 
 // =========================
