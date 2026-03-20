@@ -316,8 +316,7 @@ ${i+1}位：${t.name}（${t.score}）
 });
 html2+=`<hr><div>平均：${data.team_avg}</div>`;
 if(!isHost){
-html2+=`<div>あなたのチーム：${data.my_team ?? "-"}</div>`;
-}
+html2+=`<div>あなたのチーム得点：${data.my_team_score ?? "-"}</div>`;}
 team.innerHTML=html2;
 
 wrap.appendChild(personal);
