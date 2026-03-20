@@ -208,112 +208,96 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             # =========================
             # NASA
             # =========================
-            elif msg_type == "start_nasa":
-                await broadcast(room, {"type": "start_nasa"})
-
             elif msg_type == "nasa_start":
 
                 room["nasa"] = {
                     "items": data.get("items", []),
                     "correct": data.get("correct", [])
                 }
-
+            
                 room["nasa_answers"] = {}
                 room["team_answers"] = {}
-
-                # ★ 安全リセット
-                room["team_count"] = 0
-
+            
+                # ★チームは消さない
+                room["team_leaders"] = {}
+            
                 await broadcast(room, {
                     "type": "nasa_start",
                     "items": room["nasa"]["items"]
                 })
-
-            elif msg_type == "nasa_personal":
-
-                name = data.get("name")
-                ranks = data.get("ranks", [])
-
-                if name:
-                    room["nasa_answers"][name] = {
-                        "personal": ranks
-                    }
-
-            elif msg_type == "nasa_team":
-
-                name = data.get("name")
-                team = data.get("team", "チーム")
-                ranks = data.get("ranks", [])
-
-                if name:
-                    if name not in room["nasa_answers"]:
-                        room["nasa_answers"][name] = {}
-
-                    room["nasa_answers"][name]["team_name"] = team
-                    room["team_answers"][team] = ranks
-
-            elif msg_type == "nasa_show_result":
-
-                await broadcast(room, {
-                    "type": "nasa_result",
-                    "correct": room["nasa"].get("correct", [])
-                })
-
+            
+            
             # =========================
             # チーム機能
             # =========================
             elif msg_type == "set_team_count":
-
+            
                 count = data.get("count", 2)
                 room["team_count"] = count
-
+            
                 room["teams"] = {f"チーム{i+1}": [] for i in range(count)}
                 room["team_leaders"] = {}
-
+            
                 await broadcast(room, {
                     "type": "team_count_set",
                     "teams": list(room["teams"].keys())
                 })
-
+            
+            
             elif msg_type == "select_team":
-
+            
                 name = data.get("name")
                 team = data.get("team")
-
+            
                 for t in room["teams"]:
                     if name in room["teams"][t]:
                         room["teams"][t].remove(name)
-
+            
                 if team in room["teams"]:
                     room["teams"][team].append(name)
-
+            
                 await broadcast(room, {
                     "type": "team_update",
                     "teams": room["teams"]
                 })
-
+            
+            
+            # ★追加：リーダーフェーズ開始
+            elif msg_type == "start_leader_phase":
+            
+                await broadcast(room, {
+                    "type": "leader_phase_start",
+                    "teams": room["teams"]
+                })
+            
+            
+            # ★修正：1チーム1リーダー制御
             elif msg_type == "set_team_leader":
-
+            
                 team = data.get("team")
                 leader = data.get("leader")
-
+            
+                # 既に決まってたら無視
+                if team in room["team_leaders"]:
+                    return
+            
                 if team in room["teams"] and leader in room["teams"][team]:
                     room["team_leaders"][team] = leader
-
-                await broadcast(room, {
-                    "type": "team_leader_set",
-                    "team": team,
-                    "leader": leader
-                })
-
+            
+                    await broadcast(room, {
+                        "type": "team_leader_set",
+                        "team": team,
+                        "leader": leader
+                    })
+            
+            
             elif msg_type == "start_team_phase":
-
+            
                 await broadcast(room, {
                     "type": "team_phase_start",
                     "teams": room["teams"],
                     "leaders": room["team_leaders"]
                 })
-
             # =========================
             # ランキング
             # =========================
