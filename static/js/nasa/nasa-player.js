@@ -34,12 +34,23 @@ startPersonal();
 }
 
 // =========================
+// ★ 追加：チーム数決定 → チーム選択開始
+// =========================
+if(data.type==="team_count_set"){
+teams = {};
+data.teams.forEach(t=>{
+teams[t]=[];
+});
+startTeamSelect();
+}
+
+// =========================
 // チームフェーズ開始（親トリガー）
 // =========================
 if(data.type==="team_phase_start"){
 teams=data.teams;
 leaders=data.leaders;
-startTeamSelect();
+startTeamAnswer();
 }
 
 // =========================
