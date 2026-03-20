@@ -7,7 +7,6 @@ let lastCorrect = null;
 let lastItems = null;
 let lastRanking = null;
 
-// ★ 追加
 let teamCount = 2;
 
 export function startNASAHost(ws, uiContainer) {
@@ -15,12 +14,8 @@ export function startNASAHost(ws, uiContainer) {
   socket = ws;
   container = uiContainer;
 
-  // =========================
-  // ★ 先にチーム数選択UI
-  // =========================
   showTeamSetup(() => {
 
-    // 元の処理（完全維持）
     createItemEditor(container, (items, correct) => {
 
       lastItems = items;
@@ -57,7 +52,6 @@ export function startNASAHost(ws, uiContainer) {
 
   });
 
-  // 正解再表示（そのまま）
   window.showCorrectAgain = () => {
     if (lastCorrect) {
       showCorrect(container, lastItems, lastCorrect, () => {
@@ -69,26 +63,20 @@ export function startNASAHost(ws, uiContainer) {
 }
 
 // =========================
-// ★ チーム設定UI（追加）
+// チーム設定
 // =========================
 function showTeamSetup(onNext){
 
   container.innerHTML=`
     <div class="nasa-ui">
       <h2>チーム設定</h2>
-      <label>チーム数：</label>
-      <input id="teamCount" type="number" min="2" max="10" value="2">
-      <br><br>
+      <input id="teamCount" type="number" value="2" min="2" max="10">
       <button id="nextBtn">次へ</button>
     </div>
   `;
 
-  const input = document.getElementById("teamCount");
-  const btn = document.getElementById("nextBtn");
-
-  btn.onclick=()=>{
-
-    teamCount = parseInt(input.value) || 2;
+  document.getElementById("nextBtn").onclick=()=>{
+    teamCount = parseInt(document.getElementById("teamCount").value) || 2;
 
     socket.send(JSON.stringify({
       type:"set_team_count",
@@ -101,7 +89,7 @@ function showTeamSetup(onNext){
 }
 
 // =========================
-// コントロール画面（既存＋追加）
+// コントロール
 // =========================
 function showControl(){
 
@@ -109,49 +97,33 @@ function showControl(){
     <div class="nasa-ui">
       <h2>NASAゲーム進行</h2>
 
-      <!-- ★ 追加 -->
       <button id="startTeam">チーム回答開始</button>
-
       <button id="showResult">正解発表</button>
       <button id="showRanking">ランキング</button>
     </div>
   `;
 
-  const resultBtn = document.getElementById("showResult");
-  const rankingBtn = document.getElementById("showRanking");
+  document.getElementById("startTeam").onclick=()=>{
+    socket.send(JSON.stringify({
+      type:"start_team_phase"
+    }));
+  };
 
-  // ★ 追加
-  const teamBtn = document.getElementById("startTeam");
+  document.getElementById("showResult").onclick=()=>{
+    socket.send(JSON.stringify({type:"nasa_show_result"}));
+  };
 
-  if (teamBtn) {
-    teamBtn.onclick=()=>{
-      socket.send(JSON.stringify({
-        type:"start_team_phase"
-      }));
-    };
-  }
-
-  // ↓↓↓ここ完全に元のまま↓↓↓
-
-  if (resultBtn) {
-    resultBtn.onclick=()=>{
-      socket.send(JSON.stringify({type:"nasa_show_result"}));
-    };
-  }
-
-  if (rankingBtn) {
-    rankingBtn.onclick=()=>{
-     socket.send(JSON.stringify({
+  document.getElementById("showRanking").onclick=()=>{
+    socket.send(JSON.stringify({
       type:"nasa_get_ranking",
       name: window.myName || "host"
     }));
-    };
-  }
+  };
 
 }
 
 // =========================
-// ランキング→正解ボタン（そのまま）
+// 戻るボタン
 // =========================
 function addBackToCorrectButton() {
 
