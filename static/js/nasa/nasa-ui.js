@@ -76,7 +76,7 @@ values.forEach(v=>{
 if(values.filter(x=>x===v).length>1) dup.push(v);
 });
 selects.forEach(s=>{
-s.style.background = dup.includes(s.value) ? "#ff6b6b" : "";
+s.style.background = dup.includes(s.value) ? "#ff6b6b": "";
 });
 }
 
