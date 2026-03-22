@@ -403,8 +403,20 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
 
 
 # =========================
-# broadcast
+# broadcast（完全版・安全）
 # =========================
 async def broadcast(room, message):
+
+    dead_sockets = []
+
     for socket in room["sockets"]:
-        await socket.send_json(message)
+        try:
+            await socket.send_json(message)
+        except Exception as e:
+            print("送信失敗:", e)
+            dead_sockets.append(socket)
+
+    # 壊れたsocket削除（重要）
+    for s in dead_sockets:
+        if s in room["sockets"]:
+            room["sockets"].remove(s)
