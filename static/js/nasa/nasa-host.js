@@ -36,7 +36,7 @@ export function startNASAHost(ws, uiContainer) {
 
       showControl();
 
-      // ★追加：進捗UI（←呼び出し位置はそのままでOK）
+      // ★追加：進捗UI
       createProgressUI();
 
     });
@@ -63,6 +63,10 @@ export function startNASAHost(ws, uiContainer) {
     if (data.type === "nasa_ranking") {
       lastRanking = data;
       showRanking(container, data, true);
+
+      // ★ここ追加（最重要）
+      showControl();
+
       addBackToCorrectButton();
     }
 
@@ -70,6 +74,9 @@ export function startNASAHost(ws, uiContainer) {
       showCorrect(container, lastItems, data.correct, () => {
         socket.send(JSON.stringify({ type: "nasa_get_ranking" }));
       });
+
+      // ★ここ追加（最重要）
+      showControl();
     }
 
   });
@@ -79,6 +86,9 @@ export function startNASAHost(ws, uiContainer) {
       showCorrect(container, lastItems, lastCorrect, () => {
         socket.send(JSON.stringify({ type: "nasa_get_ranking" }));
       });
+
+      // ★ここも保険で入れてOK
+      showControl();
     }
   };
 
@@ -155,11 +165,10 @@ function showControl(){
 }
 
 // =========================
-// ★ここだけ修正（超重要）
+// ★進捗UI
 // =========================
 function createProgressUI(){
 
-  // すでにあれば作らない
   if(progressDiv) return;
 
   progressDiv = document.createElement("div");
@@ -176,7 +185,6 @@ function createProgressUI(){
 
   progressDiv.textContent = "待機中...";
 
-  // ★containerじゃなくbodyに出す
   document.body.appendChild(progressDiv);
 }
 
