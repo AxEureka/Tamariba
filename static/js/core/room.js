@@ -285,7 +285,7 @@ let socket;
 
 function connectSocket() {
 
-const protocol = location.protocol === "https:" ? "wss" : "ws";
+const protocol = location.protocol === "https:" ? "wss": "ws";
 
 socket = new WebSocket(`${protocol}://${location.host}/ws/${roomId}`);
 
@@ -323,7 +323,7 @@ container.innerHTML="";
 
 }
 
-if (msg.type === "start_nasa") {
+if (msg.type === "nasa_start") {
 
 const container = document.getElementById("game-container");
 
