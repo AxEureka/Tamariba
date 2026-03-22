@@ -167,7 +167,7 @@ location.href = "/static/kick.html";
 
 function toggleMembers() {
 const box = document.getElementById("members");
-box.style.display = box.style.display === "none" ? "block" : "none";
+box.style.display = box.style.display === "none" ? "block": "none";
 }
 
 function showPopup(text) {
