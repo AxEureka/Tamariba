@@ -29,7 +29,7 @@ export function startNASAPlayer(ws,uiContainer){
 
     // =========================
     // 個人回答開始
-    if(data.type==="nasa_start"){
+    if(data.type==="start_nasa"){
       items=data.items;
       startPersonal();
     }
