@@ -264,17 +264,23 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 })
 
             elif msg_type == "select_team":
-
+            
                 name = data.get("name")
                 team = data.get("team")
-
+            
                 for t in room["teams"]:
                     if name in room["teams"][t]:
                         room["teams"][t].remove(name)
-
+            
                 if team in room["teams"]:
                     room["teams"][team].append(name)
-
+            
+                # ★ここ追加（超重要）
+                if name:
+                    if name not in room["nasa_answers"]:
+                        room["nasa_answers"][name] = {}
+                    room["nasa_answers"][name]["team_name"] = team
+            
                 await broadcast(room, {
                     "type": "team_update",
                     "teams": room["teams"]
