@@ -209,7 +209,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             # =========================
             # NASA
             # =========================
-            elif msg_type == "nasa_start":
+            elif msg_type == "start_nasa":
 
                 room["nasa"] = {
                     "items": data.get("items", []),
@@ -221,7 +221,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 room["team_leaders"] = {}
 
                 await broadcast(room, {
-                    "type": "nasa_start",
+                    "type": "start_nasa",
                     "items": room["nasa"]["items"]
                 })
 
