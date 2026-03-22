@@ -159,6 +159,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             msg_type = data.get("type")
 
             print("WS受信:", data)
+            print("現在のソケット数:", len(room["sockets"]))  # ←デバッグ用
 
             # =========================
             # クイズ
@@ -224,7 +225,6 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     "items": room["nasa"]["items"]
                 })
 
-            # ★追加：個人回答保存
             elif msg_type == "nasa_personal":
 
                 name = data.get("name")
@@ -235,7 +235,6 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                         "personal": ranks
                     }
 
-            # ★追加：チーム回答保存
             elif msg_type == "nasa_team":
 
                 name = data.get("name")
@@ -313,7 +312,6 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     "leaders": room["team_leaders"]
                 })
 
-            # ★追加：正解発表
             elif msg_type == "nasa_show_result":
 
                 await broadcast(room, {
