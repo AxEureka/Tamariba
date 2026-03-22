@@ -95,6 +95,9 @@
   color:white;
   cursor:pointer;
   transition:background 0.2s;
+  position: relative;
+  z-index: 21;
+  pointer-events: auto;
 }
 
 .nasa-ui button:hover{
@@ -105,15 +108,20 @@
    投票背景暗転
 ========================= */
 
-#game-container.active::before{
-  content:"";
-  position:absolute;
-  top:0; left:0;
-  width:100%; height:100%;
-  background:rgba(0,0,0,0.55);
-  pointer-events: none; /* これで下のボタンが押せる */
+/* オーバーレイは残すがクリックは通す */
+#game-container.active::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.55);
+  pointer-events: none; /* ←必ずnone */
+  z-index: 10;          /* ボタンより下 */
 }
 
+
+　
 /* =========================
    出現アニメーション
 ========================= */
