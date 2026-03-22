@@ -24,10 +24,10 @@ export function startNASAHost(ws, uiContainer) {
       lastCorrect = correct;
 
       // ✅ 個人回答開始
-      console.log("🚀 nasa_start送信", items, correct);
+      console.log("🚀 start_nasa送信", items, correct);
 
       socket.send(JSON.stringify({
-        type: "nasa_start",
+        type: "start_nasa",
         items: items,
         correct: correct
       }));
