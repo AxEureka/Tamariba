@@ -78,6 +78,9 @@ export function startNASAPlayer(ws,uiContainer){
           name:window.myName
         }));
       });
+
+      // ★ボタンを追加
+      addRankingAndBackButton();
     }
 
     // ランキング
@@ -86,6 +89,9 @@ export function startNASAPlayer(ws,uiContainer){
 
       // ★差分表示
       showMyResultDiff(data);
+
+      // ★ボタンを追加
+      addRankingAndBackButton();
     }
 
   });
@@ -98,6 +104,8 @@ export function startNASAPlayer(ws,uiContainer){
           name:window.myName
         }));
       });
+
+      addRankingAndBackButton();
     }
   };
 
@@ -274,6 +282,9 @@ function showWaiting(msg){
 
 }
 
+// =========================
+// チーム回答
+// =========================
 function startTeamAnswer(){
 
   const leader=leaders[myTeam];
@@ -308,4 +319,39 @@ function startTeamAnswer(){
 
   },`${myTeam} の回答（リーダー: ${leader}）`,true);
 
+}
+
+// =========================
+// ★ランキング/正解ボタン追加
+// =========================
+function addRankingAndBackButton(){
+
+  const wrapper = document.createElement("div");
+  wrapper.style.marginTop = "15px";
+  wrapper.style.display = "flex";
+  wrapper.style.flexDirection = "column";
+  wrapper.style.gap = "8px";
+
+  // ランキングボタン
+  const rankBtn = document.createElement("button");
+  rankBtn.textContent = "ランキングを見る";
+  rankBtn.onclick = () => {
+    socket.send(JSON.stringify({
+      type:"nasa_get_ranking",
+      name:window.myName
+    }));
+  };
+  wrapper.appendChild(rankBtn);
+
+  // 正解に戻るボタン
+  const backBtn = document.createElement("button");
+  backBtn.textContent = "正解を見る";
+  backBtn.onclick = () => {
+    if(window.showCorrectAgain){
+      window.showCorrectAgain();
+    }
+  };
+  wrapper.appendChild(backBtn);
+
+  container.appendChild(wrapper);
 }
