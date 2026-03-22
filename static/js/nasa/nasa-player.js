@@ -10,18 +10,7 @@ let myTeam=null;
 let teams={};
 let leaders={};
 
-export function startNASAPlayer(socket, container){
 
-  console.log("🧑 プレイヤー起動");
-
-  socket.addEventListener("message", (e)=>{
-    let data;
-    try { data = JSON.parse(e.data); } catch { return; }
-
-    console.log("📩 プレイヤー受信:", data);
-  });
-
-}
 
 export function startNASAPlayer(ws,uiContainer){
 
