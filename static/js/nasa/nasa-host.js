@@ -126,7 +126,7 @@ function showTeamSetup(onNext){
 // コントロール
 // =========================
 function showControl(){
-
+  // container 内はボタンのみ作成
   container.innerHTML=`
     <div class="nasa-ui">
       <h2>NASAゲーム進行</h2>
@@ -135,13 +135,11 @@ function showControl(){
       <button id="startLeader">リーダー選択開始</button>
       <button id="showResult">正解発表</button>
       <button id="showRanking">ランキング</button>
-
-      <div id="progress" style="margin-top:10px;font-weight:bold;"></div>
     </div>
   `;
 
-  // ★ここで取得
-  progressDiv = document.getElementById("progress");
+  // progressDiv は固定表示の右上UIを使う
+  // progressDiv = document.getElementById("progress"); ←消す
 
   document.getElementById("startTeam").onclick=()=>{
     socket.send(JSON.stringify({ type:"start_team_phase" }));
@@ -161,7 +159,6 @@ function showControl(){
       name: window.myName || "host"
     }));
   };
-
 }
 
 // =========================
