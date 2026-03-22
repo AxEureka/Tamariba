@@ -37,7 +37,6 @@ document.getElementById("join-url").value = joinURL;
 if (typeof QRCode !== "undefined") {
 new QRCode(document.getElementById("qrcode"), joinURL);
 }
-
 }
 
 if (myName !== hostName && !joined) {
@@ -52,15 +51,12 @@ body: JSON.stringify({ name: myName })
 } catch (e) {
 console.error("参加処理でエラー", e);
 }
-
 }
-
 }
 
 async function updateMembers() {
 
 try {
-
 const res = await fetch(`${baseURL}/room/${roomId}/members`);
 if (!res.ok) return;
 
@@ -78,11 +74,8 @@ return;
 }
 
 } else {
-
 missingCount = 0;
-
 }
-
 }
 
 document.getElementById("count").textContent = data.count;
@@ -101,17 +94,13 @@ if (m !== myName) showPopup(`${m}さんが退出しました`);
 lastMembers = [...data.members];
 
 const list = [];
-
 list.push(`<strong>${hostName} (親)</strong>`);
 
 if (myName === hostName) {
 
 data.members.forEach(m => {
-
 if (m === hostName) return;
-
 list.push(`・${m} <button onclick="kickMember('${m}')">退室させる</button>`);
-
 });
 
 } else {
@@ -119,23 +108,16 @@ list.push(`・${m} <button onclick="kickMember('${m}')">退室させる</button>
 list.push(`・${myName} (自分)`);
 
 data.members.forEach(m => {
-
 if (m === hostName || m === myName) return;
-
 list.push(`・${m}`);
-
 });
-
 }
 
 document.getElementById("members").innerHTML = list.join("<br>");
 
 } catch (e) {
-
 console.error("メンバー更新エラー", e);
-
 }
-
 }
 
 async function kickMember(name) {
@@ -143,13 +125,10 @@ async function kickMember(name) {
 if (!confirm(`${name}さんを退室させますか？`)) return;
 
 await fetch(`${baseURL}/room/${roomId}/kick`, {
-
 method: "POST",
 headers: { "Content-Type": "application/json" },
 body: JSON.stringify({ name })
-
 });
-
 }
 
 async function exitRoom() {
@@ -159,11 +138,9 @@ if (!confirm("退室しますか？")) return;
 if (myName !== hostName) {
 
 await fetch(`${baseURL}/room/${roomId}/kick`, {
-
 method: "POST",
 headers: { "Content-Type": "application/json" },
 body: JSON.stringify({ name: myName })
-
 });
 
 } else {
@@ -171,60 +148,39 @@ body: JSON.stringify({ name: myName })
 const res = await fetch(`${baseURL}/room/${roomId}/members`);
 
 if (res.ok) {
-
 const data = await res.json();
 
 for (const m of data.members) {
-
 if (m !== hostName) {
-
 await fetch(`${baseURL}/room/${roomId}/kick`, {
-
 method: "POST",
 headers: { "Content-Type": "application/json" },
 body: JSON.stringify({ name: m })
-
 });
-
 }
-
 }
-
 }
-
 }
 
 location.href = "/static/kick.html";
-
 }
 
 function toggleMembers() {
-
 const box = document.getElementById("members");
-
 box.style.display = box.style.display === "none" ? "block" : "none";
-
 }
 
 function showPopup(text) {
-
 const popup = document.getElementById("popup");
-
 popup.textContent = text;
 popup.style.display = "block";
-
 setTimeout(() => popup.style.display = "none", 3000);
-
 }
 
 function copyURL() {
-
 const input = document.getElementById("join-url");
-
 navigator.clipboard.writeText(input.value);
-
 showPopup("参加URLをコピーしました");
-
 }
 
 /* ===== 遊び選択 ===== */
@@ -240,53 +196,32 @@ if (gameDropdown) gameDropdown.style.display = "none";
 
 const container = document.getElementById("game-container");
 
-/* ===== クイズ ===== */
-
+/* クイズ */
 if (type === "quiz"){
-
 if (myName === hostName){
-
-socket.send(JSON.stringify({
-type:"start_quiz"
-}));
-
+socket.send(JSON.stringify({ type:"start_quiz" }));
 container.classList.add("active");
-
 startQuizHost(socket, container);
-
 document.getElementById("exitQuizBtn").style.display = "inline-block";
-
+}
 }
 
-}
-
-/* ===== NASA ===== */
-
+/* NASA */
 if(type==="nasa"){
-
 if(myName===hostName){
-
-socket.send(JSON.stringify({
-type:"start_nasa"
-}));
-
+socket.send(JSON.stringify({ type:"start_nasa" }));
 container.classList.add("active");
-
 startNASAHost(socket,container);
-
 document.getElementById("exitQuizBtn").style.display = "inline-block";
-
+}
+}
 }
 
-}
-
-}
 let socket;
 
 function connectSocket() {
 
 const protocol = location.protocol === "https:" ? "wss": "ws";
-
 socket = new WebSocket(`${protocol}://${location.host}/ws/${roomId}`);
 
 socket.onopen = () => {
@@ -297,51 +232,36 @@ window.socket = socket;
 socket.onmessage = (e) => {
 
 let msg;
+try { msg = JSON.parse(e.data); } catch { return; }
 
-try {
-msg = JSON.parse(e.data);
-} catch {
-return;
-}
-
+/* クイズ */
 if (msg.type === "start_quiz") {
-
 const container = document.getElementById("game-container");
-
 if (myName !== hostName) {
 startQuizPlayer(socket, container);
 }
-
 }
 
-if (msg.type === "end_quiz") {
-
+/* NASA（★ここ修正） */
+if (msg.type === "start_nasa") {
 const container = document.getElementById("game-container");
-
-container.classList.remove("active");
-container.innerHTML="";
-
-}
-
-if (msg.type === "nasa_start") {
-
-const container = document.getElementById("game-container");
-
 if (myName !== hostName) {
 startNASAPlayer(socket, container);
 }
+}
 
+if (msg.type === "end_quiz") {
+const container = document.getElementById("game-container");
+container.classList.remove("active");
+container.innerHTML="";
 }
 
 if (msg.type === "end_nasa") {
-
 const container = document.getElementById("game-container");
-
 container.classList.remove("active");
 container.innerHTML="";
-
 }
-  
+
 };
 
 socket.onerror = (e) => {
@@ -352,28 +272,23 @@ socket.onclose = () => {
 console.log("WebSocket closed, reconnecting...");
 setTimeout(connectSocket, 2000);
 };
-
 }
 
-/* 🔥ここだけ修正（クリック検知強化） */
+/* クリック検知 */
 document.addEventListener("click", (e) => {
 
 const gameDropdown = document.getElementById("gameDropdown");
-
-console.log("クリック:", e.target);
 
 const nasaBtn = document.getElementById("nasaBtn");
 const quizBtn = document.getElementById("quizBtn");
 
 if (nasaBtn && nasaBtn.contains(e.target)) {
-console.log("🚀 NASAボタン押された");
 e.stopPropagation();
 selectGame("nasa");
 return;
 }
 
 if (quizBtn && quizBtn.contains(e.target)) {
-console.log("🧠 クイズボタン押された");
 e.stopPropagation();
 selectGame("quiz");
 return;
@@ -386,11 +301,9 @@ gameDropdown &&
 ) {
 gameDropdown.style.display = "none";
 }
-
 });
 
 /* 初期起動 */
-
 window.addEventListener("DOMContentLoaded", () => {
 
 const gameBtn = document.getElementById("gameSelectBtn");
@@ -398,48 +311,34 @@ const gameDropdown = document.getElementById("gameDropdown");
 const exitQuizBtn = document.getElementById("exitQuizBtn");
 
 if (gameBtn) {
-
 gameBtn.onclick = (e) => {
-
-  e.stopPropagation();
-
-  gameDropdown.style.display =
-    gameDropdown.style.display === "block" ? "none" : "block";
-
+e.stopPropagation();
+gameDropdown.style.display =
+gameDropdown.style.display === "block" ? "none" : "block";
 };
-
 }
 
-/* ★ここ追加 */
-
 if(exitQuizBtn){
-
 exitQuizBtn.onclick = ()=>{
-
 socket.send(JSON.stringify({ type:"end_quiz" }));
 socket.send(JSON.stringify({ type:"end_nasa" }));
 
 const container = document.getElementById("game-container");
 container.classList.remove("active");
 container.innerHTML="";
-
 exitQuizBtn.style.display="none";
-
 };
-
 }
 
 connectSocket();
 
 loadRoom().then(() => {
-
 updateMembers();
-
 setInterval(updateMembers, 2000);
-
 });
 
 });
+
 window.copyURL = copyURL;
 window.selectGame = selectGame;
 window.toggleMembers = toggleMembers;
