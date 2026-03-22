@@ -18,10 +18,14 @@ export function startNASAHost(ws, uiContainer) {
 
     createItemEditor(container, (items, correct) => {
 
+      console.log("🔥 onSubmit呼ばれた", items, correct);
+
       lastItems = items;
       lastCorrect = correct;
 
       // ✅ 個人回答開始
+      console.log("🚀 nasa_start送信", items, correct);
+
       socket.send(JSON.stringify({
         type: "nasa_start",
         items: items,
@@ -39,6 +43,8 @@ export function startNASAHost(ws, uiContainer) {
 
     let data;
     try { data = JSON.parse(e.data); } catch { return; }
+
+    console.log("📩 ホスト受信:", data);
 
     if (data.type === "nasa_ranking") {
       lastRanking = data;
@@ -78,6 +84,8 @@ function showTeamSetup(onNext){
   `;
 
   document.getElementById("nextBtn").onclick=()=>{
+    console.log("👉 チーム設定 次へ押された");
+
     teamCount = parseInt(document.getElementById("teamCount").value) || 2;
 
     socket.send(JSON.stringify({
@@ -107,6 +115,8 @@ function showControl(){
   `;
 
   document.getElementById("startTeam").onclick=()=>{
+    console.log("👉 チーム回答開始押された");
+
     socket.send(JSON.stringify({
       type:"start_team_phase"
     }));
@@ -114,16 +124,22 @@ function showControl(){
 
   // ★リーダーフェーズ開始
   document.getElementById("startLeader").onclick=()=>{
+    console.log("👉 リーダー選択開始押された");
+
     socket.send(JSON.stringify({
       type:"start_leader_phase"
     }));
   };
 
   document.getElementById("showResult").onclick=()=>{
+    console.log("👉 正解発表押された");
+
     socket.send(JSON.stringify({type:"nasa_show_result"}));
   };
 
   document.getElementById("showRanking").onclick=()=>{
+    console.log("👉 ランキング押された");
+
     socket.send(JSON.stringify({
       type:"nasa_get_ranking",
       name: window.myName || "host"
