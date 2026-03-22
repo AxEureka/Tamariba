@@ -10,8 +10,6 @@ let myTeam=null;
 let teams={};
 let leaders={};
 
-
-
 export function startNASAPlayer(ws,uiContainer){
 
   socket=ws;
@@ -27,21 +25,18 @@ export function startNASAPlayer(ws,uiContainer){
     let data;
     try{data=JSON.parse(e.data);}catch{return;}
 
-    // =========================
-    // 個人回答開始
+    // 個人回答
     if(data.type==="start_nasa"){
       items=data.items;
       startPersonal();
     }
 
-    // =========================
     // チーム選択
     if(data.type==="team_phase_start"){
       teams=data.teams;
       startTeamSelect();
     }
 
-    // =========================
     // チーム更新
     if(data.type==="team_update"){
       teams=data.teams;
@@ -53,7 +48,6 @@ export function startNASAPlayer(ws,uiContainer){
       }
     }
 
-    // =========================
     // リーダー選択
     if(data.type==="leader_phase_start"){
       teams=data.teams;
@@ -65,17 +59,15 @@ export function startNASAPlayer(ws,uiContainer){
       }
     }
 
-    // =========================
-    // リーダー確定 → リーダーだけチーム回答
+    // リーダー確定
     if(data.type==="team_leader_set"){
       leaders[data.team]=data.leader;
 
       if(data.team===myTeam){
-        startTeamAnswer(); // リーダーのみ呼ばれる
+        startTeamAnswer();
       }
     }
 
-    // =========================
     // 結果
     if(data.type==="nasa_result"){
       lastCorrect=data.correct;
@@ -88,10 +80,12 @@ export function startNASAPlayer(ws,uiContainer){
       });
     }
 
-    // =========================
     // ランキング
     if(data.type==="nasa_ranking"){
       showRanking(container,data,false);
+
+      // ★差分表示
+      showMyResultDiff(data);
     }
 
   });
@@ -110,7 +104,45 @@ export function startNASAPlayer(ws,uiContainer){
 }
 
 // =========================
-// 個人回答
+// ★差分表示
+// =========================
+function showMyResultDiff(data){
+
+  const personal = data.my_personal;
+  const team = data.my_team_score;
+
+  if(personal == null || team == null) return;
+
+  const diff = personal - team;
+
+  const div = document.createElement("div");
+  div.style.marginTop = "20px";
+  div.style.fontWeight = "bold";
+
+  let msg = "";
+
+  if(diff > 0){
+    msg = "チームの方が優秀！";
+  }else if(diff < 0){
+    msg = "あなたの方が鋭い！";
+  }else{
+    msg = "完全一致！すごい！";
+  }
+
+  div.innerHTML = `
+    <p>あなたの個人得点：${personal}</p>
+    <p>チーム得点：${team}</p>
+    <p>差分：${diff}</p>
+    <p>${msg}</p>
+  `;
+
+  container.appendChild(div);
+}
+
+// =========================
+// 以下既存そのまま
+// =========================
+
 function startPersonal(){
 
   createRankingUI(container,items,(r)=>{
@@ -129,8 +161,6 @@ function startPersonal(){
 
 }
 
-// =========================
-// チーム選択
 function startTeamSelect(){
   renderTeamSelect();
 }
@@ -183,8 +213,6 @@ function renderTeamSelect(){
 
 }
 
-// =========================
-// リーダー選択
 function renderLeaderSelect(){
 
   container.innerHTML="<h2>リーダーを選択</h2>";
@@ -228,8 +256,6 @@ function renderLeaderSelect(){
 
 }
 
-// =========================
-// 待機UI
 function showWaiting(msg){
 
   container.innerHTML="";
@@ -248,8 +274,6 @@ function showWaiting(msg){
 
 }
 
-// =========================
-// チーム回答
 function startTeamAnswer(){
 
   const leader=leaders[myTeam];
