@@ -36,7 +36,7 @@ export function startNASAHost(ws, uiContainer) {
 
       showControl();
 
-      // ★追加：進捗UI
+      // ★追加：進捗UI（←呼び出し位置はそのままでOK）
       createProgressUI();
 
     });
@@ -150,13 +150,29 @@ function showControl(){
 }
 
 // =========================
-// ★進捗UI
+// ★ここだけ修正（超重要）
 // =========================
 function createProgressUI(){
+
+  // すでにあれば作らない
+  if(progressDiv) return;
+
   progressDiv = document.createElement("div");
-  progressDiv.style.marginTop = "10px";
+
+  progressDiv.style.position = "fixed";
+  progressDiv.style.top = "10px";
+  progressDiv.style.right = "10px";
+  progressDiv.style.background = "rgba(0,0,0,0.7)";
+  progressDiv.style.color = "white";
+  progressDiv.style.padding = "8px 12px";
+  progressDiv.style.borderRadius = "8px";
+  progressDiv.style.zIndex = "9999";
   progressDiv.style.fontWeight = "bold";
-  container.appendChild(progressDiv);
+
+  progressDiv.textContent = "待機中...";
+
+  // ★containerじゃなくbodyに出す
+  document.body.appendChild(progressDiv);
 }
 
 function updateProgress(text){
