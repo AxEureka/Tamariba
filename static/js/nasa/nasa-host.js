@@ -125,8 +125,13 @@ function showControl(){
       <button id="startLeader">リーダー選択開始</button>
       <button id="showResult">正解発表</button>
       <button id="showRanking">ランキング</button>
+
+      <div id="progress" style="margin-top:10px;font-weight:bold;"></div>
     </div>
   `;
+
+  // ★ここで取得
+  progressDiv = document.getElementById("progress");
 
   document.getElementById("startTeam").onclick=()=>{
     socket.send(JSON.stringify({ type:"start_team_phase" }));
