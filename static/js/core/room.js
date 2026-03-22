@@ -355,19 +355,27 @@ setTimeout(connectSocket, 2000);
 
 }
 
+/* 🔥ここだけ修正（クリック検知強化） */
 document.addEventListener("click", (e) => {
 
 const gameDropdown = document.getElementById("gameDropdown");
 
-if (e.target.closest("#quizBtn")) {
+console.log("クリック:", e.target);
+
+const nasaBtn = document.getElementById("nasaBtn");
+const quizBtn = document.getElementById("quizBtn");
+
+if (nasaBtn && nasaBtn.contains(e.target)) {
+console.log("🚀 NASAボタン押された");
 e.stopPropagation();
-selectGame("quiz");
+selectGame("nasa");
 return;
 }
 
-if (e.target.closest("#nasaBtn")) {
+if (quizBtn && quizBtn.contains(e.target)) {
+console.log("🧠 クイズボタン押された");
 e.stopPropagation();
-selectGame("nasa");
+selectGame("quiz");
 return;
 }
 
@@ -408,7 +416,6 @@ if(exitQuizBtn){
 
 exitQuizBtn.onclick = ()=>{
 
-// 全ゲーム終了（共通化）
 socket.send(JSON.stringify({ type:"end_quiz" }));
 socket.send(JSON.stringify({ type:"end_nasa" }));
 
