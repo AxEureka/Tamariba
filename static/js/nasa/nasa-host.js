@@ -9,6 +9,9 @@ let lastRanking = null;
 
 let teamCount = 2;
 
+// ★進捗表示用
+let progressDiv = null;
+
 export function startNASAHost(ws, uiContainer) {
 
   socket = ws;
@@ -23,7 +26,6 @@ export function startNASAHost(ws, uiContainer) {
       lastItems = items;
       lastCorrect = correct;
 
-      // ✅ 個人回答開始
       console.log("🚀 start_nasa送信", items, correct);
 
       socket.send(JSON.stringify({
@@ -32,8 +34,10 @@ export function startNASAHost(ws, uiContainer) {
         correct: correct
       }));
 
-      // 個人回答が終わったらボタンでチーム・リーダーフェーズ進行
       showControl();
+
+      // ★追加：進捗UI
+      createProgressUI();
 
     });
 
@@ -45,6 +49,16 @@ export function startNASAHost(ws, uiContainer) {
     try { data = JSON.parse(e.data); } catch { return; }
 
     console.log("📩 ホスト受信:", data);
+
+    // ★個人進捗
+    if (data.type === "nasa_progress") {
+      updateProgress(`個人回答：${data.done} / ${data.total}人`);
+    }
+
+    // ★チーム進捗
+    if (data.type === "team_progress") {
+      updateProgress(`チーム回答：${data.done} / ${data.total}チーム`);
+    }
 
     if (data.type === "nasa_ranking") {
       lastRanking = data;
@@ -115,37 +129,40 @@ function showControl(){
   `;
 
   document.getElementById("startTeam").onclick=()=>{
-    console.log("👉 チーム回答開始押された");
-
-    socket.send(JSON.stringify({
-      type:"start_team_phase"
-    }));
+    socket.send(JSON.stringify({ type:"start_team_phase" }));
   };
 
-  // ★リーダーフェーズ開始
   document.getElementById("startLeader").onclick=()=>{
-    console.log("👉 リーダー選択開始押された");
-
-    socket.send(JSON.stringify({
-      type:"start_leader_phase"
-    }));
+    socket.send(JSON.stringify({ type:"start_leader_phase" }));
   };
 
   document.getElementById("showResult").onclick=()=>{
-    console.log("👉 正解発表押された");
-
     socket.send(JSON.stringify({type:"nasa_show_result"}));
   };
 
   document.getElementById("showRanking").onclick=()=>{
-    console.log("👉 ランキング押された");
-
     socket.send(JSON.stringify({
       type:"nasa_get_ranking",
       name: window.myName || "host"
     }));
   };
 
+}
+
+// =========================
+// ★進捗UI
+// =========================
+function createProgressUI(){
+  progressDiv = document.createElement("div");
+  progressDiv.style.marginTop = "10px";
+  progressDiv.style.fontWeight = "bold";
+  container.appendChild(progressDiv);
+}
+
+function updateProgress(text){
+  if(progressDiv){
+    progressDiv.textContent = text;
+  }
 }
 
 // =========================
