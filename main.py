@@ -225,6 +225,8 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     "items": room["nasa"]["items"]
                 })
 
+            # （上はそのままなので省略）
+
             elif msg_type == "nasa_personal":
 
                 name = data.get("name")
@@ -234,6 +236,14 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     room["nasa_answers"][name] = {
                         "personal": ranks
                     }
+
+                # ★追加：個人回答進捗
+                await broadcast(room, {
+                    "type": "nasa_personal_progress",
+                    "done": len([a for a in room["nasa_answers"].values() if "personal" in a]),
+                    "total": len(room["members"])
+                })
+
 
             elif msg_type == "nasa_team":
 
@@ -247,87 +257,17 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 if name in room["nasa_answers"]:
                     room["nasa_answers"][name]["team_name"] = team
 
-            # =========================
-            # チーム機能
-            # =========================
-            elif msg_type == "set_team_count":
-
-                count = data.get("count", 2)
-                room["team_count"] = count
-
-                room["teams"] = {f"チーム{i+1}": [] for i in range(count)}
-                room["team_leaders"] = {}
-
+                # ★追加：チーム回答進捗
                 await broadcast(room, {
-                    "type": "team_count_set",
-                    "teams": list(room["teams"].keys())
+                    "type": "nasa_team_progress",
+                    "done": len(room["team_answers"]),
+                    "total": len(room["teams"])
                 })
 
-            elif msg_type == "select_team":
-            
-                name = data.get("name")
-                team = data.get("team")
-            
-                for t in room["teams"]:
-                    if name in room["teams"][t]:
-                        room["teams"][t].remove(name)
-            
-                if team in room["teams"]:
-                    room["teams"][team].append(name)
-            
-                # ★ここ追加（超重要）
-                if name:
-                    if name not in room["nasa_answers"]:
-                        room["nasa_answers"][name] = {}
-                    room["nasa_answers"][name]["team_name"] = team
-            
-                await broadcast(room, {
-                    "type": "team_update",
-                    "teams": room["teams"]
-                })
 
-            elif msg_type == "start_leader_phase":
-
-                await broadcast(room, {
-                    "type": "leader_phase_start",
-                    "teams": room["teams"]
-                })
-
-            elif msg_type == "set_team_leader":
-
-                team = data.get("team")
-                leader = data.get("leader")
-
-                if team in room["team_leaders"]:
-                    return
-
-                if team in room["teams"] and leader in room["teams"][team]:
-                    room["team_leaders"][team] = leader
-
-                    await broadcast(room, {
-                        "type": "team_leader_set",
-                        "team": team,
-                        "leader": leader
-                    })
-
-            elif msg_type == "start_team_phase":
-
-                await broadcast(room, {
-                    "type": "team_phase_start",
-                    "teams": room["teams"],
-                    "leaders": room["team_leaders"]
-                })
-
-            elif msg_type == "nasa_show_result":
-
-                await broadcast(room, {
-                    "type": "nasa_result",
-                    "correct": room["nasa"].get("correct", [])
-                })
-
-            # =========================
-            # ランキング
-            # =========================
+# =========================
+# ランキング
+# =========================
             elif msg_type == "nasa_get_ranking":
 
                 correct = room["nasa"].get("correct", [])
@@ -381,6 +321,16 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     if team_avg_dict else 0
                 )
 
+                # ★追加：差分計算
+                my_team_score = next(
+                    (team_scores[t][0] for t in team_scores if t == my_team),
+                    None
+                )
+
+                my_diff = None
+                if my_personal is not None and my_team_score is not None:
+                    my_diff = my_personal - my_team_score
+
                 await websocket.send_json({
                     "type": "nasa_ranking",
                     "personal_top": [
@@ -394,10 +344,8 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     ],
                     "team_avg": round(team_avg, 1),
                     "my_personal": my_personal,
-                    "my_team_score": next(
-                        (team_scores[t][0] for t in team_scores if t == my_team),
-                        None
-                    )
+                    "my_team_score": my_team_score,
+                    "my_diff": my_diff   # ★追加
                 })
 
             elif msg_type == "end_nasa":
