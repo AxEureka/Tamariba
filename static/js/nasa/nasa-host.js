@@ -51,12 +51,12 @@ export function startNASAHost(ws, uiContainer) {
     console.log("📩 ホスト受信:", data);
 
     // ★個人進捗
-    if (data.type === "nasa_progress") {
+    if (data.type === "nasa_personal_progress") {
       updateProgress(`個人回答：${data.done} / ${data.total}人`);
     }
 
     // ★チーム進捗
-    if (data.type === "team_progress") {
+    if (data.type === "nasa_team_progress") {
       updateProgress(`チーム回答：${data.done} / ${data.total}チーム`);
     }
 
