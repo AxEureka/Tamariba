@@ -64,8 +64,7 @@ export function startNASAHost(ws, uiContainer) {
       lastRanking = data;
       showRanking(container, data, true);
 
-      // ★ここ追加（最重要）
-      showControl();
+      // ❌ showControl(); ←削除（上書き防止）
 
       addBackToCorrectButton();
     }
@@ -75,8 +74,7 @@ export function startNASAHost(ws, uiContainer) {
         socket.send(JSON.stringify({ type: "nasa_get_ranking" }));
       });
 
-      // ★ここ追加（最重要）
-      showControl();
+      // ❌ showControl(); ←削除（上書き防止）
     }
 
   });
@@ -87,8 +85,7 @@ export function startNASAHost(ws, uiContainer) {
         socket.send(JSON.stringify({ type: "nasa_get_ranking" }));
       });
 
-      // ★ここも保険で入れてOK
-      showControl();
+      // ❌ showControl(); ←削除（上書き防止）
     }
   };
 
@@ -126,7 +123,7 @@ function showTeamSetup(onNext){
 // コントロール
 // =========================
 function showControl(){
-  // container 内はボタンのみ作成
+
   container.innerHTML=`
     <div class="nasa-ui">
       <h2>NASAゲーム進行</h2>
@@ -137,9 +134,6 @@ function showControl(){
       <button id="showRanking">ランキング</button>
     </div>
   `;
-
-  // progressDiv は固定表示の右上UIを使う
-  // progressDiv = document.getElementById("progress"); ←消す
 
   document.getElementById("startTeam").onclick=()=>{
     socket.send(JSON.stringify({ type:"start_team_phase" }));
