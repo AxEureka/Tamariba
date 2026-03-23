@@ -115,9 +115,6 @@ function showMyResultDiff(data){
 
   const diff = personal - team;
 
-  // =========================
-  // スコア評価
-  // =========================
   function getRankLabel(score){
     if(score <= 10) return "神レベル";
     if(score <= 30) return "かなり優秀";
@@ -128,26 +125,21 @@ function showMyResultDiff(data){
   const personalRank = getRankLabel(personal);
   const teamRank = getRankLabel(team);
 
-  // =========================
-  // 差分メッセージ
-  // =========================
   let msg = "";
 
   if(diff === 0){
     msg = "完全一致！理想的な判断！";
   }
   else if(diff > 0){
-    // チームの方が良い
     if(diff <= 10){
       msg = "チームの方が少し良い判断！";
     }else if(diff <= 30){
       msg = "チームで話し合った効果が大きい！";
     }else{
-      msg = "チーム判断が圧勝！協力が鍵！";
+      msg = "チーム判断が圧勝！";
     }
   }
   else{
-    // 個人の方が良い
     const d = Math.abs(diff);
 
     if(d <= 10){
@@ -159,19 +151,19 @@ function showMyResultDiff(data){
     }
   }
 
-  // =========================
-  // 表示
-  // =========================
-  const wrap = document.querySelector(".ranking-wrap");
-  if(!wrap) return;
-
   const msgBox = document.createElement("div");
 
-  msgBox.style.position = "relative";
-  msgBox.style.marginTop = "30px";
+  msgBox.style.position = "fixed";
+  msgBox.style.bottom = "40px";
+  msgBox.style.left = "50%";
+  msgBox.style.transform = "translateX(-50%)";
+  msgBox.style.background = "rgba(0,0,0,0.8)";
+  msgBox.style.padding = "12px 18px";
+  msgBox.style.borderRadius = "10px";
   msgBox.style.textAlign = "center";
   msgBox.style.fontWeight = "bold";
   msgBox.style.color = "white";
+  msgBox.style.zIndex = "1000";
 
   msgBox.innerHTML = `
     <div>あなた：${personal}（${personalRank}）</div>
@@ -180,7 +172,7 @@ function showMyResultDiff(data){
     <div style="margin-top:10px;">${msg}</div>
   `;
 
-  wrap.appendChild(msgBox);
+  container.appendChild(msgBox);
 }
 // =========================
 // 以下そのまま
