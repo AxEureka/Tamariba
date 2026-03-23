@@ -150,7 +150,7 @@ function showControl(){
   document.getElementById("showRanking").onclick=()=>{
     socket.send(JSON.stringify({
       type:"nasa_get_ranking",
-      name: window.myName || "host"
+      name: null
     }));
   };
 }
