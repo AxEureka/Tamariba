@@ -68,7 +68,7 @@ export function startNASAPlayer(ws,uiContainer){
       }
     }
 
-    // 結果（★ボタン追加しない）
+    // 正解
     if(data.type==="nasa_result"){
       lastCorrect=data.correct;
 
@@ -80,15 +80,12 @@ export function startNASAPlayer(ws,uiContainer){
       });
     }
 
-    // ランキング（★ここだけボタン追加）
+    // ランキング
     if(data.type==="nasa_ranking"){
       showRanking(container,data,false);
 
-      // 差分表示
-      showMyResultDiff(data);
-
-      // ★ここだけで追加
-      addRankingAndBackButton();
+      // ★メッセージだけ表示
+      showSimpleMessage(data);
     }
 
   });
@@ -101,16 +98,15 @@ export function startNASAPlayer(ws,uiContainer){
           name:window.myName
         }));
       });
-      // ★ここでは追加しない（重要）
     }
   };
 
 }
 
 // =========================
-// ★差分表示（ランキングの下に表示）
+// ★シンプルメッセージ（差分だけ）
 // =========================
-function showMyResultDiff(data){
+function showSimpleMessage(data){
 
   const personal = data.my_personal;
   const team = data.my_team_score;
@@ -134,27 +130,23 @@ function showMyResultDiff(data){
 
   const msgBox = document.createElement("div");
 
-  msgBox.style.position = "relative";
-  msgBox.style.marginTop = "30px";
-  msgBox.style.alignSelf = "center";
+  msgBox.style.position = "absolute";
+  msgBox.style.bottom = "40px";
+  msgBox.style.left = "50%";
+  msgBox.style.transform = "translateX(-50%)";
   msgBox.style.background = "rgba(0,0,0,0.8)";
   msgBox.style.padding = "12px 18px";
   msgBox.style.borderRadius = "10px";
   msgBox.style.textAlign = "center";
   msgBox.style.fontWeight = "bold";
 
-  msgBox.innerHTML = `
-    <div>あなた：${personal}</div>
-    <div>チーム：${team}</div>
-    <div>差分：${diff}</div>
-    <div>${msg}</div>
-  `;
+  msgBox.textContent = msg;
 
   wrap.appendChild(msgBox);
 }
 
 // =========================
-// 以下既存そのまま
+// 以下そのまま
 // =========================
 
 function startPersonal(){
@@ -325,48 +317,4 @@ function startTeamAnswer(){
 
   },`${myTeam} の回答（リーダー: ${leader}）`,true);
 
-}
-
-// =========================
-// ★ランキング横ボタン（修正版）
-// =========================
-function addRankingAndBackButton(){
-
-  // ★既存削除
-  document.querySelectorAll(".extra-btns").forEach(el => el.remove());
-
-  const wrap = document.querySelector(".ranking-wrap");
-  if(!wrap) return;
-
-  const wrapper = document.createElement("div");
-  wrapper.className = "extra-btns";
-
-  wrapper.style.display = "flex";
-  wrapper.style.flexDirection = "column";
-  wrapper.style.gap = "8px";
-  wrapper.style.marginLeft = "20px";
-
-  // ランキングボタン
-  const rankBtn = document.createElement("button");
-  rankBtn.textContent = "ランキングを見る";
-  rankBtn.onclick = () => {
-    socket.send(JSON.stringify({
-      type:"nasa_get_ranking",
-      name:window.myName
-    }));
-  };
-  wrapper.appendChild(rankBtn);
-
-  // 正解ボタン
-  const backBtn = document.createElement("button");
-  backBtn.textContent = "正解を見る";
-  backBtn.onclick = () => {
-    if(window.showCorrectAgain){
-      window.showCorrectAgain();
-    }
-  };
-  wrapper.appendChild(backBtn);
-
-  // ★ランキング横に配置
-  wrap.appendChild(wrapper);
 }
