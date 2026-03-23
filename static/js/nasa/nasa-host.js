@@ -199,5 +199,7 @@ function addBackToCorrectButton() {
     }
   };
 
-  container.appendChild(btn);
+ const ui = container.querySelector(".nasa-ui");
+if (ui) {
+  ui.appendChild(btn);
 }
