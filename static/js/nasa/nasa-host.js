@@ -203,3 +203,4 @@ function addBackToCorrectButton() {
 if (ui) {
   ui.appendChild(btn);
 }
+}
