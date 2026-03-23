@@ -123,10 +123,6 @@ function showMyResultDiff(data){
 
   const diff = personal - team;
 
-  const div = document.createElement("div");
-  div.style.marginTop = "20px";
-  div.style.fontWeight = "bold";
-
   let msg = "";
 
   if(diff > 0){
@@ -137,16 +133,30 @@ function showMyResultDiff(data){
     msg = "完全一致！すごい！";
   }
 
-  div.innerHTML = `
-    <p>あなたの個人得点：${personal}</p>
-    <p>チーム得点：${team}</p>
-    <p>差分：${diff}</p>
-    <p>${msg}</p>
+  const wrap = document.querySelector(".ranking-wrap");
+  if(!wrap) return;
+
+  const msgBox = document.createElement("div");
+
+  msgBox.style.position = "absolute";
+  msgBox.style.bottom = "40px";
+  msgBox.style.left = "50%";
+  msgBox.style.transform = "translateX(-50%)";
+  msgBox.style.background = "rgba(0,0,0,0.8)";
+  msgBox.style.padding = "12px 18px";
+  msgBox.style.borderRadius = "10px";
+  msgBox.style.textAlign = "center";
+  msgBox.style.fontWeight = "bold";
+
+  msgBox.innerHTML = `
+    <div>あなた：${personal}</div>
+    <div>チーム：${team}</div>
+    <div>差分：${diff}</div>
+    <div>${msg}</div>
   `;
 
-  container.appendChild(div);
+  wrap.appendChild(msgBox);
 }
-
 // =========================
 // 以下既存そのまま
 // =========================
