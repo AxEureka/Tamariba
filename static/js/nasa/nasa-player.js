@@ -136,8 +136,8 @@ function showMyResultDiff(data){
 
   const msgBox = document.createElement("div");
 
-  msgBox.style.position = "absolute";
-  msgBox.style.bottom = "40px";
+  msgBox.style.position = "relative";
+  msgBox.style.marginTop = "20px";
   msgBox.style.left = "50%";
   msgBox.style.transform = "translateX(-50%)";
   msgBox.style.background = "rgba(0,0,0,0.8)";
