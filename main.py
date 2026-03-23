@@ -296,19 +296,22 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 name = data.get("name")
                 team = data.get("team")
                 ranks = data.get("ranks")
-
+            
                 if team:
                     room["team_answers"][team] = ranks
-
-                if name in room["nasa_answers"]:
-                    room["nasa_answers"][name]["team_name"] = team
-
+            
+                    # ★ここが最重要修正
+                    for member in room["teams"].get(team, []):
+                        if member not in room["nasa_answers"]:
+                            room["nasa_answers"][member] = {}
+            
+                        room["nasa_answers"][member]["team_name"] = team
+            
                 await broadcast(room, {
                     "type": "nasa_team_progress",
                     "done": len(room["team_answers"]),
                     "total": len(room["teams"])
-                })
-
+    })
             # =========================
             # ランキング（そのまま）
             # =========================
