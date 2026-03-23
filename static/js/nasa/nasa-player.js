@@ -79,9 +79,7 @@ export function startNASAPlayer(ws,uiContainer){
         }));
       });
 
-      // ★ボタンを追加
-      addRankingAndBackButton();
-    }
+          }
 
     // ランキング
     if(data.type==="nasa_ranking"){
