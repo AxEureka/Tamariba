@@ -68,7 +68,7 @@ export function startNASAPlayer(ws,uiContainer){
       }
     }
 
-    // 結果
+    // 結果（★ボタン追加しない）
     if(data.type==="nasa_result"){
       lastCorrect=data.correct;
 
@@ -78,17 +78,16 @@ export function startNASAPlayer(ws,uiContainer){
           name:window.myName
         }));
       });
+    }
 
-          }
-
-    // ランキング
+    // ランキング（★ここだけボタン追加）
     if(data.type==="nasa_ranking"){
       showRanking(container,data,false);
 
-      // ★差分表示
+      // 差分表示
       showMyResultDiff(data);
 
-      // ★ボタンを追加
+      // ★ここだけで追加
       addRankingAndBackButton();
     }
 
@@ -102,15 +101,14 @@ export function startNASAPlayer(ws,uiContainer){
           name:window.myName
         }));
       });
-
-      addRankingAndBackButton();
+      // ★ここでは追加しない（重要）
     }
   };
 
 }
 
 // =========================
-// ★差分表示
+// ★差分表示（ランキングの下に表示）
 // =========================
 function showMyResultDiff(data){
 
@@ -137,9 +135,8 @@ function showMyResultDiff(data){
   const msgBox = document.createElement("div");
 
   msgBox.style.position = "relative";
-  msgBox.style.marginTop = "20px";
-  msgBox.style.left = "50%";
-  msgBox.style.transform = "translateX(-50%)";
+  msgBox.style.marginTop = "30px";
+  msgBox.style.alignSelf = "center";
   msgBox.style.background = "rgba(0,0,0,0.8)";
   msgBox.style.padding = "12px 18px";
   msgBox.style.borderRadius = "10px";
@@ -155,6 +152,7 @@ function showMyResultDiff(data){
 
   wrap.appendChild(msgBox);
 }
+
 // =========================
 // 以下既存そのまま
 // =========================
@@ -330,15 +328,23 @@ function startTeamAnswer(){
 }
 
 // =========================
-// ★ランキング/正解ボタン追加
+// ★ランキング横ボタン（修正版）
 // =========================
 function addRankingAndBackButton(){
 
+  // ★既存削除
+  document.querySelectorAll(".extra-btns").forEach(el => el.remove());
+
+  const wrap = document.querySelector(".ranking-wrap");
+  if(!wrap) return;
+
   const wrapper = document.createElement("div");
-  wrapper.style.marginTop = "15px";
+  wrapper.className = "extra-btns";
+
   wrapper.style.display = "flex";
   wrapper.style.flexDirection = "column";
   wrapper.style.gap = "8px";
+  wrapper.style.marginLeft = "20px";
 
   // ランキングボタン
   const rankBtn = document.createElement("button");
@@ -351,7 +357,7 @@ function addRankingAndBackButton(){
   };
   wrapper.appendChild(rankBtn);
 
-  // 正解に戻るボタン
+  // 正解ボタン
   const backBtn = document.createElement("button");
   backBtn.textContent = "正解を見る";
   backBtn.onclick = () => {
@@ -361,5 +367,6 @@ function addRankingAndBackButton(){
   };
   wrapper.appendChild(backBtn);
 
-  container.appendChild(wrapper);
+  // ★ランキング横に配置
+  wrap.appendChild(wrapper);
 }
