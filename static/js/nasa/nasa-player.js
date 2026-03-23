@@ -106,7 +106,7 @@ export function startNASAPlayer(ws,uiContainer){
 // =========================
 // ★シンプルメッセージ（差分だけ）
 // =========================
-function showSimpleMessage(data){
+function showMyResultDiff(data){
 
   const personal = data.my_personal;
   const team = data.my_team_score;
@@ -115,36 +115,73 @@ function showSimpleMessage(data){
 
   const diff = personal - team;
 
-  let msg = "";
-
-  if(diff > 0){
-    msg = "チームの方が優秀！";
-  }else if(diff < 0){
-    msg = "あなたの方が鋭い！";
-  }else{
-    msg = "完全一致！すごい！";
+  // =========================
+  // スコア評価
+  // =========================
+  function getRankLabel(score){
+    if(score <= 10) return "神レベル";
+    if(score <= 30) return "かなり優秀";
+    if(score <= 60) return "そこそこ";
+    return "ズレ気味";
   }
 
+  const personalRank = getRankLabel(personal);
+  const teamRank = getRankLabel(team);
+
+  // =========================
+  // 差分メッセージ
+  // =========================
+  let msg = "";
+
+  if(diff === 0){
+    msg = "完全一致！理想的な判断！";
+  }
+  else if(diff > 0){
+    // チームの方が良い
+    if(diff <= 10){
+      msg = "チームの方が少し良い判断！";
+    }else if(diff <= 30){
+      msg = "チームで話し合った効果が大きい！";
+    }else{
+      msg = "チーム判断が圧勝！協力が鍵！";
+    }
+  }
+  else{
+    // 個人の方が良い
+    const d = Math.abs(diff);
+
+    if(d <= 10){
+      msg = "あなたの直感がわずかに上！";
+    }else if(d <= 30){
+      msg = "あなたの判断力が光ってる！";
+    }else{
+      msg = "あなたの洞察が圧倒的！";
+    }
+  }
+
+  // =========================
+  // 表示
+  // =========================
   const wrap = document.querySelector(".ranking-wrap");
   if(!wrap) return;
 
   const msgBox = document.createElement("div");
 
-  msgBox.style.position = "absolute";
-  msgBox.style.bottom = "40px";
-  msgBox.style.left = "50%";
-  msgBox.style.transform = "translateX(-50%)";
-  msgBox.style.background = "rgba(0,0,0,0.8)";
-  msgBox.style.padding = "12px 18px";
-  msgBox.style.borderRadius = "10px";
+  msgBox.style.position = "relative";
+  msgBox.style.marginTop = "30px";
   msgBox.style.textAlign = "center";
   msgBox.style.fontWeight = "bold";
+  msgBox.style.color = "white";
 
-  msgBox.textContent = msg;
+  msgBox.innerHTML = `
+    <div>あなた：${personal}（${personalRank}）</div>
+    <div>チーム：${team}（${teamRank}）</div>
+    <div>差分：${diff}</div>
+    <div style="margin-top:10px;">${msg}</div>
+  `;
 
   wrap.appendChild(msgBox);
 }
-
 // =========================
 // 以下そのまま
 // =========================
