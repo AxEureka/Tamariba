@@ -25,6 +25,10 @@ export function startNASAPlayer(ws,uiContainer){
     let data;
     try{data=JSON.parse(e.data);}catch{return;}
 
+    // =========================
+    // ⭐ここがエラー原因だった（関数復活）
+    // =========================
+
     if(data.type==="start_nasa"){
       items=data.items;
       startPersonal();
@@ -133,7 +137,6 @@ function showDetailedCorrect(container,items,correct,personalAnswers,teamAnswers
     row.style.display="flex";
     row.style.justifyContent="space-between";
     row.style.gap="10px";
-    row.style.padding="4px 0";
 
     row.innerHTML=`
       <div style="flex:2">${item}</div>
@@ -160,7 +163,7 @@ function showDetailedCorrect(container,items,correct,personalAnswers,teamAnswers
 }
 
 // =========================
-// ★ランキングメッセージ強化
+// ★ランキングメッセージ
 // =========================
 function showAdvancedMessages(data){
 
@@ -197,7 +200,7 @@ function showAdvancedMessages(data){
     }
   }
 
-  // 個人下
+  // 個人
   const pMsg=document.createElement("div");
   pMsg.style.marginTop="10px";
   pMsg.style.textAlign="center";
@@ -205,7 +208,7 @@ function showAdvancedMessages(data){
   pMsg.textContent=getScoreMsg(personal);
   boxes[0].appendChild(pMsg);
 
-  // チーム下
+  // チーム
   const tMsg=document.createElement("div");
   tMsg.style.marginTop="10px";
   tMsg.style.textAlign="center";
@@ -225,4 +228,172 @@ function showAdvancedMessages(data){
   `;
 
   wrap.appendChild(diffBox);
+}
+
+// =========================
+// ★ここから「元の関数全部」復活
+// =========================
+
+function startPersonal(){
+
+  createRankingUI(container,items,(r)=>{
+
+    if(!confirm("個人回答を確定しますか？")) return;
+
+    socket.send(JSON.stringify({
+      type:"nasa_personal",
+      name:window.myName,
+      ranks:r
+    }));
+
+    container.innerHTML="<h2>しばらくお待ちください...</h2>";
+
+  },`${window.myName} の回答`,false);
+
+}
+
+function startTeamSelect(){
+  renderTeamSelect();
+}
+
+function renderTeamSelect(){
+
+  container.innerHTML="";
+  container.style.pointerEvents="auto";
+
+  const title=document.createElement("h2");
+  title.textContent="チームを選択";
+  container.appendChild(title);
+
+  const select=document.createElement("select");
+
+  const def=document.createElement("option");
+  def.textContent="選択してください";
+  def.disabled=true;
+  def.selected=true;
+  select.appendChild(def);
+
+  Object.keys(teams).forEach(team=>{
+    const opt=document.createElement("option");
+    opt.value=team;
+    opt.textContent=team;
+    select.appendChild(opt);
+  });
+
+  container.appendChild(select);
+
+  const btn=document.createElement("button");
+  btn.textContent="決定";
+
+  btn.onclick=()=>{
+    const team=select.value;
+    if(!team) return;
+
+    myTeam=team;
+
+    socket.send(JSON.stringify({
+      type:"select_team",
+      name:window.myName,
+      team:team
+    }));
+
+    showWaiting("チーム登録完了。他メンバーを待っています...");
+  };
+
+  container.appendChild(btn);
+}
+
+function renderLeaderSelect(){
+
+  container.innerHTML="<h2>リーダーを選択</h2>";
+
+  const members = teams[myTeam] || [];
+
+  const select=document.createElement("select");
+
+  const def=document.createElement("option");
+  def.textContent="選択してください";
+  def.disabled=true;
+  def.selected=true;
+  select.appendChild(def);
+
+  members.forEach(m=>{
+    const opt=document.createElement("option");
+    opt.value=m;
+    opt.textContent=m;
+    select.appendChild(opt);
+  });
+
+  container.appendChild(select);
+
+  const btn=document.createElement("button");
+  btn.textContent="決定";
+
+  btn.onclick=()=>{
+    const leader=select.value;
+    if(!leader) return;
+
+    socket.send(JSON.stringify({
+      type:"set_team_leader",
+      team:myTeam,
+      leader:leader
+    }));
+
+    showWaiting(`${leader} をリーダーに設定中...`);
+  };
+
+  container.appendChild(btn);
+}
+
+function showWaiting(msg){
+
+  container.innerHTML="";
+
+  const h=document.createElement("h2");
+  h.textContent=msg;
+  container.appendChild(h);
+
+  if(myTeam && teams[myTeam]){
+    teams[myTeam].forEach(m=>{
+      const div=document.createElement("div");
+      div.textContent=m;
+      container.appendChild(div);
+    });
+  }
+}
+
+function startTeamAnswer(){
+
+  const leader=leaders[myTeam];
+
+  if(!leader){
+    showWaiting("リーダー未決定...");
+    return;
+  }
+
+  const isLeader = leader===window.myName;
+
+  if(!isLeader){
+    container.innerHTML=`
+      <h2>${myTeam} の回答（リーダー: ${leader}）</h2>
+      <p>リーダーが回答中です...</p>
+    `;
+    return;
+  }
+
+  createRankingUI(container,items,(r)=>{
+
+    if(!confirm("チーム回答を確定しますか？")) return;
+
+    socket.send(JSON.stringify({
+      type:"nasa_team",
+      name:window.myName,
+      team:myTeam,
+      ranks:r
+    }));
+
+    container.innerHTML="<h2>送信完了</h2>";
+
+  },`${myTeam} の回答（リーダー: ${leader}）`,true);
+
 }
