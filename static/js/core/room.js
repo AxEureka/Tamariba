@@ -276,7 +276,7 @@ if (msg.type === "host_message") {
   // 個別指定がある場合、自分宛だけ表示
   if (msg.target && msg.target !== myName) return;
 
-  alert("📩 親からのメッセージ\n\n" + msg.text);
+  showPopup("📩 親： " + msg.text);
 }
 
 /* クイズ */
