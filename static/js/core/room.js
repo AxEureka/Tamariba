@@ -28,8 +28,16 @@ document.getElementById("room-title").textContent = `${data.room}（親：${data
 document.getElementById("room-id").textContent = roomId;
 
 if (myName === hostName) {
-document.getElementById("host-area").style.display = "block";
-document.getElementById("gameSelectBtn").style.display = "inline-block";
+
+  document.getElementById("host-area").style.display = "block";
+  document.getElementById("gameSelectBtn").style.display = "inline-block";
+
+  // 👇これ追加
+  const msgBtn = document.createElement("button");
+  msgBtn.textContent = "📩 全体メッセージ";
+  msgBtn.onclick = sendMessageToAll;
+  document.getElementById("host-area").appendChild(msgBtn);
+}
 
 const joinURL = window.location.origin + "/static/join.html?room=" + roomId;
 document.getElementById("join-url").value = joinURL;
@@ -100,7 +108,11 @@ if (myName === hostName) {
 
 data.members.forEach(m => {
 if (m === hostName) return;
-list.push(`・${m} <button onclick="kickMember('${m}')">退室させる</button>`);
+list.push(`
+  ・${m}
+  <button onclick="sendMessageTo('${m}')">💬</button>
+  <button onclick="kickMember('${m}')">退室</button>
+`);
 });
 
 } else {
@@ -183,6 +195,29 @@ navigator.clipboard.writeText(input.value);
 showPopup("参加URLをコピーしました");
 }
 
+function sendMessageToAll(){
+
+  const text = prompt("全員に送るメッセージ");
+  if(!text) return;
+
+  socket.send(JSON.stringify({
+    type:"host_message",
+    text:text
+  }));
+}
+
+function sendMessageTo(name){
+
+  const text = prompt(`${name}さんに送るメッセージ`);
+  if(!text) return;
+
+  socket.send(JSON.stringify({
+    type:"host_message",
+    text:text,
+    target:name
+  }));
+}
+
 /* ===== 遊び選択 ===== */
 function selectGame(type){
 
@@ -235,6 +270,14 @@ socket.onmessage = (e) => {
 
 let msg;
 try { msg = JSON.parse(e.data); } catch { return; }
+
+if (msg.type === "host_message") {
+
+  // 個別指定がある場合、自分宛だけ表示
+  if (msg.target && msg.target !== myName) return;
+
+  alert("📩 親からのメッセージ\n\n" + msg.text);
+}
 
 /* クイズ */
 if (msg.type === "start_quiz") {
