@@ -298,3 +298,10 @@ if (ui) {
   ui.appendChild(btn);
 }
 }
+
+function removeProgressUI(){
+  if(progressDiv){
+    progressDiv.remove();
+    progressDiv = null;
+  }
+}
