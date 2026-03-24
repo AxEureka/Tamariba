@@ -116,13 +116,21 @@ function showDetailedCorrect(container,items,correct,personalAnswers,teamAnswers
   title.textContent="正解と比較";
   box.appendChild(title);
 
-  const myName = window.myName;
-
-  const myData = personalAnswers?.[myName] || {};
-  const myRanks = myData.personal || [];
-
-  const myTeamName = myData.team_name;
-  const teamRanks = teamAnswers?.[myTeamName] || [];
+// ★ここに追加！！
+  const header=document.createElement("div");
+  header.style.display="flex";
+  header.style.justifyContent="space-between";
+  header.style.gap="10px";
+  header.style.fontWeight="bold";
+  
+  header.innerHTML=`
+    <div style="flex:2">品目</div>
+    <div style="flex:1">正解</div>
+    <div style="flex:1">あなた</div>
+    <div style="flex:1">チーム</div>
+  `;
+  
+  box.appendChild(header);
 
   items.forEach((item,i)=>{
 
@@ -140,10 +148,14 @@ function showDetailedCorrect(container,items,correct,personalAnswers,teamAnswers
 
     row.innerHTML=`
       <div style="flex:2">${item}</div>
-      <div style="flex:1">正解：${c}</div>
-      <div style="flex:1">あなた：${p ?? "-"}（${pDiff}）</div>
-      <div style="flex:1">チーム：${t ?? "-"}（${tDiff}）</div>
-    `;
+      <div style="flex:1">${c}</div>
+      <div style="flex:1">
+        ${p ?? "-"} <span style="color:#888">(${pDiff})</span>
+      </div>
+      <div style="flex:1">
+        ${t ?? "-"} <span style="color:#888">(${tDiff})</span>
+      </div>
+`;
 
     box.appendChild(row);
   });
@@ -205,6 +217,7 @@ function showAdvancedMessages(data){
   pMsg.style.marginTop="10px";
   pMsg.style.textAlign="center";
   pMsg.style.fontWeight="bold";
+  pMsg.style.fontSize="18px";
   pMsg.textContent=getScoreMsg(personal);
   boxes[0].appendChild(pMsg);
 
@@ -213,14 +226,27 @@ function showAdvancedMessages(data){
   tMsg.style.marginTop="10px";
   tMsg.style.textAlign="center";
   tMsg.style.fontWeight="bold";
+  tMsg.style.fontSize="18px";
   tMsg.textContent=getScoreMsg(team);
   boxes[1].appendChild(tMsg);
 
+  [pMsg, tMsg].forEach(el=>{
+    el.style.background="rgba(0,0,0,0.7)";
+    el.style.color="white";
+    el.style.padding="8px";
+    el.style.borderRadius="8px";
+  });
+
   // 差分
   const diffBox=document.createElement("div");
-  diffBox.style.marginTop="20px";
+  diffBox.style.background="black";
+  diffBox.style.color="white";
+  diffBox.style.padding="12px";
+  diffBox.style.borderRadius="10px";
+  diffBox.style.fontSize="18px";
   diffBox.style.textAlign="center";
   diffBox.style.fontWeight="bold";
+  diffBox.style.boxShadow="0 0 10px rgba(0,0,0,0.5)";
 
   diffBox.innerHTML=`
     <div>個人得点 ー チーム得点：${diff}</div>
