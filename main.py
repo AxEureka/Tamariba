@@ -241,9 +241,15 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
 
                     room["teams"][team].append(name)
 
+                # 選択済み人数を計算
+                selected = sum(len(members) for members in room["teams"].values())
+                total = len(room["members"])
+                
                 await broadcast(room, {
                     "type": "team_update",
-                    "teams": room["teams"]
+                    "teams": room["teams"],
+                    "selected": selected,
+                    "total": total
                 })
 
             elif msg_type == "start_leader_phase":
