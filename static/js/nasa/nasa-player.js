@@ -180,23 +180,23 @@ function showAdvancedMessages(data){
   const diff = personal - team;
 
   function getScoreMsg(score){
-    if(score <= 10) return "ほぼ完璧！";
-    if(score <= 30) return "かなり優秀";
-    if(score <= 60) return "まずまず";
+    if(score <= 10) return "ほぼ完璧な判断";
+    if(score <= 30) return "かなり優秀な判断";
+    if(score <= 60) return "まずまずの判断";
     return "ズレあり";
   }
 
   function getDiffMsg(diff){
     if(diff === 0) return "完全一致！理想的！";
     if(diff > 0){
-      if(diff <= 10) return "チームの方が少し良い";
-      if(diff <= 30) return "チームで大きく改善！";
-      return "チーム判断が圧勝！";
+      if(diff <= 10) return "チームの方が少し良い結果";
+      if(diff <= 30) return "チームで判断する方が正確！";
+      return "困ったらチームで話し合おう！";
     }else{
       const d=Math.abs(diff);
-      if(d <= 10) return "あなたの方が少し良い";
-      if(d <= 30) return "あなたの判断が光る！";
-      return "あなたが圧倒的に正確！";
+      if(d <= 10) return "一人の方が少し良い結果";
+      if(d <= 30) return "一人で判断する方が正確！";
+      return "困ったら一人だけで決断しよう！";
     }
   }
 
@@ -223,7 +223,7 @@ function showAdvancedMessages(data){
   diffBox.style.fontWeight="bold";
 
   diffBox.innerHTML=`
-    <div>差分：${diff}</div>
+    <div>個人得点 ー チーム得点：${diff}</div>
     <div>${getDiffMsg(diff)}</div>
   `;
 
