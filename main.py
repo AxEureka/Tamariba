@@ -399,7 +399,8 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     "team_avg": round(team_avg, 1),
                     "my_personal": my_personal,
                     "my_team_score": my_team_score,
-                    "my_diff": my_diff
+                    "my_diff": my_diff,
+                    "my_team_name": my_team
                 })
 
             elif msg_type == "end_nasa":
