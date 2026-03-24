@@ -309,11 +309,14 @@ container.innerHTML="";
 }
 
 if (msg.type === "end_nasa") {
-const container = document.getElementById("game-container");
-container.classList.remove("active");
-container.innerHTML="";
-}
+  const container = document.getElementById("game-container");
+  container.classList.remove("active");
+  container.innerHTML="";
 
+  if(window.removeProgressUI){
+    window.removeProgressUI();
+  }
+}
 };
 
 socket.onerror = (e) => {
@@ -382,7 +385,7 @@ if(exitQuizBtn){
     container.innerHTML="";
     exitQuizBtn.style.display="none";
 
-    // ★追加
+    // ★ここ ← 完璧な位置
     if(window.removeProgressUI){
       window.removeProgressUI();
     }
