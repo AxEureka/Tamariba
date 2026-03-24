@@ -271,7 +271,9 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
 
                 await broadcast(room, {
                     "type": "nasa_result",
-                    "correct": room["nasa"].get("correct", [])
+                    "correct": room["nasa"].get("correct", []),
+                    "personal_answers": room["nasa_answers"],
+                    "team_answers": room["team_answers"]
                 })
             # ★追加ここまで
 
