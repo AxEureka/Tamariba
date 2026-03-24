@@ -39,11 +39,12 @@ export function startNASAPlayer(ws,uiContainer){
     if(data.type==="team_update"){
       teams=data.teams;
     
-      // ★未選択ならUI更新
       if(!myTeamSelected){
-        renderTeamSelect();
+        // ★すでにselectがあれば再生成しない
+        if(!container.querySelector("select")){
+          renderTeamSelect();
+        }
       }else{
-        // ★選択済みなら待機表示だけ更新（メンバー表示更新）
         showWaiting("チーム登録完了。他メンバーを待っています...");
       }
     }
@@ -51,7 +52,7 @@ export function startNASAPlayer(ws,uiContainer){
     if(data.type==="leader_phase_start"){
       teams=data.teams;
 
-      if(myTeam){
+      if(myTeamSelected){
         renderLeaderSelect();
       }else{
         showWaiting("リーダー選択フェーズ待機中...");
