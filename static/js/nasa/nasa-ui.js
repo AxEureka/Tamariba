@@ -285,14 +285,22 @@ container.innerHTML="";
 const wrap=document.createElement("div");
 wrap.className="ranking-wrap";
 
+wrap.style.display="flex";
+wrap.style.flexDirection="column";
+wrap.style.alignItems="center";
+
+// ★2列部分
+const row=document.createElement("div");
+row.style.display="flex";
+row.style.gap="30px";
+row.style.justifyContent="center";
+
 const personal=document.createElement("div");
 personal.className="ranking-box";
 
 let html1=`<h2>🏆 個人ランキング</h2>`;
 data.personal_top.forEach((p,i)=>{
-html1+=`<div class="rank-line ${i===0?"rank-1":""}">
-${i+1}位：${p.name}（${p.score}）
-</div>`;
+html1+=`<div>${i+1}位：${p.name}（${p.score}）</div>`;
 });
 html1+=`<hr><div>平均：${data.personal_avg}</div>`;
 if(!isHost){
@@ -305,24 +313,22 @@ team.className="ranking-box";
 
 let html2=`<h2>👥 チームランキング</h2>`;
 data.team_top.forEach((t,i)=>{
-html2+=`<div class="rank-line ${i===0?"rank-1":""}">
-${i+1}位：${t.name}（${t.score}）
-</div>`;
+html2+=`<div>${i+1}位：${t.name}（${t.score}）</div>`;
 });
 html2+=`<hr><div>平均：${data.team_avg}</div>`;
 if(!isHost){
-html2+=`<div>あなたのチーム得点：${data.my_team_score ?? "-"}</div>`;
+html2+=`<div>あなたのチーム：${data.my_team_score ?? "-"}</div>`;
 }
 team.innerHTML=html2;
 
-wrap.appendChild(personal);
-wrap.appendChild(team);
-container.appendChild(wrap);
+row.appendChild(personal);
+row.appendChild(team);
 
+wrap.appendChild(row);
+
+// ★ボタン
 const btnArea=document.createElement("div");
-btnArea.style.display="flex";
-btnArea.style.justifyContent="flex-end";
-btnArea.style.marginTop="10px";
+btnArea.style.marginTop="15px";
 
 const backBtn=document.createElement("button");
 backBtn.textContent="正解を見る";
@@ -333,6 +339,8 @@ window.showCorrectAgain();
 }
 };
 
-wrap.appendChild(btnArea);
 btnArea.appendChild(backBtn);
+wrap.appendChild(btnArea);
+
+container.appendChild(wrap);
 }
