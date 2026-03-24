@@ -198,26 +198,28 @@ const container = document.getElementById("game-container");
 
 /* クイズ */
 if (type === "quiz"){
-if (myName === hostName){
-socket.send(JSON.stringify({ type:"start_quiz" }));
-container.classList.add("active");
-startQuizHost(socket, container);
-document.getElementById("exitQuizBtn").style.display = "inline-block";
+  if (myName === hostName){
+    currentGame = "quiz"; // ★追加
+    socket.send(JSON.stringify({ type:"start_quiz" }));
+    container.classList.add("active");
+    startQuizHost(socket, container);
+    document.getElementById("exitQuizBtn").style.display = "inline-block";
 }
 }
 
 /* NASA */
 if(type==="nasa"){
-if(myName===hostName){
-socket.send(JSON.stringify({ type:"start_nasa" }));
-container.classList.add("active");
-startNASAHost(socket,container);
-document.getElementById("exitQuizBtn").style.display = "inline-block";
-}
+  if(myName===hostName){
+    currentGame = "nasa"; // ★追加
+    socket.send(JSON.stringify({ type:"start_nasa" }));
+    container.classList.add("active");
+    startNASAHost(socket,container);
+    document.getElementById("exitQuizBtn").style.display = "inline-block";}
 }
 }
 
 let socket;
+let currentGame = null; // ★追加
 
 function connectSocket() {
 
@@ -236,18 +238,26 @@ try { msg = JSON.parse(e.data); } catch { return; }
 
 /* クイズ */
 if (msg.type === "start_quiz") {
-const container = document.getElementById("game-container");
-if (myName !== hostName) {
-startQuizPlayer(socket, container);
-}
+  const container = document.getElementById("game-container");
+
+  container.classList.add("active"); // ←追加
+  document.getElementById("exitQuizBtn").style.display = "inline-block"; // ←追加
+
+  if (myName !== hostName) {
+    startQuizPlayer(socket, container);
+  }
 }
 
 /* NASA（★ここ修正） */
 if (msg.type === "start_nasa") {
-const container = document.getElementById("game-container");
-if (myName !== hostName) {
-startNASAPlayer(socket, container);
-}
+  const container = document.getElementById("game-container");
+
+  container.classList.add("active"); // ←追加
+  document.getElementById("exitQuizBtn").style.display = "inline-block"; // ←追加
+
+  if (myName !== hostName) {
+    startNASAPlayer(socket, container);
+  }
 }
 
 if (msg.type === "end_quiz") {
@@ -319,15 +329,19 @@ gameDropdown.style.display === "block" ? "none" : "block";
 }
 
 if(exitQuizBtn){
-exitQuizBtn.onclick = ()=>{
-socket.send(JSON.stringify({ type:"end_quiz" }));
-socket.send(JSON.stringify({ type:"end_nasa" }));
+  exitQuizBtn.onclick = ()=>{
 
-const container = document.getElementById("game-container");
-container.classList.remove("active");
-container.innerHTML="";
-exitQuizBtn.style.display="none";
-};
+    if(currentGame){
+      socket.send(JSON.stringify({ type:`end_${currentGame}` }));
+    }
+
+    const container = document.getElementById("game-container");
+    container.classList.remove("active");
+    container.innerHTML="";
+    exitQuizBtn.style.display="none";
+
+    currentGame = null; // ★リセット
+  };
 }
 
 connectSocket();
