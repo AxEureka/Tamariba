@@ -382,7 +382,12 @@ if(exitQuizBtn){
     container.innerHTML="";
     exitQuizBtn.style.display="none";
 
-    currentGame = null; // ★リセット
+    // ★追加
+    if(window.removeProgressUI){
+      window.removeProgressUI();
+    }
+
+    currentGame = null;
   };
 }
 
