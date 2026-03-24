@@ -244,11 +244,14 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             # ★追加ここから
             elif msg_type == "set_team_count":
                 room["team_count"] = data.get("count", 2)
+                room["team_names"] = data.get("names", [])
 
             elif msg_type == "start_team_phase":
 
+                names = room.get("team_names", [])
+
                 room["teams"] = {
-                    f"チーム{i+1}": []
+                    (names[i] if i < len(names) else f"チーム{i+1}"): []
                     for i in range(room.get("team_count", 2))
                 }
 
