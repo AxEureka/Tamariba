@@ -153,13 +153,13 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             msg_type = data.get("type")
 
             # ★ここ！！（一番上に近いところ）
-           if msg_type == "host_message":
-
+            if msg_type == "host_message":
+            
                 text = data.get("text", "")
                 target = data.get("target")
             
                 if not text:
-                    continue  # ←これも入れてOK（空防止）
+                    continue
             
                 if not target:
                     await broadcast(room, {
