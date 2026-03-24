@@ -300,7 +300,13 @@ personal.className="ranking-box";
 
 let html1=`<h2>🏆 個人ランキング</h2>`;
 data.personal_top.forEach((p,i)=>{
-html1+=`<div>${i+1}位：${p.name}（${p.score}）</div>`;
+const isMe = (!isHost && p.name === window.myName);
+
+html1+=`
+  <div style="${isMe ? 'color: yellow; font-weight: bold;' : ''}">
+    ${i+1}位：${p.name}（${p.score}）
+  </div>
+`;
 });
 html1+=`<hr><div>平均：${data.personal_avg}</div>`;
 if(!isHost){
@@ -313,7 +319,13 @@ team.className="ranking-box";
 
 let html2=`<h2>👥 チームランキング</h2>`;
 data.team_top.forEach((t,i)=>{
-html2+=`<div>${i+1}位：${t.name}（${t.score}）</div>`;
+const isMyTeam = (!isHost && t.name === data.my_team_name);
+
+html2+=`
+  <div style="${isMyTeam ? 'color: yellow; font-weight: bold;' : ''}">
+    ${i+1}位：${t.name}（${t.score}）
+  </div>
+`;
 });
 html2+=`<hr><div>平均：${data.team_avg}</div>`;
 if(!isHost){
