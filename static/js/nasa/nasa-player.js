@@ -25,10 +25,6 @@ export function startNASAPlayer(ws,uiContainer){
     let data;
     try{data=JSON.parse(e.data);}catch{return;}
 
-    // =========================
-    // ⭐ここがエラー原因だった（関数復活）
-    // =========================
-
     if(data.type==="start_nasa"){
       items=data.items;
       startPersonal();
@@ -67,9 +63,6 @@ export function startNASAPlayer(ws,uiContainer){
       }
     }
 
-    // =========================
-    // ★正解（強化版）
-    // =========================
     if(data.type==="nasa_result"){
       lastCorrect=data.correct;
 
@@ -82,9 +75,6 @@ export function startNASAPlayer(ws,uiContainer){
       );
     }
 
-    // =========================
-    // ★ランキング（強化版）
-    // =========================
     if(data.type==="nasa_ranking"){
       showRanking(container,data,false);
       showAdvancedMessages(data);
@@ -116,20 +106,27 @@ function showDetailedCorrect(container,items,correct,personalAnswers,teamAnswers
   title.textContent="正解と比較";
   box.appendChild(title);
 
-// ★ここに追加！！
+  // ★致命バグ修正（ここ追加）
+  const myName = window.myName;
+  const myData = personalAnswers?.[myName] || {};
+  const myRanks = myData.personal || [];
+  const myTeamName = myData.team_name;
+  const teamRanks = teamAnswers?.[myTeamName] || [];
+
+  // ★ヘッダー
   const header=document.createElement("div");
   header.style.display="flex";
   header.style.justifyContent="space-between";
   header.style.gap="10px";
   header.style.fontWeight="bold";
-  
+
   header.innerHTML=`
     <div style="flex:2">品目</div>
     <div style="flex:1">正解</div>
     <div style="flex:1">あなた</div>
     <div style="flex:1">チーム</div>
   `;
-  
+
   box.appendChild(header);
 
   items.forEach((item,i)=>{
@@ -155,7 +152,7 @@ function showDetailedCorrect(container,items,correct,personalAnswers,teamAnswers
       <div style="flex:1">
         ${t ?? "-"} <span style="color:#888">(${tDiff})</span>
       </div>
-`;
+    `;
 
     box.appendChild(row);
   });
@@ -212,7 +209,6 @@ function showAdvancedMessages(data){
     }
   }
 
-  // 個人
   const pMsg=document.createElement("div");
   pMsg.style.marginTop="10px";
   pMsg.style.textAlign="center";
@@ -221,7 +217,6 @@ function showAdvancedMessages(data){
   pMsg.textContent=getScoreMsg(personal);
   boxes[0].appendChild(pMsg);
 
-  // チーム
   const tMsg=document.createElement("div");
   tMsg.style.marginTop="10px";
   tMsg.style.textAlign="center";
@@ -237,7 +232,6 @@ function showAdvancedMessages(data){
     el.style.borderRadius="8px";
   });
 
-  // 差分
   const diffBox=document.createElement("div");
   diffBox.style.background="black";
   diffBox.style.color="white";
@@ -257,7 +251,7 @@ function showAdvancedMessages(data){
 }
 
 // =========================
-// ★ここから「元の関数全部」復活
+// ★元の関数
 // =========================
 
 function startPersonal(){
@@ -295,6 +289,7 @@ function renderTeamSelect(){
 
   const def=document.createElement("option");
   def.textContent="選択してください";
+  def.value=""; // ★修正
   def.disabled=true;
   def.selected=true;
   select.appendChild(def);
@@ -311,9 +306,19 @@ function renderTeamSelect(){
   const btn=document.createElement("button");
   btn.textContent="決定";
 
+  btn.disabled = true; // ★修正
+
+  select.onchange = () => {
+    btn.disabled = !select.value; // ★修正
+  };
+
   btn.onclick=()=>{
     const team=select.value;
-    if(!team) return;
+
+    if(!team){
+      alert("チームを選択してください");
+      return;
+    }
 
     myTeam=team;
 
