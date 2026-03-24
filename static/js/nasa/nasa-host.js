@@ -91,6 +91,10 @@ export function startNASAHost(ws, uiContainer) {
       // ❌ showControl(); ←削除（上書き防止）
     }
 
+    if (data.type === "end_nasa") {
+      removeProgressUI();
+    }
+
   });
 
   window.showCorrectAgain = () => {
@@ -305,3 +309,5 @@ function removeProgressUI(){
     progressDiv = null;
   }
 }
+
+window.removeProgressUI = removeProgressUI;
