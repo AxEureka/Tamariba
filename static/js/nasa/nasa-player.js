@@ -7,6 +7,7 @@ let items=[];
 let lastCorrect=null;
 
 let myTeam=null;
+let myTeamSelected = false;
 let teams={};
 let leaders={};
 
@@ -37,11 +38,10 @@ export function startNASAPlayer(ws,uiContainer){
 
     if(data.type==="team_update"){
       teams=data.teams;
-
-      if(!myTeam){
+    
+      // ★自分がまだ選んでない時だけUI更新
+      if(!myTeamSelected){
         renderTeamSelect();
-      }else{
-        showWaiting("チーム登録完了。他メンバーを待っています...");
       }
     }
 
@@ -321,6 +321,7 @@ function renderTeamSelect(){
     }
 
     myTeam=team;
+    myTeamSelected = true;
 
     socket.send(JSON.stringify({
       type:"select_team",
