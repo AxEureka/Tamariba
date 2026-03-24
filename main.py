@@ -159,7 +159,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 target = data.get("target")
             
                 if not text:
-                    return  # ←これも入れてOK（空防止）
+                    continue  # ←これも入れてOK（空防止）
             
                 if not target:
                     await broadcast(room, {
