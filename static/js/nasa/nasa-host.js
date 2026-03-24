@@ -113,24 +113,70 @@ function showTeamSetup(onNext){
   container.innerHTML=`
     <div class="nasa-ui">
       <h2>チーム設定</h2>
+
       <input id="teamCount" type="number" value="2" min="2" max="10">
+
+      <br><br>
+
+      <button id="editNames">チーム名を設定</button>
+
+      <div id="teamNameArea" style="margin-top:10px;"></div>
+
+      <br>
       <button id="nextBtn">次へ</button>
     </div>
   `;
 
+  const nameArea = document.getElementById("teamNameArea");
+
+  // ★チーム名入力生成
+  document.getElementById("editNames").onclick = () => {
+
+    const count = parseInt(document.getElementById("teamCount").value) || 2;
+
+    nameArea.innerHTML = "";
+
+    for(let i=0;i<count;i++){
+      nameArea.innerHTML += `
+        <div>
+          チーム${i+1}名：
+          <input class="teamNameInput" placeholder="未入力ならデフォルト">
+        </div>
+      `;
+    }
+  };
+
   document.getElementById("nextBtn").onclick=()=>{
+
     console.log("👉 チーム設定 次へ押された");
 
     teamCount = parseInt(document.getElementById("teamCount").value) || 2;
 
+    // ★チーム名取得
+    const inputs = document.querySelectorAll(".teamNameInput");
+    let teamNames = [];
+
+    if(inputs.length > 0){
+      inputs.forEach((input, i)=>{
+        const name = input.value.trim();
+        teamNames.push(name || `チーム${i+1}`);
+      });
+    }else{
+      // 入力してない場合
+      for(let i=0;i<teamCount;i++){
+        teamNames.push(`チーム${i+1}`);
+      }
+    }
+
+    // ★ここ変更（名前も送る）
     socket.send(JSON.stringify({
       type:"set_team_count",
-      count: teamCount
+      count: teamCount,
+      names: teamNames
     }));
 
     onNext();
   };
-
 }
 
 // =========================
