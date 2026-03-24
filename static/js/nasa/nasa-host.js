@@ -140,8 +140,8 @@ function showControl(){
   };
 
   document.getElementById("startLeader").onclick=()=>{
-    socket.senなさーほｓｔ。ｊｓringify({ type:"start_leader_phase" }));
-  };
+  socket.send(JSON.stringify({ type:"start_leader_phase" }));
+};
 
   document.getElementById("showResult").onclick=()=>{
     socket.send(JSON.stringify({type:"nasa_show_result"}));
