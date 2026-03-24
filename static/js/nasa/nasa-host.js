@@ -55,6 +55,20 @@ export function startNASAHost(ws, uiContainer) {
       updateProgress(`個人回答：${data.done} / ${data.total}人`);
     }
 
+    if (data.type === "team_update") {
+
+      if(data.selected != null && data.total != null){
+    
+        const remaining = data.total - data.selected;
+    
+        updateProgress(`チーム選択中：残り ${remaining} 人`);
+    
+        if(remaining === 0){
+          updateProgress("全員チーム選択完了！");
+        }
+      }
+    }
+
     // ★チーム進捗
     if (data.type === "nasa_team_progress") {
       updateProgress(`チーム回答：${data.done} / ${data.total}チーム`);
@@ -136,10 +150,16 @@ function showControl(){
   `;
 
   document.getElementById("startTeam").onclick=()=>{
-    socket.send(JSON.stringify({ type:"start_team_phase" }));
-  };
 
-  document.getElementById("startLeader").onclick=()=>{
+  showPhaseOverlay("チーム選択中：残り 計算中...");
+
+  socket.send(JSON.stringify({ type:"start_team_phase" }));
+};
+
+document.getElementById("startLeader").onclick=()=>{
+
+  showPhaseOverlay("リーダー選択中...");
+
   socket.send(JSON.stringify({ type:"start_leader_phase" }));
 };
 
@@ -183,6 +203,34 @@ function updateProgress(text){
   if(progressDiv){
     progressDiv.textContent = text;
   }
+}
+
+// =========================
+// ★フェーズポップ（追加）
+// =========================
+function showPhaseOverlay(text){
+
+  if(!progressDiv){
+    progressDiv = document.createElement("div");
+
+    progressDiv.style.position = "fixed";
+    progressDiv.style.top = "50%";
+    progressDiv.style.left = "50%";
+    progressDiv.style.transform = "translate(-50%, -50%)";
+    progressDiv.style.background = "rgba(0,0,0,0.85)";
+    progressDiv.style.color = "white";
+    progressDiv.style.padding = "20px 30px";
+    progressDiv.style.borderRadius = "12px";
+    progressDiv.style.fontSize = "20px";
+    progressDiv.style.zIndex = "9999";
+    progressDiv.style.fontWeight = "bold";
+    progressDiv.style.textAlign = "center";
+
+    document.body.appendChild(progressDiv);
+  }
+
+  progressDiv.style.display = "block";
+  progressDiv.textContent = text;
 }
 
 // =========================
