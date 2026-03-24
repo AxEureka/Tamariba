@@ -149,10 +149,38 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             print("WS受信:", data)
             print("現在のソケット数:", len(room["sockets"]))
 
+
+            msg_type = data.get("type")
+
+            # ★ここ！！（一番上に近いところ）
+           if msg_type == "host_message":
+
+                text = data.get("text", "")
+                target = data.get("target")
+            
+                if not text:
+                    return  # ←これも入れてOK（空防止）
+            
+                if not target:
+                    await broadcast(room, {
+                        "type": "host_message",
+                        "text": text
+                    })
+                else:
+                    for socket in room["sockets"]:
+                        try:
+                            await socket.send_json({
+                                "type": "host_message",
+                                "text": text,
+                                "target": target
+                            })
+                        except:
+                            pass
+            
             # =========================
             # クイズ（そのまま）
             # =========================
-            if msg_type == "start_quiz":
+            elif msg_type == "start_quiz":
                 await broadcast(room, {"type": "start_quiz"})
 
             elif msg_type == "quiz_question":
