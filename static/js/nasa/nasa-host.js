@@ -140,7 +140,7 @@ function showControl(){
   };
 
   document.getElementById("startLeader").onclick=()=>{
-    socket.send(JSON.stringify({ type:"start_leader_phase" }));
+    socket.senなさーほｓｔ。ｊｓringify({ type:"start_leader_phase" }));
   };
 
   document.getElementById("showResult").onclick=()=>{
