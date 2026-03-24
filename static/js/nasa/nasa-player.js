@@ -39,9 +39,12 @@ export function startNASAPlayer(ws,uiContainer){
     if(data.type==="team_update"){
       teams=data.teams;
     
-      // ★自分がまだ選んでない時だけUI更新
+      // ★未選択ならUI更新
       if(!myTeamSelected){
         renderTeamSelect();
+      }else{
+        // ★選択済みなら待機表示だけ更新（メンバー表示更新）
+        showWaiting("チーム登録完了。他メンバーを待っています...");
       }
     }
 
