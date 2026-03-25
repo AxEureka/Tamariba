@@ -1,4 +1,4 @@
-// 修正版 room.js（安全版 / 再接続対応・巻き添え防止）
+// 修正版 room.js（ボタン位置調整済 / 再接続対応・巻き添え防止）
 
 import { startQuizHost } from "/static/js/quiz/quiz-host.js";
 import { startQuizPlayer } from "/static/js/quiz/quiz-player.js";
@@ -34,10 +34,16 @@ async function loadRoom() {
     document.getElementById("host-area").style.display = "block";
     document.getElementById("gameSelectBtn").style.display = "inline-block";
 
-    const msgBtn = document.createElement("button");
-    msgBtn.textContent = "📩 全体メッセージ";
-    msgBtn.onclick = sendMessageToAll;
-    document.getElementById("host-area").appendChild(msgBtn);
+    // 全体メッセージボタンを遊び選択ボタン横に表示
+    const msgBtn = document.getElementById("msgAllBtn");
+    if (msgBtn) {
+      msgBtn.style.display = "inline-block";
+      msgBtn.onclick = sendMessageToAll;
+    }
+
+    // メンバー横のコピーで参加ボタンを表示
+    const copyBtn = document.getElementById("copyJoinBtn");
+    if (copyBtn) copyBtn.style.display = "inline-block";
   }
 
   const joinURL = window.location.origin + "/static/join.html?room=" + roomId;
@@ -71,7 +77,6 @@ async function updateMembers() {
 
     const data = await res.json();
 
-    // 自分が消えてたら missingCount を増やす（スマホ切替やタブ切替対応）
     if (myName !== hostName && joined) {
       if (!data.members.includes(myName)) {
         missingCount++;
@@ -119,12 +124,11 @@ async function updateMembers() {
     }
 
     document.getElementById("members").innerHTML = list.join("<br>");
-    // 個人メッセージボタン
+
     document.querySelectorAll("#members .msgBtn").forEach(btn => {
       btn.onclick = () => sendMessageTo(btn.dataset.target);
     });
     
-    // Kickボタン
     document.querySelectorAll("#members .kickBtn").forEach(btn => {
       btn.onclick = () => kickMember(btn.dataset.target);
     });
@@ -272,13 +276,11 @@ function connectSocket() {
     let msg;
     try { msg = JSON.parse(e.data); } catch { return; }
 
-    // ホストメッセージ
     if (msg.type === "host_message") {
       if (msg.target && msg.target !== myName) return;
       showPopup("📩 親： " + msg.text);
     }
 
-    // クイズ
     if (msg.type === "start_quiz") {
       const container = document.getElementById("game-container");
       container.classList.add("active");
@@ -286,7 +288,6 @@ function connectSocket() {
       if (myName !== hostName) startQuizPlayer(socket, container);
     }
 
-    // NASA
     if (msg.type === "start_nasa") {
       const container = document.getElementById("game-container");
       container.classList.add("active");
