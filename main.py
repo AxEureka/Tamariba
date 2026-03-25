@@ -229,6 +229,9 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             elif msg_type == "nasa_personal":
                 name = data.get("name")
                 ranks = data.get("ranks")
+                if not ranks or any(r is None for r in ranks):
+                    print("不正データ検出（personal）:", ranks)
+                    continue
                 if name:
                     room["nasa_answers"][name] = {"personal": ranks}
                 await broadcast(room, {
@@ -241,6 +244,10 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 name = data.get("name")
                 team = data.get("team")
                 ranks = data.get("ranks")
+                # ★追加
+                if not ranks or any(r is None for r in ranks):
+                    print("不正データ検出（team）:", ranks)
+                    continue
                 if team:
                     room["team_answers"][team] = ranks
                     for member in room["teams"].get(team, []):
@@ -260,8 +267,16 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 def calc(arr):
                     if not arr or not correct:
                         return 0
-                    return sum(abs(arr[i] - correct[i]) for i in range(min(len(arr), len(correct))))
-
+                
+                    score = 0
+                    for i in range(min(len(arr), len(correct))):
+                        try:
+                            if arr[i] is None:
+                                continue
+                            score += abs(int(arr[i]) - correct[i])
+                        except:
+                            continue
+                    return score
                 personal_scores = []
                 team_scores = {}
                 for t, ranks in room["team_answers"].items():
