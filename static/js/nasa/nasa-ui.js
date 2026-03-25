@@ -136,7 +136,7 @@ container.appendChild(box);
 
 
 // =========================
-// 回答UI（★ここだけ拡張）
+// 回答UI（★ここだけ修正）
 // =========================
 export function createRankingUI(
   container,
@@ -144,7 +144,7 @@ export function createRankingUI(
   onSubmit,
   title,
   isTeam=false,
-  isLeader=true   // ★追加
+  isLeader=true
 ){
 
 container.innerHTML="";
@@ -200,40 +200,26 @@ selects.push(select);
 const btn=document.createElement("button");
 btn.textContent="OK";
 
-// ★ リーダー以外は押せない
-if(!isLeader){
-btn.disabled=true;
+// ★初期状態：押せない
+btn.disabled = true;
+
+// ★全て数字が入ったら押せる
+function checkAllSelected(){
+  const allSelected = selects.every(s => s.value !== "");
+  btn.disabled = !allSelected || !isLeader;
 }
 
-function checkDuplicate(){
+// ★変更時にチェック
+selects.forEach(s => s.addEventListener("change", checkAllSelected));
 
-const values=selects.map(s=>s.value).filter(v=>v!="");
-
-let dup=[];
-
-values.forEach(v=>{
-if(values.filter(x=>x===v).length>1) dup.push(v);
-});
-
-selects.forEach(s=>{
-s.style.background = dup.includes(s.value) ? "#ff6b6b" : "";
-});
-
-if(isTeam){
-btn.disabled = !isLeader || values.length!=items.length;
-}else{
-btn.disabled = dup.length>0 || values.length!=items.length;
-}
-
-}
-
-selects.forEach(s=>s.onchange=checkDuplicate);
-
+// ★クリック時ポップアップ
 btn.onclick=()=>{
 if(!isLeader){
 alert("リーダーのみ操作できます");
 return;
 }
+if(!confirm("回答を確定しますか？")) return;
+
 const ranks=selects.map(s=>parseInt(s.value));
 onSubmit(ranks);
 };
