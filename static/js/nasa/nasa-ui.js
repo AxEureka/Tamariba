@@ -70,24 +70,26 @@ selects.push(rank);
 }
 
 function checkDuplicate(){
-  const values = selects.map(s => s.value);
 
-  let dup = [];
+  const values=selects.map(s=>s.value).filter(v=>v!="");
+
+  let dup=[];
   values.forEach(v=>{
-    if(v!="" && values.filter(x=>x===v).length>1) dup.push(v);
+    if(values.filter(x=>x===v).length>1) dup.push(v);
   });
 
   selects.forEach(s=>{
     s.style.background = dup.includes(s.value) ? "#ff6b6b" : "";
   });
 
-  // 空欄があるかどうか
-  const hasEmpty = values.some(v => v==="");
+  const hasEmpty = selects.some(s => s.value==="");
 
-  if(isTeam){
-    btn.disabled = !isLeader || hasEmpty; // ★空欄ある場合は押せない
+  const isTeamMode = typeof isTeam !== "undefined" ? isTeam : false;
+
+  if(isTeamMode){
+    btn.disabled = !isLeader || hasEmpty;
   } else {
-    btn.disabled = dup.length>0 || hasEmpty; // 個人も空欄不可
+    btn.disabled = dup.length>0 || hasEmpty;
   }
 }
 selects.forEach(s=>s.onchange=checkDuplicate);
