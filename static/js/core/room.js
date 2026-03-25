@@ -106,8 +106,8 @@ async function updateMembers() {
         if (m === hostName) return;
         list.push(`
           ・${m}
-          <button onclick="sendMessageTo('${m}')">💬</button>
-          <button onclick="kickMember('${m}')">退室</button>
+          <button class="msgBtn" data-target="${m}">💬</button>
+          <button class="kickBtn" data-target="${m}">退室</button>
         `);
       });
     } else {
@@ -119,6 +119,15 @@ async function updateMembers() {
     }
 
     document.getElementById("members").innerHTML = list.join("<br>");
+    // 個人メッセージボタン
+    document.querySelectorAll("#members .msgBtn").forEach(btn => {
+      btn.onclick = () => sendMessageTo(btn.dataset.target);
+    });
+    
+    // Kickボタン
+    document.querySelectorAll("#members .kickBtn").forEach(btn => {
+      btn.onclick = () => kickMember(btn.dataset.target);
+    });
   } catch (e) {
     console.error("メンバー更新エラー", e);
   }
