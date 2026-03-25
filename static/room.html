@@ -116,12 +116,14 @@ button{
 
 <button class="exit" onclick="exitRoom()">退出</button>
 
-<div style="position:relative;display:flex;align-items:center;gap:12px;">
+<!-- タイトルとゲーム選択ボタン -->
+<div style="position:relative; display:flex; align-items:center; justify-content:space-between; gap:12px;">
   <h1 id="room-title" style="margin:0;">読み込み中...</h1>
 
-  <button id="gameSelectBtn" style="display:none;">
-    🎮 遊びを選ぶ
-  </button>
+  <div style="display:flex; gap:6px;">
+    <button id="gameSelectBtn" style="display:none;">🎮 遊びを選ぶ</button>
+    <button id="msgAllBtn" style="display:none;">📩 全体メッセージ</button>
+  </div>
 
   <div id="gameDropdown">
     <div id="quizBtn" class="gameItem">クイズ</div>
@@ -131,14 +133,16 @@ button{
   </div>
 </div>
 
-<p>
-ルームID：
-<strong id="room-id"></strong>
-/
-参加人数：
-<strong id="count">0</strong>人
-
-<button onclick="toggleMembers()">メンバーを見る</button>
+<!-- ルームIDと人数、メンバーボタン -->
+<p style="display:flex; align-items:center; justify-content:space-between;">
+  <span>
+    ルームID：<strong id="room-id"></strong> /
+    参加人数：<strong id="count">0</strong>人
+  </span>
+  <div style="display:flex; gap:6px;">
+    <button onclick="toggleMembers()">メンバーを見る</button>
+    <button onclick="copyURL()">コピーで参加</button>
+  </div>
 </p>
 
 <div id="members" style="display:none;"></div>
@@ -146,7 +150,6 @@ button{
 <!-- ホスト用 -->
 <div id="host-area" class="section" style="display:none;">
   <input id="join-url" type="hidden" value="">
-  <button onclick="copyURL()">コピーで参加</button>
   <div id="qrcode" style="margin-top:15px;"></div>
   <button id="exitQuizBtn" style="display:none;">遊びを終わる</button>
 </div>
