@@ -103,14 +103,20 @@ const defaultBtn=document.createElement("button");
 defaultBtn.textContent="デフォルトを使う";
 
 defaultBtn.onclick=()=>{
-countInput.value = DEFAULT_SET.items.length;
-buildItems();
-const rows = itemArea.querySelectorAll(".rank-row");
-rows.forEach((row,i)=>{
-const inputs=row.querySelectorAll("input, select");
-inputs[0].value = DEFAULT_SET.items[i];
-inputs[1].value = DEFAULT_SET.correct[i];
-});
+  countInput.value = DEFAULT_SET.items.length;
+  buildItems();
+  const rows = itemArea.querySelectorAll(".rank-row");
+  rows.forEach((row,i)=>{
+    const inputs=row.querySelectorAll("input, select");
+    inputs[0].value = DEFAULT_SET.items[i];
+    inputs[1].value = DEFAULT_SET.correct[i];
+  });
+
+  // ★追加
+  setTimeout(() => {
+    const event = new Event("change");
+    itemArea.querySelectorAll("select").forEach(s => s.dispatchEvent(event));
+  }, 0);
 };
 
 box.appendChild(defaultBtn);
