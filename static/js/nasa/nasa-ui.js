@@ -224,7 +224,6 @@ if(!isLeader){
 alert("リーダーのみ操作できます");
 return;
 }
-if(!confirm("回答を確定しますか？")) return;
 
 const ranks=selects.map(s=>parseInt(s.value));
 onSubmit(ranks);
