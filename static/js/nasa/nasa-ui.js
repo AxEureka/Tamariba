@@ -212,10 +212,8 @@ btn.disabled = true;
 // ★全て数字が入ったら押せる
 function checkDuplicate(){
 
-  // 入力値取得
   const values = selects.map(s => s.value).filter(v => v !== "");
 
-  // 重複検出
   let dup = [];
   values.forEach(v=>{
     if(values.filter(x=>x===v).length > 1) dup.push(v);
@@ -226,21 +224,20 @@ function checkDuplicate(){
     s.style.background = dup.includes(s.value) ? "#ff6b6b" : "";
   });
 
-  // 空欄チェック
   const hasEmpty = selects.some(s => s.value === "");
 
-  // ボタン制御（これが最重要）
+  // ボタン制御
   btn.disabled = dup.length > 0 || hasEmpty || !isLeader;
 }
 
 // イベント登録
 selects.forEach(s => s.addEventListener("change", checkDuplicate));
 
+// 初期チェック
+checkDuplicate();
 // 初期状態チェック（超重要）
 checkDuplicate();
 
-// ★変更時にチェック
-selects.forEach(s => s.addEventListener("change", checkAllSelected));
 
 // ★クリック時ポップアップ
 btn.onclick=()=>{
