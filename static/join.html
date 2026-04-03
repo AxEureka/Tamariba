@@ -60,9 +60,9 @@ async function joinRoom() {
     return;
   }
 
-  // id付きでroom.htmlに遷移
+  // ルームIDとニックネームだけでなく、サーバが返したユニークIDも付与してroom.htmlに遷移
   location.href =
-    `/static/room.html?room=${roomId}&name=${encodeURIComponent(name)}&id=${data.id}`;
+    `/static/room.html?room=${roomId}&name=${encodeURIComponent(name)}&id=${encodeURIComponent(data.id)}`;
 }
 </script>
 
