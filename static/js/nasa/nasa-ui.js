@@ -324,25 +324,22 @@ personal.className="ranking-box";
 
 let html1=`<h2>🏆 個人ランキング</h2>`;
 
-// ★スコアでグループ化
+// ★グループ化
 const groups = {};
 data.personal_top.forEach(p=>{
   if(!groups[p.score]) groups[p.score] = [];
   groups[p.score].push(p);
 });
 
-// ★スコア降順
+// ★昇順（小さいほど上位）
 const sortedScores = Object.keys(groups)
   .map(Number)
-  .sort((a,b)=>b-a);
+  .sort((a,b)=>a-b);
 
-// ★上位3つの「順位」
-const topScores = sortedScores.slice(0,3);
-
-// ★順位カウンタ
 let rank = 1;
 
-topScores.forEach((score)=>{
+for(const score of sortedScores){
+
   const players = groups[score];
 
   players.forEach((p,i)=>{
@@ -356,7 +353,11 @@ topScores.forEach((score)=>{
     `;
   });
 
-  rank++; // ★ここが重要
+  rank++;
+
+  // ★3位まで出したら終了
+  if(rank > 3) break;
+}
 });
   
 html1+=`<hr><div>平均：${data.personal_avg}</div>`;
@@ -376,15 +377,15 @@ data.team_top.forEach(t=>{
   teamGroups[t.score].push(t);
 });
 
+// ★昇順
 const sortedTeamScores = Object.keys(teamGroups)
   .map(Number)
-  .sort((a,b)=>b-a);
-
-const topTeamScores = sortedTeamScores.slice(0,3);
+  .sort((a,b)=>a-b);
 
 let teamRank = 1;
 
-topTeamScores.forEach((score)=>{
+for(const score of sortedTeamScores){
+
   const teams = teamGroups[score];
 
   teams.forEach((t,i)=>{
@@ -399,6 +400,9 @@ topTeamScores.forEach((score)=>{
   });
 
   teamRank++;
+
+  if(teamRank > 3) break;
+}
 });
   
 html2+=`<hr><div>平均：${data.team_avg}</div>`;
