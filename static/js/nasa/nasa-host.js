@@ -8,6 +8,7 @@ let lastItems = null;
 let lastRanking = null;
 
 let teamCount = 2;
+let heartbeatInterval;
 
 // ★進捗表示用
 let progressDiv = null;
@@ -17,16 +18,12 @@ export function startNASAHost(ws, uiContainer) {
   socket = ws;
   container = uiContainer;
 
+  startHeartbeat(); // ★ heartbeat開始
+
   showTeamSetup(() => {
-
     createItemEditor(container, (items, correct) => {
-
-      console.log("🔥 onSubmit呼ばれた", items, correct);
-
       lastItems = items;
       lastCorrect = correct;
-
-      console.log("🚀 start_nasa送信", items, correct);
 
       socket.send(JSON.stringify({
         type: "start_nasa",
@@ -35,41 +32,28 @@ export function startNASAHost(ws, uiContainer) {
       }));
 
       showControl();
-
-      // ★追加：進捗UI
       createProgressUI();
-
     });
-
   });
 
   socket.addEventListener("message", (e) => {
-
     let data;
     try { data = JSON.parse(e.data); } catch { return; }
 
     console.log("📩 ホスト受信:", data);
 
-    // ★個人進捗
     if (data.type === "nasa_personal_progress") {
       updateProgress(`個人回答：${data.done} / ${data.total}人`);
     }
 
     if (data.type === "team_update") {
-
       if(data.selected != null && data.total != null){
-    
         const remaining = data.total - data.selected;
-    
         updateProgress(`チーム選択中：残り ${remaining} 人`);
-    
-        if(remaining === 0){
-          updateProgress("全員チーム選択完了！");
-        }
+        if(remaining === 0) updateProgress("全員チーム選択完了！");
       }
     }
 
-    // ★チーム進捗
     if (data.type === "nasa_team_progress") {
       updateProgress(`チーム回答：${data.done} / ${data.total}チーム`);
     }
@@ -77,9 +61,6 @@ export function startNASAHost(ws, uiContainer) {
     if (data.type === "nasa_ranking") {
       lastRanking = data;
       showRanking(container, data, true);
-
-      // ❌ showControl(); ←削除（上書き防止）
-
       addBackToCorrectButton();
     }
 
@@ -87,8 +68,6 @@ export function startNASAHost(ws, uiContainer) {
       showCorrect(container, lastItems, data.correct, () => {
         socket.send(JSON.stringify({ type: "nasa_get_ranking" }));
       });
-
-      // ❌ showControl(); ←削除（上書き防止）
     }
 
     if (data.type === "end_nasa") {
@@ -97,17 +76,50 @@ export function startNASAHost(ws, uiContainer) {
 
   });
 
+  socket.addEventListener("close", () => {
+    console.warn("⚠️ WebSocket closed, reconnecting...");
+    reconnectWebSocket();
+  });
+
   window.showCorrectAgain = () => {
     if (lastCorrect) {
       showCorrect(container, lastItems, lastCorrect, () => {
         socket.send(JSON.stringify({ type: "nasa_get_ranking" }));
       });
-
-      // ❌ showControl(); ←削除（上書き防止）
     }
   };
-
 }
+
+// =========================
+// heartbeat
+// =========================
+function startHeartbeat() {
+  stopHeartbeat();
+  heartbeatInterval = setInterval(() => {
+    if (socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ type: "heartbeat", time: Date.now() }));
+    }
+  }, 20000);
+}
+
+function stopHeartbeat() {
+  clearInterval(heartbeatInterval);
+}
+
+// =========================
+// 軽い再接続
+// =========================
+function reconnectWebSocket() {
+  stopHeartbeat();
+  const url = socket.url;
+  console.log("♻️ 再接続中…", url);
+
+  socket = new WebSocket(url);
+
+  // 再接続後、再度初期化
+  startNASAHost(socket, container);
+}
+
 
 // =========================
 // チーム設定
