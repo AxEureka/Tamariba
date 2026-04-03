@@ -258,6 +258,8 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     "type": "nasa_team_progress",
                     "done": len(room["team_answers"]),
                     "total": len(room["teams"])
+                })
+                
                 # ★これ追加
                 await broadcast(room, {
                     "type": "team_answer_done",
