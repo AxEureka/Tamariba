@@ -168,7 +168,14 @@ function selectGame(type) {
   if (myId !== hostId) return;
 
   if (type === "quiz") { currentGame = "quiz"; socket.send(JSON.stringify({ type: "start_quiz" })); container.classList.add("active"); startQuizHost(socket, container); document.getElementById("exitQuizBtn").style.display = "inline-block"; }
-  if (type === "nasa") { currentGame = "nasa"; socket.send(JSON.stringify({ type: "start_nasa" })); container.classList.add("active"); startNASAHost(socket, container); document.getElementById("exitQuizBtn").style.display = "inline-block"; }
+  if (type === "nasa") { 
+  currentGame = "nasa"; 
+  const items = ["パラシュート","箱に入ったマッチ","宇宙食", ...]; // nasa-uiのDEFAULT_SET.items
+  const correct = [8,15,4,11,12,1,6,13,3,9,14,2,7,5,10]; // nasa-uiのDEFAULT_SET.correct
+  socket.send(JSON.stringify({ type: "start_nasa", items, correct })); 
+  container.classList.add("active"); 
+  startNASAHost(socket, container); 
+  document.getElementById("exitQuizBtn").style.display = "inline-block"; 
 }
 
 // =====================
