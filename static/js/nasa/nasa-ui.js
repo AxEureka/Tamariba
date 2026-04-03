@@ -323,14 +323,36 @@ const personal=document.createElement("div");
 personal.className="ranking-box";
 
 let html1=`<h2>🏆 個人ランキング</h2>`;
-data.personal_top.forEach((p,i)=>{
-const isMe = (!isHost && p.name === window.myName);
 
-html1+=`
-  <div style="${isMe ? 'color: yellow; font-weight: bold;' : ''}">
-    ${i+1}位：${p.name}（${p.score}）
-  </div>
-`;
+// ★スコアごとにグループ化
+const groups = {};
+data.personal_top.forEach(p=>{
+  if(!groups[p.score]) groups[p.score] = [];
+  groups[p.score].push(p);
+});
+
+// ★スコア降順
+const sortedScores = Object.keys(groups)
+  .map(Number)
+  .sort((a,b)=>b-a);
+
+// ★上位3スコア
+const topScores = sortedScores.slice(0,3);
+
+// ★表示
+topScores.forEach((score,rankIndex)=>{
+  const players = groups[score];
+
+  players.forEach((p,i)=>{
+    const isMe = (!isHost && p.name === window.myName);
+
+    html1+=`
+      <div style="${isMe ? 'color: yellow; font-weight: bold;' : ''}">
+        ${i===0 ? `${rankIndex+1}位：` : `　　　`}
+        ${p.name}（${p.score}）
+      </div>
+    `;
+  });
 });
 html1+=`<hr><div>平均：${data.personal_avg}</div>`;
 if(!isHost){
@@ -342,14 +364,36 @@ const team=document.createElement("div");
 team.className="ranking-box";
 
 let html2=`<h2>👥 チームランキング</h2>`;
-data.team_top.forEach((t,i)=>{
-const isMyTeam = (!isHost && t.name === data.my_team_name);
 
-html2+=`
-  <div style="${isMyTeam ? 'color: yellow; font-weight: bold;' : ''}">
-    ${i+1}位：${t.name}（${t.score}）
-  </div>
-`;
+// ★スコアごとにグループ化
+const teamGroups = {};
+data.team_top.forEach(t=>{
+  if(!teamGroups[t.score]) teamGroups[t.score] = [];
+  teamGroups[t.score].push(t);
+});
+
+// ★スコア降順
+const sortedTeamScores = Object.keys(teamGroups)
+  .map(Number)
+  .sort((a,b)=>b-a);
+
+// ★上位3スコア
+const topTeamScores = sortedTeamScores.slice(0,3);
+
+// ★表示
+topTeamScores.forEach((score,rankIndex)=>{
+  const teams = teamGroups[score];
+
+  teams.forEach((t,i)=>{
+    const isMyTeam = (!isHost && t.name === data.my_team_name);
+
+    html2+=`
+      <div style="${isMyTeam ? 'color: yellow; font-weight: bold;' : ''}">
+        ${i===0 ? `${rankIndex+1}位：` : `　　　`}
+        ${t.name}（${t.score}）
+      </div>
+    `;
+  });
 });
 html2+=`<hr><div>平均：${data.team_avg}</div>`;
 if(!isHost){
