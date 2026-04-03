@@ -1,7 +1,7 @@
 // room.js 完全版（親・同名子対応・ID基準統一・NASA起動修正版）
 import { startQuizHost } from "/static/js/quiz/quiz-host.js";
 import { startQuizPlayer } from "/static/js/quiz/quiz-player.js";
-import { startNASAHost } from "../nasa/nasa-host.js"; // 相対パス要確認
+import { startNASAHost } from "/static/js/nasa/nasa-host.js"; // 相対パス要確認
 import { startNASAPlayer } from "/static/js/nasa/nasa-player.js";
 
 console.log("startNASAHost", startNASAHost); // undefined でなければ OK
