@@ -176,8 +176,8 @@ function selectGame(type) {
     container.classList.add("active"); 
     startNASAHost(socket, container); 
     document.getElementById("exitQuizBtn").style.display = "inline-block"; 
-}
-
+  } // ← この閉じ括弧が必須
+} 
 // =====================
 // WebSocket接続
 // =====================
