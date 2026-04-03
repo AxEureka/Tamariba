@@ -285,3 +285,21 @@ window.toggleMembers = toggleMembers;
 window.exitRoom = exitRoom;
 window.kickMember = kickMember;
 window.startNASAHost = startNASAHost;
+
+// =====================
+// NASA強制起動用（コンソールから呼べる）
+window.forceStartNASA = function() {
+  if (!window.socket) { console.error("❌ WebSocket が存在しません"); return; }
+  const container = document.getElementById("game-container");
+  if (!container) { console.error("❌ game-container が存在しません"); return; }
+
+  const items = ["パラシュート","箱に入ったマッチ","宇宙食","45口径ピストル2丁","粉ミルク1ケース","酸素ボンベ2本","15mのナイロン製ロープ","ソーラー発電式の携帯用ヒーター","月面用の星図表","自動的に膨らむ救命ボート","方位磁石","水19L","注射器の入った救急箱","太陽電池のFM送受信器","照明弾"];
+  const correct = [8,15,4,11,12,1,6,13,3,9,14,2,7,5,10];
+
+  // 他プレイヤーにも通知
+  window.socket.send(JSON.stringify({ type:"start_nasa", items, correct }));
+
+  // 親画面でゲーム開始
+  window.startNASAHost(window.socket, container);
+  console.log("🚀 NASAゲームを強制起動しました！");
+};
