@@ -205,20 +205,68 @@ function connectSocket() {
 // =====================
 // 初期化
 // =====================
-document.addEventListener("click", (e) => {
+// =====================
+// 初期化（修正版：NASAボタンはロード完了後に有効化）
+// =====================
+document.addEventListener("DOMContentLoaded", () => {
+  const gameBtn = document.getElementById("gameSelectBtn");
   const gameDropdown = document.getElementById("gameDropdown");
+  const exitQuizBtn = document.getElementById("exitQuizBtn");
   const nasaBtn = document.getElementById("nasaBtn");
   const quizBtn = document.getElementById("quizBtn");
 
-  if (nasaBtn && nasaBtn.contains(e.target)) { 
-    e.stopPropagation(); 
-    console.log("✅ NASAボタンがクリックされた");  // ←追加
-    selectGame("nasa"); 
-    return; 
-  }
-  if (quizBtn && quizBtn.contains(e.target)) { e.stopPropagation(); selectGame("quiz"); return; }
+  // NASAボタンをロード完了まで無効化
+  if (nasaBtn) nasaBtn.disabled = true;
 
-  if (gameDropdown && !gameDropdown.contains(e.target) && !e.target.closest("#gameSelectBtn")) gameDropdown.style.display = "none";
+  if (gameBtn) gameBtn.onclick = (e) => { 
+    e.stopPropagation(); 
+    gameDropdown.style.display = gameDropdown.style.display === "block" ? "none" : "block"; 
+  };
+  if (exitQuizBtn) exitQuizBtn.onclick = () => {
+    if (currentGame && socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: `end_${currentGame}` }));
+    const container = document.getElementById("game-container"); 
+    container.classList.remove("active"); 
+    container.innerHTML = "";
+    exitQuizBtn.style.display = "none"; 
+    if (window.removeProgressUI) window.removeProgressUI(); 
+    currentGame = null;
+  };
+
+  // WebSocket接続
+  connectSocket();
+
+  // ルーム読み込み後にメンバー更新
+  loadRoom().then(() => { 
+    updateMembers(); 
+    setInterval(updateMembers, 2000); 
+
+    // NASAボタンを有効化
+    if (nasaBtn) {
+      nasaBtn.disabled = false;
+      console.log("✅ NASAボタンが有効化されました");
+    }
+  });
+
+  // ゲーム選択ボタンクリック処理
+  document.addEventListener("click", (e) => {
+    if (nasaBtn && nasaBtn.contains(e.target)) { 
+      e.stopPropagation(); 
+      if (!nasaBtn.disabled) {
+        console.log("✅ NASAボタンがクリックされた");
+        selectGame("nasa"); 
+      }
+      return; 
+    }
+    if (quizBtn && quizBtn.contains(e.target)) { 
+      e.stopPropagation(); 
+      selectGame("quiz"); 
+      return; 
+    }
+
+    if (gameDropdown && !gameDropdown.contains(e.target) && !e.target.closest("#gameSelectBtn")) {
+      gameDropdown.style.display = "none";
+    }
+  });
 });
 
 window.addEventListener("DOMContentLoaded", () => {
