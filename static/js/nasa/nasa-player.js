@@ -10,11 +10,14 @@ let myTeam=null;
 let myTeamSelected = false;
 let teams={};
 let leaders={};
+let heartbeatInterval;
 
 export function startNASAPlayer(ws,uiContainer){
 
   socket=ws;
   container=uiContainer;
+
+  startHeartbeat(); // ★ heartbeat開始
 
   if(!window.myName){
     const params=new URLSearchParams(location.search);
@@ -93,6 +96,32 @@ export function startNASAPlayer(ws,uiContainer){
       }));
     }
   };
+
+// -------------------------
+// heartbeat
+// -------------------------
+function startHeartbeat() {
+    heartbeatInterval = setInterval(() => {
+        if(socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ type: "heartbeat", time: Date.now() }));
+        }
+    }, 20000);
+}
+
+function stopHeartbeat() {
+    clearInterval(heartbeatInterval);
+}
+
+// -------------------------
+// 軽い再接続
+// -------------------------
+function reconnectWebSocket() {
+    stopHeartbeat();
+    // 既存socketのURLを保持しておき、再接続
+    const url = socket.url;
+    socket = new WebSocket(url);
+    startNASAPlayer(socket, container); // 再度初期化
+}
 
 }
 
