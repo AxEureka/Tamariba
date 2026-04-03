@@ -358,7 +358,6 @@ for(const score of sortedScores){
   // ★3位まで出したら終了
   if(rank > 3) break;
 }
-});
   
 html1+=`<hr><div>平均：${data.personal_avg}</div>`;
 if(!isHost){
@@ -403,7 +402,6 @@ for(const score of sortedTeamScores){
 
   if(teamRank > 3) break;
 }
-});
   
 html2+=`<hr><div>平均：${data.team_avg}</div>`;
 if(!isHost){
