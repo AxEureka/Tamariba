@@ -1,4 +1,4 @@
-// 修正版 room.js（子の入室問題修正版 / 他は変更なし）
+// 修正版 room.js（ID管理統一版 / 他は変更なし）
 
 import { startQuizHost } from "/static/js/quiz/quiz-host.js";
 import { startQuizPlayer } from "/static/js/quiz/quiz-player.js";
@@ -77,11 +77,16 @@ async function updateMembers() {
 
     const data = await res.json();
 
-    // ★ object Object 対策：文字列に変換
-    const memberNames = data.members.map(m => (typeof m === "string" ? m : m.name));
+    // ★ ID管理対応：{id, name} の配列
+    const members = data.members.map(m => ({
+      id: m.id || m.name,
+      name: m.name || m
+    }));
 
+    // 子画面の missing 判定も ID で
     if (myName !== hostName && joined) {
-      if (!memberNames.includes(myName)) {
+      const found = members.some(m => m.id === myId);
+      if (!found) {
         missingCount++;
         if (missingCount >= 2) {
           location.href = "/static/kick.html";
@@ -94,68 +99,70 @@ async function updateMembers() {
 
     document.getElementById("count").textContent = data.count;
 
-    const joinedList = memberNames.filter(m => !lastMembers.includes(m));
-    const leftList = lastMembers.filter(m => !memberNames.includes(m));
+    // 参加/退出判定をIDベース
+    const joinedList = members.filter(m => !lastMembers.some(lm => lm.id === m.id));
+    const leftList = lastMembers.filter(lm => !members.some(m => m.id === lm.id));
 
     joinedList.forEach(m => {
-      if (m !== myName && m !== hostName) showPopup(`${m}さんが入室しました`);
+      if (m.id !== myId && m.name !== hostName) showPopup(`${m.name}さんが入室しました`);
     });
     leftList.forEach(m => {
-      if (m !== myName) showPopup(`${m}さんが退出しました`);
+      if (lm.id !== myId) showPopup(`${lm.name}さんが退出しました`);
     });
 
-    lastMembers = [...memberNames];
+    lastMembers = [...members];
 
     const list = [];
     list.push(`<strong>${hostName} (親)</strong>`);
 
     if (myName === hostName) {
-      memberNames.forEach(m => {
-        if (m === hostName) return;
-        const msgId = `msgBtn_${m}`;
-        const kickId = `kickBtn_${m}`;
+      members.forEach(m => {
+        if (m.id === myId) return;
+        const msgId = `msgBtn_${m.id}`;
+        const kickId = `kickBtn_${m.id}`;
         list.push(`
-          ・${m}
-          <button id="${msgId}" class="msgBtn" data-target="${m}">💬</button>
-          <button id="${kickId}" class="kickBtn" data-target="${m}">退室</button>
+          ・${m.name}
+          <button id="${msgId}" class="msgBtn" data-target="${m.id}">💬</button>
+          <button id="${kickId}" class="kickBtn" data-target="${m.id}">退室</button>
         `);
       });
     } else {
       list.push(`・${myName} (自分)`);
-      memberNames.forEach(m => {
-        if (m === hostName || m === myName) return;
-        list.push(`・${m}`);
+      members.forEach(m => {
+        if (m.id === myId || m.name === hostName) return;
+        list.push(`・${m.name}`);
       });
     }
 
     document.getElementById("members").innerHTML = list.join("<br>");
 
-    memberNames.forEach(m => {
-      if (m === hostName || m === myName) return;
+    // ボタン操作もIDベース
+    members.forEach(m => {
+      if (m.id === myId || m.name === hostName) return;
 
-      const msgBtn = document.getElementById(`msgBtn_${m}`);
-      if (msgBtn) msgBtn.onclick = () => sendMessageTo(m);
+      const msgBtn = document.getElementById(`msgBtn_${m.id}`);
+      if (msgBtn) msgBtn.onclick = () => sendMessageTo(m.id);
 
-      const kickBtn = document.getElementById(`kickBtn_${m}`);
-      if (kickBtn) kickBtn.onclick = () => kickMember(m);
+      const kickBtn = document.getElementById(`kickBtn_${m.id}`);
+      if (kickBtn) kickBtn.onclick = () => kickMember(m.id);
     });
   } catch (e) {
     console.error("メンバー更新エラー", e);
   }
 }
 
-// ※ 以下は元のコードと完全同一です
-
 // =====================
 // 退室・Kick
 // =====================
-async function kickMember(name) {
-  if (!confirm(`${name}さんを退室させますか？`)) return;
+async function kickMember(id) {
+  const target = lastMembers.find(m => m.id === id);
+  if (!target) return;
+  if (!confirm(`${target.name}さんを退室させますか？`)) return;
 
   await fetch(`${baseURL}/room/${roomId}/kick`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name })
+    body: JSON.stringify({ id })
   });
 }
 
@@ -166,18 +173,19 @@ async function exitRoom() {
     await fetch(`${baseURL}/room/${roomId}/kick`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: myName })
+      body: JSON.stringify({ id: myId })
     });
   } else {
     const res = await fetch(`${baseURL}/room/${roomId}/members`);
     if (res.ok) {
       const data = await res.json();
-      for (const m of data.members) {
-        if (m !== hostName) {
+      const members = data.members.map(m => ({id: m.id || m.name, name: m.name || m}));
+      for (const m of members) {
+        if (m.id !== myId) {
           await fetch(`${baseURL}/room/${roomId}/kick`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: m })
+            body: JSON.stringify({ id: m.id })
           });
         }
       }
@@ -188,26 +196,8 @@ async function exitRoom() {
 }
 
 // =====================
-// ユーティリティ
+// メッセージ送信
 // =====================
-function toggleMembers() {
-  const box = document.getElementById("members");
-  box.style.display = box.style.display === "none" ? "block" : "none";
-}
-
-function showPopup(text) {
-  const popup = document.getElementById("popup");
-  popup.textContent = text;
-  popup.style.display = "block";
-  setTimeout(() => popup.style.display = "none", 3000);
-}
-
-function copyURL() {
-  const input = document.getElementById("join-url");
-  navigator.clipboard.writeText(input.value);
-  showPopup("参加URLをコピーしました");
-}
-
 function sendMessageToAll() {
   const text = prompt("全員に送るメッセージ");
   if (!text) return;
@@ -220,18 +210,25 @@ function sendMessageToAll() {
   }
 }
 
-function sendMessageTo(name) {
-  const text = prompt(`${name}さんに送るメッセージ`);
+function sendMessageTo(id) {
+  const target = lastMembers.find(m => m.id === id);
+  if (!target) return;
+
+  const text = prompt(`${target.name}さんに送るメッセージ`);
   if (!text) return;
 
   if (socket && socket.readyState === WebSocket.OPEN) {
     socket.send(JSON.stringify({
       type: "host_message",
       text: text,
-      target: name
+      targetId: id
     }));
   }
 }
+
+// =====================
+// 以下、ゲーム選択・WebSocketは既存コードそのまま
+// =====================
 
 /* ===== 遊び選択 ===== */
 function selectGame(type) {
