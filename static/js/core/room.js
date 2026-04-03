@@ -75,7 +75,7 @@ async function loadRoom() {
 }
 
 // =====================
-// メンバー更新
+// updateMembers 修正版
 // =====================
 async function updateMembers() {
   try {
@@ -83,11 +83,11 @@ async function updateMembers() {
     if (!res.ok) return;
     const data = await res.json();
 
-    // memberObj = {name, id}
+    // memberObj = {name, id} に統一
     const memberObj = data.members.map(m => (typeof m === "string" ? {name:m, id:m} : m));
 
     // 自分が missing しているかチェック（親は除外）
-    if (myName !== hostName && joined) {
+    if (myId !== hostId && joined) {
       const found = memberObj.some(m => m.id === myId);
       if (!found) {
         missingCount++;
@@ -98,25 +98,24 @@ async function updateMembers() {
       } else missingCount = 0;
     }
 
-    document.getElementById("count").textContent = data.count;
+    document.getElementById("count").textContent = memberObj.length;
 
-    const memberNames = memberObj.map(m => m.name);
+    // lastMembers を {id,name} で保持
+    const joinedList = memberObj.filter(m => !lastMembers.some(lm => lm.id === m.id));
+    const leftList = lastMembers.filter(lm => !memberObj.some(m => m.id === lm.id));
 
-    const joinedList = memberNames.filter(m => !lastMembers.includes(m));
-    const leftList = lastMembers.filter(m => !memberNames.includes(m));
+    joinedList.forEach(m => { if (m.id !== myId && m.id !== hostId) showPopup(`${m.name}さんが入室しました`); });
+    leftList.forEach(m => { if (m.id !== myId) showPopup(`${m.name}さんが退出しました`); });
 
-    joinedList.forEach(m => { if (m !== myName && m !== hostName) showPopup(`${m}さんが入室しました`); });
-    leftList.forEach(m => { if (m !== myName) showPopup(`${m}さんが退出しました`); });
-
-    lastMembers = [...memberNames];
+    lastMembers = [...memberObj];
 
     // メンバー表示
     const list = [];
     list.push(`<strong>${hostName} (親)</strong>`);
 
-    if (myName === hostName) {
+    if (myId === hostId) {
       memberObj.forEach(m => {
-        if (m.name === hostName) return;
+        if (m.id === hostId) return;
         const msgId = `msgBtn_${m.id}`;
         const kickId = `kickBtn_${m.id}`;
         list.push(`
@@ -128,7 +127,7 @@ async function updateMembers() {
     } else {
       list.push(`・${myName} (自分)`);
       memberObj.forEach(m => {
-        if (m.name === hostName || m.id === myId) return;
+        if (m.id === hostId || m.id === myId) return;
         list.push(`・${m.name}`);
       });
     }
@@ -137,9 +136,9 @@ async function updateMembers() {
 
     // ボタン設定
     memberObj.forEach(m => {
-      if (m.name === hostName || m.id === myId) return;
+      if (m.id === hostId || m.id === myId) return;
       const msgBtn = document.getElementById(`msgBtn_${m.id}`);
-      if (msgBtn) msgBtn.onclick = () => sendMessageTo(m.id);
+      if (msgBtn) msgBtn.onclick = () => sendMessageToId(m.id);
       const kickBtn = document.getElementById(`kickBtn_${m.id}`);
       if (kickBtn) kickBtn.onclick = () => kickMember(m.id);
     });
@@ -222,9 +221,9 @@ function sendMessageToAll() {
 }
 
 // =====================
-// 個別メッセージ送信整理
+// 個別メッセージ整理
 // =====================
-function sendMessageToId(id) {  // ④
+function sendMessageToId(id) {
   const member = lastMembers.find(m => m.id === id);
   if (!member) return;
   const text = prompt(`${member.name}さんに送るメッセージ`);
@@ -233,7 +232,6 @@ function sendMessageToId(id) {  // ④
     socket.send(JSON.stringify({ type: "host_message", text, targetId: id }));
   }
 }
-
 // =====================
 // 遊び選択
 // =====================
