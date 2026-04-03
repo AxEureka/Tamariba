@@ -160,6 +160,7 @@ function sendMessageToId(id) { const member = lastMembers.find(m => m.id === id)
 // ゲーム選択
 // =====================
 function selectGame(type) {
+  console.log(`🎮 selectGame called with type=${type}`);  // ←追加
   if (!socket || socket.readyState !== WebSocket.OPEN) return;
   const gameDropdown = document.getElementById("gameDropdown");
   if (gameDropdown) gameDropdown.style.display = "none";
@@ -208,7 +209,12 @@ document.addEventListener("click", (e) => {
   const nasaBtn = document.getElementById("nasaBtn");
   const quizBtn = document.getElementById("quizBtn");
 
-  if (nasaBtn && nasaBtn.contains(e.target)) { e.stopPropagation(); selectGame("nasa"); return; }
+  if (nasaBtn && nasaBtn.contains(e.target)) { 
+    e.stopPropagation(); 
+    console.log("✅ NASAボタンがクリックされた");  // ←追加
+    selectGame("nasa"); 
+    return; 
+  }
   if (quizBtn && quizBtn.contains(e.target)) { e.stopPropagation(); selectGame("quiz"); return; }
 
   if (gameDropdown && !gameDropdown.contains(e.target) && !e.target.closest("#gameSelectBtn")) gameDropdown.style.display = "none";
