@@ -70,6 +70,17 @@ export function startNASAPlayer(ws,uiContainer){
       }
     }
 
+    // ★ 新規追加：チーム回答完了通知
+    if(data.type==="team_answer_done"){
+      if(data.team === myTeam && leaders[myTeam] !== window.myName){
+        // 自分が非リーダーで、自分のチームなら画面更新
+        container.innerHTML = `
+          <h2>${myTeam} の回答（リーダー: ${leaders[myTeam]}）</h2>
+          <p>送信しました ✅</p>
+        `;
+      }
+    }
+
     if(data.type==="nasa_result"){
       lastCorrect=data.correct;
 
@@ -457,7 +468,7 @@ function startTeamAnswer(){
       ranks:r
     }));
 
-    container.innerHTML="<h2>送信完了</h2>";
+    container.innerHTML="<h2>送信完了 ✅</h2>";
 
   },`${myTeam} の回答（リーダー: ${leader}）`,true);
 
