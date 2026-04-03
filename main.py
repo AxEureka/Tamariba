@@ -269,11 +269,10 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             elif msg_type == "nasa_get_ranking":
                 correct = room["nasa"].get("correct", [])
                 my_name = data.get("name")
-
+            
                 def calc(arr):
                     if not arr or not correct:
                         return 0
-                
                     score = 0
                     for i in range(min(len(arr), len(correct))):
                         try:
@@ -283,11 +282,9 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                         except:
                             continue
                     return score
+            
+                # ---------- 個人スコア ----------
                 personal_scores = []
-                team_scores = {}
-                for t, ranks in room["team_answers"].items():
-                    team_scores[t] = [calc(ranks)]
-
                 my_personal = None
                 my_team = None
                 for name, a in room["nasa_answers"].items():
@@ -298,21 +295,58 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                             my_personal = s
                     if name == my_name:
                         my_team = a.get("team_name")
-
+            
+                # スコア順にソート（低い順）
                 personal_scores.sort(key=lambda x: x[1])
-                personal_avg = sum(s for _, s in personal_scores) / len(personal_scores) if personal_scores else 0
+            
+                # 上位3位までを同順位処理
+                def rank_list(scores, top_n=3):
+                    ranked = []
+                    last_score = None
+                    last_rank = 0
+                    count = 0
+                    for i, (name, score) in enumerate(scores):
+                        if last_score is None or score != last_score:
+                            last_rank = i + 1
+                        if last_rank > top_n:
+                            break
+                        ranked.append({"name": name, "score": score, "rank": last_rank})
+                        last_score = score
+                    return ranked
+            
+                personal_top = rank_list(personal_scores, 3)
+            
+                # ---------- チームスコア ----------
+                team_scores = {}
+                for t, ranks in room["team_answers"].items():
+                    team_scores[t] = [calc(ranks)]
+            
+                # チーム平均
                 team_avg_dict = {t: sum(v) / len(v) for t, v in team_scores.items()}
-                team_top = sorted(team_avg_dict.items(), key=lambda x: x[1])
-                team_avg = sum(team_avg_dict.values()) / len(team_avg_dict) if team_avg_dict else 0
+                team_top_sorted = sorted(team_avg_dict.items(), key=lambda x: x[1])
+            
+                # 同順位処理
+                last_score = None
+                last_rank = 0
+                team_top = []
+                for i, (name, score) in enumerate(team_top_sorted):
+                    if last_score is None or score != last_score:
+                        last_rank = i + 1
+                    if last_rank > 3:
+                        break
+                    team_top.append({"name": name, "score": round(score, 1), "rank": last_rank})
+                    last_score = score
+            
+                # 自分のチームスコア
                 my_team_score = next((team_scores[t][0] for t in team_scores if t == my_team), None)
                 my_diff = my_personal - my_team_score if my_personal is not None and my_team_score is not None else None
-
+            
                 await websocket.send_json({
                     "type": "nasa_ranking",
-                    "personal_top": [{"name": n, "score": s} for n, s in personal_scores],
-                    "personal_avg": round(personal_avg, 1),
-                    "team_top": [{"name": n, "score": round(s, 1)} for n, s in team_top],
-                    "team_avg": round(team_avg, 1),
+                    "personal_top": personal_top,
+                    "team_top": team_top,
+                    "personal_avg": round(sum(s for _, s in personal_scores)/len(personal_scores), 1) if personal_scores else 0,
+                    "team_avg": round(sum(team_avg_dict.values()) / len(team_avg_dict), 1) if team_avg_dict else 0,
                     "my_personal": my_personal,
                     "my_team_score": my_team_score,
                     "my_diff": my_diff,
