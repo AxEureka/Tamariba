@@ -193,15 +193,51 @@ function connectSocket() {
   socket = new WebSocket(`${protocol}://${location.host}/ws/${roomId}`);
 
   socket.onopen = () => { console.log("WebSocket connected"); window.socket = socket; };
-  socket.onmessage = (e) => {
+  // =====================
+// WebSocket受信修正版
+// =====================
+socket.onmessage = async (e) => {  // async 追加
     let msg;
     try { msg = JSON.parse(e.data); } catch { return; }
 
-    if (msg.type === "host_message") { if (msg.targetId && msg.targetId !== myId) return; showPopup("📩 親： " + msg.text); }
-    if (msg.type === "start_quiz") { const container = document.getElementById("game-container"); container.classList.add("active"); document.getElementById("exitQuizBtn").style.display = "inline-block"; if (myId !== hostId) startQuizPlayer(socket, container); }
-    if (msg.type === "start_nasa") { const container = document.getElementById("game-container"); container.classList.add("active"); document.getElementById("exitQuizBtn").style.display = "inline-block"; if (myId !== hostId) startNASAPlayer(socket, container); }
-    if (msg.type === "end_quiz" || msg.type === "end_nasa") { const container = document.getElementById("game-container"); container.classList.remove("active"); container.innerHTML = ""; document.getElementById("exitQuizBtn").style.display = "none"; if (window.removeProgressUI) window.removeProgressUI(); currentGame = null; }
-  };
+    if (msg.type === "host_message") {
+        if (msg.targetId && msg.targetId !== myId) return;
+        showPopup("📩 親： " + msg.text);
+    }
+
+    if (msg.type === "start_quiz") {
+        const container = document.getElementById("game-container");
+        container.classList.add("active");
+        document.getElementById("exitQuizBtn").style.display = "inline-block";
+        if (myId !== hostId) startQuizPlayer(socket, container);
+    }
+
+    if (msg.type === "start_nasa") {
+        const container = document.getElementById("game-container");
+        container.classList.add("active");
+        document.getElementById("exitQuizBtn").style.display = "inline-block";
+
+        if (myId !== hostId) {
+            // プレイヤー側は必ずメンバー更新してからゲーム開始
+            try { await updateMembers(); } catch (err) { console.error("メンバー更新失敗", err); }
+
+            if (typeof startNASAPlayer === "function") {
+                startNASAPlayer(socket, container);
+            } else {
+                console.error("❌ startNASAPlayer が読み込まれていません");
+            }
+        }
+    }
+
+    if (msg.type === "end_quiz" || msg.type === "end_nasa") {
+        const container = document.getElementById("game-container");
+        container.classList.remove("active");
+        container.innerHTML = "";
+        document.getElementById("exitQuizBtn").style.display = "none";
+        if (window.removeProgressUI) window.removeProgressUI();
+        currentGame = null;
+    }
+};
 
   socket.onerror = (e) => console.error("WebSocket error", e);
   socket.onclose = () => { setTimeout(connectSocket, 2000); };
