@@ -19,15 +19,22 @@ const baseURL = location.origin;
 let socket;
 let currentGame = null;
 
+
 // =====================
 // 参加処理
 // =====================
+// =====================
+// 初期化用ホストID追加
+// =====================
+let hostId = "";  // ① hostId追加
+
 async function loadRoom() {
   const res = await fetch(`${baseURL}/room/${roomId}?name=${encodeURIComponent(myName)}&id=${encodeURIComponent(myId)}`);
   if (!res.ok) return;
 
   const data = await res.json();
   hostName = data.host;
+  hostId = data.hostId || hostName;  // ① hostId をサーバから取得、無ければ名前をID代わりに
   if (!myName) myName = hostName;
 
   document.body.style.backgroundImage = `url('/static/themes/${data.theme}.jpg')`;
@@ -155,15 +162,20 @@ async function kickMember(id) {
   });
 }
 
+/ =====================
+// 退室・Kick
+// =====================
 async function exitRoom() {
   if (!confirm("退室しますか？")) return;
-  if (myName !== hostName) {
+
+  if (myId !== hostId) {  // ② hostId で判定
     await fetch(`${baseURL}/room/${roomId}/kick`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: myId })
     });
   } else {
+    // 親は全員キックして退室
     const res = await fetch(`${baseURL}/room/${roomId}/members`);
     if (res.ok) {
       const data = await res.json();
@@ -180,34 +192,6 @@ async function exitRoom() {
   }
   location.href = "/static/kick.html";
 }
-
-
-async function exitRoom() {
-  if (!confirm("退室しますか？")) return;
-  if (myId !== hostId) {
-    await fetch(`${baseURL}/room/${roomId}/kick`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: myId })
-    });
-  } else {
-    const res = await fetch(`${baseURL}/room/${roomId}/members`);
-    if (res.ok) {
-      const data = await res.json();
-      for (const m of data.members) {
-        if (m.id !== hostId) {
-          await fetch(`${baseURL}/room/${roomId}/kick`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: m.id })
-          });
-        }
-      }
-    }
-  }
-  location.href = "/static/kick.html";
-}
-
 // =====================
 // ユーティリティ
 // =====================
@@ -237,9 +221,13 @@ function sendMessageToAll() {
   }
 }
 
-function sendMessageToId(id) {
-  const name = lastMembers.find(m => m.id === id)?.name || "";
-  const text = prompt(`${name}さんに送るメッセージ`);
+// =====================
+// 個別メッセージ送信整理
+// =====================
+function sendMessageToId(id) {  // ④
+  const member = lastMembers.find(m => m.id === id);
+  if (!member) return;
+  const text = prompt(`${member.name}さんに送るメッセージ`);
   if (!text) return;
   if (socket && socket.readyState === WebSocket.OPEN) {
     socket.send(JSON.stringify({ type: "host_message", text, targetId: id }));
@@ -364,4 +352,5 @@ window.copyURL = copyURL;
 window.selectGame = selectGame;
 window.toggleMembers = toggleMembers;
 window.exitRoom = exitRoom;
-window.kickMember = kickMemberById;
+window.kickMember = kickMember;  // ③ kickMemberById → kickMember
+
