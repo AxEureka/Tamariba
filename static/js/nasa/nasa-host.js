@@ -12,6 +12,9 @@ let teamCount = 2;
 // ★進捗表示用
 let progressDiv = null;
 
+// ★ユーザー管理
+let players = {}; // {id: {name, team, personalRanks, teamRanks}}
+
 export function startNASAHost(ws, uiContainer) {
 
   socket = ws;
@@ -50,26 +53,107 @@ export function startNASAHost(ws, uiContainer) {
 
     console.log("📩 ホスト受信:", data);
 
-    // ★個人進捗
+    // ★個人回答受信（ユーザーID対応）
+    if (data.type === "nasa_personal") {
+      const { id, name, ranks } = data;
+
+      if (!id) return;
+
+      players[id] = players[id] || {};
+      players[id].name = name;
+      players[id].personalRanks = ranks;
+
+      // 個人進捗送信
+      const done = Object.values(players).filter(p => p.personalRanks).length;
+      const total = Object.keys(players).length;
+
+      socket.send(JSON.stringify({
+        type: "nasa_personal_progress",
+        done, total
+      }));
+    }
+
+    // ★チーム選択
+    if (data.type === "select_team") {
+      const { id, name, team } = data;
+
+      if (!id) return;
+
+      players[id] = players[id] || {};
+      players[id].name = name;
+      players[id].team = team;
+
+      const selected = Object.values(players).filter(p => p.team).length;
+      const total = Object.keys(players).length;
+
+      socket.send(JSON.stringify({
+        type: "team_update",
+        selected, total
+      }));
+    }
+
+    // ★チーム回答受信（ユーザーID対応）
+    if (data.type === "nasa_team") {
+      const { id, name, team, ranks } = data;
+
+      if (!id) return;
+
+      players[id] = players[id] || {};
+      players[id].teamRanks = ranks;
+
+      // チーム回答進捗
+      const teamsDone = new Set();
+      Object.values(players).forEach(p => {
+        if (p.team && p.teamRanks) teamsDone.add(p.team);
+      });
+
+      socket.send(JSON.stringify({
+        type: "nasa_team_progress",
+        done: teamsDone.size,
+        total: new Set(Object.values(players).map(p => p.team)).size
+      }));
+    }
+
+    // ★ランキング送信
+    if (data.type === "nasa_get_ranking") {
+      const personalScores = {};
+      const teamScores = {};
+
+      Object.values(players).forEach(p => {
+        if (p.personalRanks) personalScores[p.name] = p.personalRanks;
+        if (p.teamRanks && p.team) teamScores[p.team] = p.teamRanks;
+      });
+
+      socket.send(JSON.stringify({
+        type: "nasa_ranking",
+        personal: personalScores,
+        team: teamScores
+      }));
+    }
+
+    // ★正解表示
+    if (data.type === "nasa_show_result") {
+      socket.send(JSON.stringify({
+        type: "nasa_result",
+        correct: lastCorrect
+      }));
+    }
+
+    // ★進捗表示
     if (data.type === "nasa_personal_progress") {
       updateProgress(`個人回答：${data.done} / ${data.total}人`);
     }
 
     if (data.type === "team_update") {
-
       if(data.selected != null && data.total != null){
-    
         const remaining = data.total - data.selected;
-    
         updateProgress(`チーム選択中：残り ${remaining} 人`);
-    
         if(remaining === 0){
           updateProgress("全員チーム選択完了！");
         }
       }
     }
 
-    // ★チーム進捗
     if (data.type === "nasa_team_progress") {
       updateProgress(`チーム回答：${data.done} / ${data.total}チーム`);
     }
@@ -77,9 +161,6 @@ export function startNASAHost(ws, uiContainer) {
     if (data.type === "nasa_ranking") {
       lastRanking = data;
       showRanking(container, data, true);
-
-      // ❌ showControl(); ←削除（上書き防止）
-
       addBackToCorrectButton();
     }
 
@@ -87,8 +168,6 @@ export function startNASAHost(ws, uiContainer) {
       showCorrect(container, lastItems, data.correct, () => {
         socket.send(JSON.stringify({ type: "nasa_get_ranking" }));
       });
-
-      // ❌ showControl(); ←削除（上書き防止）
     }
 
     if (data.type === "end_nasa") {
@@ -102,30 +181,20 @@ export function startNASAHost(ws, uiContainer) {
       showCorrect(container, lastItems, lastCorrect, () => {
         socket.send(JSON.stringify({ type: "nasa_get_ranking" }));
       });
-
-      // ❌ showControl(); ←削除（上書き防止）
     }
   };
-
 }
 
 // =========================
-// チーム設定
-// =========================
+// チーム設定（既存）
 function showTeamSetup(onNext){
-
   container.innerHTML=`
     <div class="nasa-ui">
       <h2>チーム設定</h2>
-
       <input id="teamCount" type="number" value="2" min="2" max="10">
-
       <br><br>
-
       <button id="editNames">チーム名を設定</button>
-
       <div id="teamNameArea" style="margin-top:10px;"></div>
-
       <br>
       <button id="nextBtn">次へ</button>
     </div>
@@ -133,13 +202,9 @@ function showTeamSetup(onNext){
 
   const nameArea = document.getElementById("teamNameArea");
 
-  // ★チーム名入力生成
   document.getElementById("editNames").onclick = () => {
-
     const count = parseInt(document.getElementById("teamCount").value) || 2;
-
     nameArea.innerHTML = "";
-
     for(let i=0;i<count;i++){
       nameArea.innerHTML += `
         <div>
@@ -151,28 +216,19 @@ function showTeamSetup(onNext){
   };
 
   document.getElementById("nextBtn").onclick=()=>{
-
-    console.log("👉 チーム設定 次へ押された");
-
     teamCount = parseInt(document.getElementById("teamCount").value) || 2;
 
-    // ★チーム名取得
     const inputs = document.querySelectorAll(".teamNameInput");
     let teamNames = [];
-
     if(inputs.length > 0){
       inputs.forEach((input, i)=>{
         const name = input.value.trim();
         teamNames.push(name || `チーム${i+1}`);
       });
-    }else{
-      // 入力してない場合
-      for(let i=0;i<teamCount;i++){
-        teamNames.push(`チーム${i+1}`);
-      }
+    } else {
+      for(let i=0;i<teamCount;i++) teamNames.push(`チーム${i+1}`);
     }
 
-    // ★ここ変更（名前も送る）
     socket.send(JSON.stringify({
       type:"set_team_count",
       count: teamCount,
@@ -184,14 +240,11 @@ function showTeamSetup(onNext){
 }
 
 // =========================
-// コントロール
-// =========================
+// コントロール（既存）
 function showControl(){
-
   container.innerHTML=`
     <div class="nasa-ui">
       <h2>NASAゲーム進行</h2>
-
       <button id="startTeam">チーム回答開始</button>
       <button id="startLeader">リーダー選択開始</button>
       <button id="showResult">正解発表</button>
@@ -200,18 +253,14 @@ function showControl(){
   `;
 
   document.getElementById("startTeam").onclick=()=>{
+    showPhaseOverlay("チーム選択中：残り 計算中...");
+    socket.send(JSON.stringify({ type:"start_team_phase" }));
+  };
 
-  showPhaseOverlay("チーム選択中：残り 計算中...");
-
-  socket.send(JSON.stringify({ type:"start_team_phase" }));
-};
-
-document.getElementById("startLeader").onclick=()=>{
-
-  showPhaseOverlay("リーダー選択中...");
-
-  socket.send(JSON.stringify({ type:"start_leader_phase" }));
-};
+  document.getElementById("startLeader").onclick=()=>{
+    showPhaseOverlay("リーダー選択中...");
+    socket.send(JSON.stringify({ type:"start_leader_phase" }));
+  };
 
   document.getElementById("showResult").onclick=()=>{
     socket.send(JSON.stringify({type:"nasa_show_result"}));
@@ -226,14 +275,10 @@ document.getElementById("startLeader").onclick=()=>{
 }
 
 // =========================
-// ★進捗UI
-// =========================
+// 進捗UI
 function createProgressUI(){
-
   if(progressDiv) return;
-
   progressDiv = document.createElement("div");
-
   progressDiv.style.position = "fixed";
   progressDiv.style.top = "10px";
   progressDiv.style.right = "10px";
@@ -243,26 +288,17 @@ function createProgressUI(){
   progressDiv.style.borderRadius = "8px";
   progressDiv.style.zIndex = "9999";
   progressDiv.style.fontWeight = "bold";
-
   progressDiv.textContent = "待機中...";
-
   document.body.appendChild(progressDiv);
 }
 
 function updateProgress(text){
-  if(progressDiv){
-    progressDiv.textContent = text;
-  }
+  if(progressDiv) progressDiv.textContent = text;
 }
 
-// =========================
-// ★フェーズポップ（追加）
-// =========================
 function showPhaseOverlay(text){
-
   if(!progressDiv){
     progressDiv = document.createElement("div");
-
     progressDiv.style.position = "fixed";
     progressDiv.style.top = "50%";
     progressDiv.style.left = "50%";
@@ -275,32 +311,20 @@ function showPhaseOverlay(text){
     progressDiv.style.zIndex = "9999";
     progressDiv.style.fontWeight = "bold";
     progressDiv.style.textAlign = "center";
-
     document.body.appendChild(progressDiv);
   }
-
   progressDiv.style.display = "block";
   progressDiv.textContent = text;
 }
 
-// =========================
-// 戻るボタン
-// =========================
 function addBackToCorrectButton() {
-
   const btn = document.createElement("button");
   btn.textContent = "正解を見る";
-
   btn.onclick = () => {
-    if (window.showCorrectAgain) {
-      window.showCorrectAgain();
-    }
+    if (window.showCorrectAgain) window.showCorrectAgain();
   };
-
- const ui = container.querySelector(".nasa-ui");
-if (ui) {
-  ui.appendChild(btn);
-}
+  const ui = container.querySelector(".nasa-ui");
+  if (ui) ui.appendChild(btn);
 }
 
 function removeProgressUI(){
