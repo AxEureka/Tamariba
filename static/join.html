@@ -46,8 +46,23 @@ async function joinRoom() {
     return;
   }
 
+  // サーバに参加リクエスト
+  const res = await fetch(`/room/${roomId}/join`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ name })
+  });
+
+  const data = await res.json();
+
+  if (!data.ok) {
+    alert("入室できませんでした");
+    return;
+  }
+
+  // id付きでroom.htmlに遷移
   location.href =
-    `/static/room.html?room=${roomId}&name=${encodeURIComponent(name)}`;
+    `/static/room.html?room=${roomId}&name=${encodeURIComponent(name)}&id=${data.id}`;
 }
 </script>
 
