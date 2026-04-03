@@ -323,15 +323,15 @@ const personal=document.createElement("div");
 personal.className="ranking-box";
 
 let html1=`<h2>🏆 個人ランキング</h2>`;
-data.personal_top.forEach((p,i)=>{
-const isMe = (!isHost && p.name === window.myName);
-
-html1+=`
-  <div style="${isMe ? 'color: yellow; font-weight: bold;' : ''}">
-    ${i+1}位：${p.name}（${p.score}）
-  </div>
-`;
+data.personal_top.forEach((p)=>{
+  const isMe = (!isHost && p.name === window.myName);
+  html1+=`
+    <div style="${isMe ? 'color: yellow; font-weight: bold;' : ''}">
+      ${p.rank}位：${p.name}（${p.score}）
+    </div>
+  `;
 });
+
 html1+=`<hr><div>平均：${data.personal_avg}</div>`;
 if(!isHost){
 html1+=`<div>あなた：${data.my_personal ?? "-"}</div>`;
@@ -342,15 +342,15 @@ const team=document.createElement("div");
 team.className="ranking-box";
 
 let html2=`<h2>👥 チームランキング</h2>`;
-data.team_top.forEach((t,i)=>{
-const isMyTeam = (!isHost && t.name === data.my_team_name);
-
-html2+=`
-  <div style="${isMyTeam ? 'color: yellow; font-weight: bold;' : ''}">
-    ${i+1}位：${t.name}（${t.score}）
-  </div>
-`;
+data.team_top.forEach((t)=>{
+  const isMyTeam = (!isHost && t.name === data.my_team_name);
+  html2+=`
+    <div style="${isMyTeam ? 'color: yellow; font-weight: bold;' : ''}">
+      ${t.rank}位：${t.name}（${t.score}）
+    </div>
+  `;
 });
+  
 html2+=`<hr><div>平均：${data.team_avg}</div>`;
 if(!isHost){
 html2+=`<div>あなたのチーム：${data.my_team_score ?? "-"}</div>`;
