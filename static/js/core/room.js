@@ -1,7 +1,14 @@
 // room.js 完全版（親・同名子対応・ID基準統一）
 import { startQuizHost } from "/static/js/quiz/quiz-host.js";
 import { startQuizPlayer } from "/static/js/quiz/quiz-player.js";
-import { startNASAHost } from "/static/js/nasa/nasa-host.js";
+import { startNASAHost } from "../nasa/nasa-host.js"; // 相対パス要確認
+
+console.log("startNASAHost", startNASAHost); // ここで undefined でなければ OK
+
+document.getElementById("nasaBtn").onclick = () => {
+  startNASAHost(socket, document.getElementById("game-container"));
+  console.log("NASA UI 呼び出し完了");
+};
 import { startNASAPlayer } from "/static/js/nasa/nasa-player.js";
 
 const params = new URLSearchParams(location.search);
