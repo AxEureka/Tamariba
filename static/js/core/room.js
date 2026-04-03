@@ -1,4 +1,4 @@
-// 修正版 room.js（ボタン位置調整済 / 再接続対応・巻き添え防止 / id管理修正 / join.html 連携対応）
+// 修正版 room.js（子の入室問題修正版 / 他は変更なし）
 
 import { startQuizHost } from "/static/js/quiz/quiz-host.js";
 import { startQuizPlayer } from "/static/js/quiz/quiz-player.js";
@@ -9,6 +9,7 @@ const params = new URLSearchParams(location.search);
 const roomId = params.get("room");
 let myName = params.get("name") || "";
 let myId = params.get("id") || "";  // join.html からのIDを受け取る
+if (!myId) myId = crypto.randomUUID();  // ★ ID自動生成追加
 let hostName = "";
 let lastMembers = [];
 let joined = false;
@@ -35,14 +36,12 @@ async function loadRoom() {
     document.getElementById("host-area").style.display = "block";
     document.getElementById("gameSelectBtn").style.display = "inline-block";
 
-    // 全体メッセージボタンを遊び選択ボタン横に表示
     const msgBtn = document.getElementById("msgAllBtn");
     if (msgBtn) {
       msgBtn.style.display = "inline-block";
       msgBtn.onclick = sendMessageToAll;
     }
 
-    // メンバー横のコピーで参加ボタンを表示
     const copyBtn = document.getElementById("copyJoinBtn");
     if (copyBtn) copyBtn.style.display = "inline-block";
   }
@@ -55,13 +54,13 @@ async function loadRoom() {
   }
 
   if (myName !== hostName && !joined) {
-    joined = true;
     try {
       await fetch(`${baseURL}/room/${roomId}/join`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: myName, id: myId })  // join.html 連携
+        body: JSON.stringify({ name: myName, id: myId })
       });
+      joined = true;  // ★ joined を fetch 成功後にセット
     } catch (e) {
       console.error("参加処理でエラー", e);
     }
@@ -78,8 +77,11 @@ async function updateMembers() {
 
     const data = await res.json();
 
+    // ★ object Object 対策：文字列に変換
+    const memberNames = data.members.map(m => (typeof m === "string" ? m : m.name));
+
     if (myName !== hostName && joined) {
-      if (!data.members.includes(myName)) {
+      if (!memberNames.includes(myName)) {
         missingCount++;
         if (missingCount >= 2) {
           location.href = "/static/kick.html";
@@ -92,8 +94,8 @@ async function updateMembers() {
 
     document.getElementById("count").textContent = data.count;
 
-    const joinedList = data.members.filter(m => !lastMembers.includes(m));
-    const leftList = lastMembers.filter(m => !data.members.includes(m));
+    const joinedList = memberNames.filter(m => !lastMembers.includes(m));
+    const leftList = lastMembers.filter(m => !memberNames.includes(m));
 
     joinedList.forEach(m => {
       if (m !== myName && m !== hostName) showPopup(`${m}さんが入室しました`);
@@ -102,13 +104,13 @@ async function updateMembers() {
       if (m !== myName) showPopup(`${m}さんが退出しました`);
     });
 
-    lastMembers = [...data.members];
+    lastMembers = [...memberNames];
 
     const list = [];
     list.push(`<strong>${hostName} (親)</strong>`);
 
     if (myName === hostName) {
-      data.members.forEach(m => {
+      memberNames.forEach(m => {
         if (m === hostName) return;
         const msgId = `msgBtn_${m}`;
         const kickId = `kickBtn_${m}`;
@@ -120,7 +122,7 @@ async function updateMembers() {
       });
     } else {
       list.push(`・${myName} (自分)`);
-      data.members.forEach(m => {
+      memberNames.forEach(m => {
         if (m === hostName || m === myName) return;
         list.push(`・${m}`);
       });
@@ -128,8 +130,7 @@ async function updateMembers() {
 
     document.getElementById("members").innerHTML = list.join("<br>");
 
-    // ★ id付きボタンを安全に取得してイベント登録
-    data.members.forEach(m => {
+    memberNames.forEach(m => {
       if (m === hostName || m === myName) return;
 
       const msgBtn = document.getElementById(`msgBtn_${m}`);
@@ -142,6 +143,8 @@ async function updateMembers() {
     console.error("メンバー更新エラー", e);
   }
 }
+
+// ※ 以下は元のコードと完全同一です
 
 // =====================
 // 退室・Kick
