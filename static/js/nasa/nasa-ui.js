@@ -382,7 +382,7 @@ const sortedTeamScores = Object.keys(teamGroups)
 
 const topTeamScores = sortedTeamScores.slice(0,3);
 
-let rank = 1;
+let teamRank = 1;
 
 topTeamScores.forEach((score)=>{
   const teams = teamGroups[score];
@@ -392,13 +392,13 @@ topTeamScores.forEach((score)=>{
 
     html2+=`
       <div style="${isMyTeam ? 'color: yellow; font-weight: bold;' : ''}">
-        ${i===0 ? `${rank}位：` : `　　　`}
+        ${i===0 ? `${teamRank}位：` : `　　　`}
         ${t.name}（${t.score}）
       </div>
     `;
   });
 
-  rank++;
+  teamRank++;
 });
   
 html2+=`<hr><div>平均：${data.team_avg}</div>`;
