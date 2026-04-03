@@ -1,4 +1,4 @@
-// 修正版 room.js（ボタン位置調整済 / 再接続対応・巻き添え防止）
+// 修正版 room.js（ボタン位置調整済 / 再接続対応・巻き添え防止 / id管理修正）
 
 import { startQuizHost } from "/static/js/quiz/quiz-host.js";
 import { startQuizPlayer } from "/static/js/quiz/quiz-player.js";
@@ -109,10 +109,12 @@ async function updateMembers() {
     if (myName === hostName) {
       data.members.forEach(m => {
         if (m === hostName) return;
+        const msgId = `msgBtn_${m}`;
+        const kickId = `kickBtn_${m}`;
         list.push(`
           ・${m}
-          <button class="msgBtn" data-target="${m}">💬</button>
-          <button class="kickBtn" data-target="${m}">退室</button>
+          <button id="${msgId}" class="msgBtn" data-target="${m}">💬</button>
+          <button id="${kickId}" class="kickBtn" data-target="${m}">退室</button>
         `);
       });
     } else {
@@ -125,12 +127,15 @@ async function updateMembers() {
 
     document.getElementById("members").innerHTML = list.join("<br>");
 
-    document.querySelectorAll("#members .msgBtn").forEach(btn => {
-      btn.onclick = () => sendMessageTo(btn.dataset.target);
-    });
-    
-    document.querySelectorAll("#members .kickBtn").forEach(btn => {
-      btn.onclick = () => kickMember(btn.dataset.target);
+    // ★ id付きボタンを安全に取得してイベント登録
+    data.members.forEach(m => {
+      if (m === hostName || m === myName) return;
+
+      const msgBtn = document.getElementById(`msgBtn_${m}`);
+      if (msgBtn) msgBtn.onclick = () => sendMessageTo(m);
+
+      const kickBtn = document.getElementById(`kickBtn_${m}`);
+      if (kickBtn) kickBtn.onclick = () => kickMember(m);
     });
   } catch (e) {
     console.error("メンバー更新エラー", e);
