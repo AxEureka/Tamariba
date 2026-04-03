@@ -1,10 +1,8 @@
-// room.js 完全版（親・同名子対応・ID基準統一・NASA起動修正版）
+// room.js 完全版
 import { startQuizHost } from "/static/js/quiz/quiz-host.js";
 import { startQuizPlayer } from "/static/js/quiz/quiz-player.js";
-import { startNASAHost } from "/static/js/nasa/nasa-host.js"; // 相対パス要確認
+import { startNASAHost } from "/static/js/nasa/nasa-host.js";
 import { startNASAPlayer } from "/static/js/nasa/nasa-player.js";
-
-console.log("startNASAHost", startNASAHost); // undefined でなければ OK
 
 const params = new URLSearchParams(location.search);
 const roomId = params.get("room");
@@ -172,12 +170,10 @@ function selectGame(type) {
   }
 
   if (type === "nasa") {
-    if (!container) { console.error("❌ game-container が見つかりません"); return; }
-    if (typeof startNASAHost !== "function") { console.error("❌ startNASAHost が関数ではありません"); return; }
+    if (!container || typeof startNASAHost !== "function") return;
     currentGame = "nasa"; 
-    const items = ["パラシュート", "箱に入ったマッチ", "宇宙食", "45口径ピストル2丁", "粉ミルク1ケース", "酸素ボンベ2本", "15mのナイロン製ロープ", "ソーラー発電式の携帯用ヒーター", "月面用の星図表", "自動的に膨らむ救命ボート", "方位磁石", "水19L", "注射器の入った救急箱", "太陽電池のFM送受信器", "照明弾"];
+    const items = ["パラシュート","箱に入ったマッチ","宇宙食","45口径ピストル2丁","粉ミルク1ケース","酸素ボンベ2本","15mのナイロン製ロープ","ソーラー発電式の携帯用ヒーター","月面用の星図表","自動的に膨らむ救命ボート","方位磁石","水19L","注射器の入った救急箱","太陽電池のFM送受信器","照明弾"];
     const correct = [8,15,4,11,12,1,6,13,3,9,14,2,7,5,10];
-    console.log("🚀 start_nasa送信", items, correct);
     socket.send(JSON.stringify({ type: "start_nasa", items, correct }));
     container.classList.add("active");
     startNASAHost(socket, container);
@@ -193,10 +189,8 @@ function connectSocket() {
   socket = new WebSocket(`${protocol}://${location.host}/ws/${roomId}`);
 
   socket.onopen = () => { console.log("WebSocket connected"); window.socket = socket; };
-  // =====================
-// WebSocket受信修正版
-// =====================
-socket.onmessage = async (e) => {  // async 追加
+
+  socket.onmessage = async (e) => {
     let msg;
     try { msg = JSON.parse(e.data); } catch { return; }
 
@@ -218,14 +212,8 @@ socket.onmessage = async (e) => {  // async 追加
         document.getElementById("exitQuizBtn").style.display = "inline-block";
 
         if (myId !== hostId) {
-            // プレイヤー側は必ずメンバー更新してからゲーム開始
             try { await updateMembers(); } catch (err) { console.error("メンバー更新失敗", err); }
-
-            if (typeof startNASAPlayer === "function") {
-                startNASAPlayer(socket, container);
-            } else {
-                console.error("❌ startNASAPlayer が読み込まれていません");
-            }
+            if (typeof startNASAPlayer === "function") startNASAPlayer(socket, container);
         }
     }
 
@@ -237,38 +225,10 @@ socket.onmessage = async (e) => {  // async 追加
         if (window.removeProgressUI) window.removeProgressUI();
         currentGame = null;
     }
-};
+  };
 
   socket.onerror = (e) => console.error("WebSocket error", e);
   socket.onclose = () => { setTimeout(connectSocket, 2000); };
-}
-
-// =========================
-// NASAゲーム デバッグ用チェック
-// =========================
-export function debugNASAStart(ws, containerId) {
-  const container = document.getElementById(containerId);
-  console.log("🛠 debugNASAStart container:", container);
-
-  import("/static/js/nasa/nasa-host.js").then(module => {
-    const startNASAHost = module.startNASAHost;
-    console.log("🛠 debugNASAStart startNASAHost type:", typeof startNASAHost);
-
-    if (!container) {
-      console.error("❌ container が取得できません。HTMLに <div id='" + containerId + "'></div> があるか確認してください");
-      return;
-    }
-
-    if (typeof startNASAHost !== "function") {
-      console.error("❌ startNASAHost が関数として読み込めません。パスや export を確認してください");
-      return;
-    }
-
-    console.log("✅ container と startNASAHost は OK。ゲームを起動します…");
-    startNASAHost(ws, container);
-  }).catch(err => {
-    console.error("❌ モジュール読み込みエラー:", err);
-  });
 }
 
 // =====================
@@ -323,7 +283,8 @@ window.kickMember = kickMember;
 window.startNASAHost = startNASAHost;
 
 // =====================
-// NASA強制起動用（コンソールから呼べる）
+// NASA強制起動用
+// =====================
 window.forceStartNASA = function() {
   if (!window.socket) { console.error("❌ WebSocket が存在しません"); return; }
   const container = document.getElementById("game-container");
@@ -332,10 +293,7 @@ window.forceStartNASA = function() {
   const items = ["パラシュート","箱に入ったマッチ","宇宙食","45口径ピストル2丁","粉ミルク1ケース","酸素ボンベ2本","15mのナイロン製ロープ","ソーラー発電式の携帯用ヒーター","月面用の星図表","自動的に膨らむ救命ボート","方位磁石","水19L","注射器の入った救急箱","太陽電池のFM送受信器","照明弾"];
   const correct = [8,15,4,11,12,1,6,13,3,9,14,2,7,5,10];
 
-  // 他プレイヤーにも通知
   window.socket.send(JSON.stringify({ type:"start_nasa", items, correct }));
-
-  // 親画面でゲーム開始
   window.startNASAHost(window.socket, container);
   console.log("🚀 NASAゲームを強制起動しました！");
 };
