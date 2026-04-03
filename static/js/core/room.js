@@ -1,5 +1,4 @@
-// 修正版 room.js（ID管理統一版 / 他は変更なし）
-
+// room.js 完全版（子の入室・WebSocket・ゲーム対応修正版）
 import { startQuizHost } from "/static/js/quiz/quiz-host.js";
 import { startQuizPlayer } from "/static/js/quiz/quiz-player.js";
 import { startNASAHost } from "/static/js/nasa/nasa-host.js";
@@ -8,14 +7,17 @@ import { startNASAPlayer } from "/static/js/nasa/nasa-player.js";
 const params = new URLSearchParams(location.search);
 const roomId = params.get("room");
 let myName = params.get("name") || "";
-let myId = params.get("id") || "";  // join.html からのIDを受け取る
-if (!myId) myId = crypto.randomUUID();  // ★ ID自動生成追加
+let myId = params.get("id") || "";
+if (!myId) myId = crypto.randomUUID(); // ID自動生成
+
 let hostName = "";
 let lastMembers = [];
 let joined = false;
 let missingCount = 0;
-
 const baseURL = location.origin;
+
+let socket;
+let currentGame = null;
 
 // =====================
 // 参加処理
@@ -46,7 +48,7 @@ async function loadRoom() {
     if (copyBtn) copyBtn.style.display = "inline-block";
   }
 
-  const joinURL = window.location.origin + "/static/join.html?room=" + roomId;
+  const joinURL = `${window.location.origin}/static/join.html?room=${roomId}`;
   document.getElementById("join-url").value = joinURL;
 
   if (typeof QRCode !== "undefined") {
@@ -60,7 +62,7 @@ async function loadRoom() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: myName, id: myId })
       });
-      joined = true;  // ★ joined を fetch 成功後にセット
+      joined = true; // ★ joined 成功後セット
     } catch (e) {
       console.error("参加処理でエラー", e);
     }
@@ -74,19 +76,12 @@ async function updateMembers() {
   try {
     const res = await fetch(`${baseURL}/room/${roomId}/members`);
     if (!res.ok) return;
-
     const data = await res.json();
 
-    // ★ ID管理対応：{id, name} の配列
-    const members = data.members.map(m => ({
-      id: m.id || m.name,
-      name: m.name || m
-    }));
+    const memberNames = data.members.map(m => (typeof m === "string" ? m : m.name));
 
-    // 子画面の missing 判定も ID で
     if (myName !== hostName && joined) {
-      const found = members.some(m => m.id === myId);
-      if (!found) {
+      if (!memberNames.includes(myName)) {
         missingCount++;
         if (missingCount >= 2) {
           location.href = "/static/kick.html";
@@ -99,53 +94,46 @@ async function updateMembers() {
 
     document.getElementById("count").textContent = data.count;
 
-    // 参加/退出判定をIDベース
-    const joinedList = members.filter(m => !lastMembers.some(lm => lm.id === m.id));
-    const leftList = lastMembers.filter(lm => !members.some(m => m.id === lm.id));
+    const joinedList = memberNames.filter(m => !lastMembers.includes(m));
+    const leftList = lastMembers.filter(m => !memberNames.includes(m));
 
-    joinedList.forEach(m => {
-      if (m.id !== myId && m.name !== hostName) showPopup(`${m.name}さんが入室しました`);
-    });
-    leftList.forEach(m => {
-      if (lm.id !== myId) showPopup(`${lm.name}さんが退出しました`);
-    });
+    joinedList.forEach(m => { if (m !== myName && m !== hostName) showPopup(`${m}さんが入室しました`); });
+    leftList.forEach(m => { if (m !== myName) showPopup(`${m}さんが退出しました`); });
 
-    lastMembers = [...members];
+    lastMembers = [...memberNames];
 
     const list = [];
     list.push(`<strong>${hostName} (親)</strong>`);
 
     if (myName === hostName) {
-      members.forEach(m => {
-        if (m.id === myId) return;
-        const msgId = `msgBtn_${m.id}`;
-        const kickId = `kickBtn_${m.id}`;
+      memberNames.forEach(m => {
+        if (m === hostName) return;
+        const msgId = `msgBtn_${m}`;
+        const kickId = `kickBtn_${m}`;
         list.push(`
-          ・${m.name}
-          <button id="${msgId}" class="msgBtn" data-target="${m.id}">💬</button>
-          <button id="${kickId}" class="kickBtn" data-target="${m.id}">退室</button>
+          ・${m}
+          <button id="${msgId}" class="msgBtn" data-target="${m}">💬</button>
+          <button id="${kickId}" class="kickBtn" data-target="${m}">退室</button>
         `);
       });
     } else {
       list.push(`・${myName} (自分)`);
-      members.forEach(m => {
-        if (m.id === myId || m.name === hostName) return;
-        list.push(`・${m.name}`);
+      memberNames.forEach(m => {
+        if (m === hostName || m === myName) return;
+        list.push(`・${m}`);
       });
     }
 
     document.getElementById("members").innerHTML = list.join("<br>");
 
-    // ボタン操作もIDベース
-    members.forEach(m => {
-      if (m.id === myId || m.name === hostName) return;
-
-      const msgBtn = document.getElementById(`msgBtn_${m.id}`);
-      if (msgBtn) msgBtn.onclick = () => sendMessageTo(m.id);
-
-      const kickBtn = document.getElementById(`kickBtn_${m.id}`);
-      if (kickBtn) kickBtn.onclick = () => kickMember(m.id);
+    memberNames.forEach(m => {
+      if (m === hostName || m === myName) return;
+      const msgBtn = document.getElementById(`msgBtn_${m}`);
+      if (msgBtn) msgBtn.onclick = () => sendMessageTo(m);
+      const kickBtn = document.getElementById(`kickBtn_${m}`);
+      if (kickBtn) kickBtn.onclick = () => kickMember(m);
     });
+
   } catch (e) {
     console.error("メンバー更新エラー", e);
   }
@@ -154,81 +142,77 @@ async function updateMembers() {
 // =====================
 // 退室・Kick
 // =====================
-async function kickMember(id) {
-  const target = lastMembers.find(m => m.id === id);
-  if (!target) return;
-  if (!confirm(`${target.name}さんを退室させますか？`)) return;
-
+async function kickMember(name) {
+  if (!confirm(`${name}さんを退室させますか？`)) return;
   await fetch(`${baseURL}/room/${roomId}/kick`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id })
+    body: JSON.stringify({ name })
   });
 }
 
 async function exitRoom() {
   if (!confirm("退室しますか？")) return;
-
   if (myName !== hostName) {
     await fetch(`${baseURL}/room/${roomId}/kick`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: myId })
+      body: JSON.stringify({ name: myName })
     });
   } else {
     const res = await fetch(`${baseURL}/room/${roomId}/members`);
     if (res.ok) {
       const data = await res.json();
-      const members = data.members.map(m => ({id: m.id || m.name, name: m.name || m}));
-      for (const m of members) {
-        if (m.id !== myId) {
+      for (const m of data.members) {
+        if (m !== hostName) {
           await fetch(`${baseURL}/room/${roomId}/kick`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: m.id })
+            body: JSON.stringify({ name: m })
           });
         }
       }
     }
   }
-
   location.href = "/static/kick.html";
 }
 
 // =====================
-// メッセージ送信
+// ユーティリティ
 // =====================
+function toggleMembers() {
+  const box = document.getElementById("members");
+  box.style.display = box.style.display === "none" ? "block" : "none";
+}
+
+function showPopup(text) {
+  const popup = document.getElementById("popup");
+  popup.textContent = text;
+  popup.style.display = "block";
+  setTimeout(() => popup.style.display = "none", 3000);
+}
+
+function copyURL() {
+  const input = document.getElementById("join-url");
+  navigator.clipboard.writeText(input.value);
+  showPopup("参加URLをコピーしました");
+}
+
 function sendMessageToAll() {
   const text = prompt("全員に送るメッセージ");
   if (!text) return;
-
   if (socket && socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({
-      type: "host_message",
-      text: text
-    }));
+    socket.send(JSON.stringify({ type: "host_message", text }));
   }
 }
 
-function sendMessageTo(id) {
-  const target = lastMembers.find(m => m.id === id);
-  if (!target) return;
-
-  const text = prompt(`${target.name}さんに送るメッセージ`);
+function sendMessageTo(name) {
+  const text = prompt(`${name}さんに送るメッセージ`);
   if (!text) return;
-
   if (socket && socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({
-      type: "host_message",
-      text: text,
-      targetId: id
-    }));
+    socket.send(JSON.stringify({ type: "host_message", text, target: name }));
   }
 }
-
-// =====================
-// 以下、ゲーム選択・WebSocketは既存コードそのまま
-// =====================
 
 /* ===== 遊び選択 ===== */
 function selectGame(type) {
@@ -236,7 +220,6 @@ function selectGame(type) {
     console.warn("WebSocket未接続");
     return;
   }
-
   const gameDropdown = document.getElementById("gameDropdown");
   if (gameDropdown) gameDropdown.style.display = "none";
 
@@ -262,9 +245,6 @@ function selectGame(type) {
     }
   }
 }
-
-let socket;
-let currentGame = null;
 
 // =====================
 // WebSocket 接続（再接続対応）
@@ -312,37 +292,31 @@ function connectSocket() {
   };
 
   socket.onerror = (e) => console.error("WebSocket error", e);
-
   socket.onclose = () => {
     console.log("WebSocket closed, attempting reconnect in 2s...");
     setTimeout(connectSocket, 2000);
   };
 }
 
-/* クリック検知 */
+// =====================
+// クリック検知・ゲーム選択UI
+// =====================
 document.addEventListener("click", (e) => {
   const gameDropdown = document.getElementById("gameDropdown");
   const nasaBtn = document.getElementById("nasaBtn");
   const quizBtn = document.getElementById("quizBtn");
 
-  if (nasaBtn && nasaBtn.contains(e.target)) {
-    e.stopPropagation();
-    selectGame("nasa");
-    return;
-  }
-
-  if (quizBtn && quizBtn.contains(e.target)) {
-    e.stopPropagation();
-    selectGame("quiz");
-    return;
-  }
+  if (nasaBtn && nasaBtn.contains(e.target)) { e.stopPropagation(); selectGame("nasa"); return; }
+  if (quizBtn && quizBtn.contains(e.target)) { e.stopPropagation(); selectGame("quiz"); return; }
 
   if (gameDropdown && !gameDropdown.contains(e.target) && !e.target.closest("#gameSelectBtn")) {
     gameDropdown.style.display = "none";
   }
 });
 
-/* 初期起動 */
+// =====================
+// 初期起動
+// =====================
 window.addEventListener("DOMContentLoaded", () => {
   const gameBtn = document.getElementById("gameSelectBtn");
   const gameDropdown = document.getElementById("gameDropdown");
@@ -360,7 +334,6 @@ window.addEventListener("DOMContentLoaded", () => {
       if (currentGame && socket && socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({ type: `end_${currentGame}` }));
       }
-
       const container = document.getElementById("game-container");
       container.classList.remove("active");
       container.innerHTML = "";
@@ -371,13 +344,15 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   connectSocket();
-
   loadRoom().then(() => {
     updateMembers();
     setInterval(updateMembers, 2000);
   });
 });
 
+// =====================
+// グローバル登録
+// =====================
 window.copyURL = copyURL;
 window.selectGame = selectGame;
 window.toggleMembers = toggleMembers;
