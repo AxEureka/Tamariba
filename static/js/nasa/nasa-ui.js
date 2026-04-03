@@ -324,7 +324,7 @@ personal.className="ranking-box";
 
 let html1=`<h2>🏆 個人ランキング</h2>`;
 
-// ★スコアごとにグループ化
+// ★スコアでグループ化
 const groups = {};
 data.personal_top.forEach(p=>{
   if(!groups[p.score]) groups[p.score] = [];
@@ -336,11 +336,13 @@ const sortedScores = Object.keys(groups)
   .map(Number)
   .sort((a,b)=>b-a);
 
-// ★上位3スコア
+// ★上位3つの「順位」
 const topScores = sortedScores.slice(0,3);
 
-// ★表示
-topScores.forEach((score,rankIndex)=>{
+// ★順位カウンタ
+let rank = 1;
+
+topScores.forEach((score)=>{
   const players = groups[score];
 
   players.forEach((p,i)=>{
@@ -348,12 +350,15 @@ topScores.forEach((score,rankIndex)=>{
 
     html1+=`
       <div style="${isMe ? 'color: yellow; font-weight: bold;' : ''}">
-        ${i===0 ? `${rankIndex+1}位：` : `　　　`}
+        ${i===0 ? `${rank}位：` : `　　　`}
         ${p.name}（${p.score}）
       </div>
     `;
   });
+
+  rank++; // ★ここが重要
 });
+  
 html1+=`<hr><div>平均：${data.personal_avg}</div>`;
 if(!isHost){
 html1+=`<div>あなた：${data.my_personal ?? "-"}</div>`;
@@ -365,23 +370,21 @@ team.className="ranking-box";
 
 let html2=`<h2>👥 チームランキング</h2>`;
 
-// ★スコアごとにグループ化
 const teamGroups = {};
 data.team_top.forEach(t=>{
   if(!teamGroups[t.score]) teamGroups[t.score] = [];
   teamGroups[t.score].push(t);
 });
 
-// ★スコア降順
 const sortedTeamScores = Object.keys(teamGroups)
   .map(Number)
   .sort((a,b)=>b-a);
 
-// ★上位3スコア
 const topTeamScores = sortedTeamScores.slice(0,3);
 
-// ★表示
-topTeamScores.forEach((score,rankIndex)=>{
+let rank = 1;
+
+topTeamScores.forEach((score)=>{
   const teams = teamGroups[score];
 
   teams.forEach((t,i)=>{
@@ -389,12 +392,15 @@ topTeamScores.forEach((score,rankIndex)=>{
 
     html2+=`
       <div style="${isMyTeam ? 'color: yellow; font-weight: bold;' : ''}">
-        ${i===0 ? `${rankIndex+1}位：` : `　　　`}
+        ${i===0 ? `${rank}位：` : `　　　`}
         ${t.name}（${t.score}）
       </div>
     `;
   });
+
+  rank++;
 });
+  
 html2+=`<hr><div>平均：${data.team_avg}</div>`;
 if(!isHost){
 html2+=`<div>あなたのチーム：${data.my_team_score ?? "-"}</div>`;
