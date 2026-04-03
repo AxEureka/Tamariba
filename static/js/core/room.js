@@ -1,4 +1,4 @@
-// 修正版 room.js（ボタン位置調整済 / 再接続対応・巻き添え防止 / id管理修正）
+// 修正版 room.js（ボタン位置調整済 / 再接続対応・巻き添え防止 / id管理修正 / join.html 連携対応）
 
 import { startQuizHost } from "/static/js/quiz/quiz-host.js";
 import { startQuizPlayer } from "/static/js/quiz/quiz-player.js";
@@ -8,6 +8,7 @@ import { startNASAPlayer } from "/static/js/nasa/nasa-player.js";
 const params = new URLSearchParams(location.search);
 const roomId = params.get("room");
 let myName = params.get("name") || "";
+let myId = params.get("id") || "";  // join.html からのIDを受け取る
 let hostName = "";
 let lastMembers = [];
 let joined = false;
@@ -19,7 +20,7 @@ const baseURL = location.origin;
 // 参加処理
 // =====================
 async function loadRoom() {
-  const res = await fetch(`${baseURL}/room/${roomId}?name=${encodeURIComponent(myName)}`);
+  const res = await fetch(`${baseURL}/room/${roomId}?name=${encodeURIComponent(myName)}&id=${encodeURIComponent(myId)}`);
   if (!res.ok) return;
 
   const data = await res.json();
@@ -59,7 +60,7 @@ async function loadRoom() {
       await fetch(`${baseURL}/room/${roomId}/join`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: myName })
+        body: JSON.stringify({ name: myName, id: myId })  // join.html 連携
       });
     } catch (e) {
       console.error("参加処理でエラー", e);
