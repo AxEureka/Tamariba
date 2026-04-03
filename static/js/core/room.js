@@ -162,7 +162,7 @@ async function kickMember(id) {
   });
 }
 
-/ =====================
+// =====================
 // 退室・Kick
 // =====================
 async function exitRoom() {
