@@ -253,7 +253,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // =====================
 window.copyURL = copyURL;
 window.selectGame = selectGame;
-window.startNASAHost = startNASAHost;
 window.toggleMembers = toggleMembers;
 window.exitRoom = exitRoom;
 window.kickMember = kickMember;
+window.startNASAHost = startNASAHost;
