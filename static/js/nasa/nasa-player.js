@@ -2,16 +2,19 @@ console.log("nasa-player loaded");
 
 let ws;
 let container;
+let myId;
 let myName;
-let myTeam;
+let myTeamId;
+let myTeamName;
 let myLeader = false;
 let lastItems = null;
 let lastCorrect = null;
 
-export function startNASAPlayer(socket, uiContainer, playerName){
+export function startNASAPlayer(socket, uiContainer, playerInfo){
     ws = socket;
     container = uiContainer;
-    myName = playerName;
+    myId = playerInfo.id;
+    myName = playerInfo.name;
 
     function send(msg){
         ws.send(JSON.stringify(msg));
@@ -21,19 +24,20 @@ export function startNASAPlayer(socket, uiContainer, playerName){
         const data = JSON.parse(evt.data);
         switch(data.type){
             case "request_name":
-                send({type:"player_name", name:myName});
+                send({type:"player_info", id:myId, name:myName});
                 break;
             case "team_setup":
-                showTeamSelection(data.teams, data.leader, (team)=>{
-                    myTeam = team;
-                    myLeader = data.leader.includes(team);
-                    send({type:"team_selected", team:team});
+                showTeamSelection(data.teams, data.leaderIds, (team)=>{
+                    myTeamId = team.id;
+                    myTeamName = team.name;
+                    myLeader = data.leaderIds.includes(team.id);
+                    send({type:"team_selected", id:myId, teamId:team.id});
                 });
                 break;
             case "start_question":
                 lastItems = data.items;
                 showAnswerPhase(data.items, myLeader, (ranks)=>{
-                    send({type:"submit_ranks", ranks:ranks});
+                    send({type:"submit_ranks", id:myId, ranks:ranks});
                 });
                 break;
             case "show_correct":
@@ -49,7 +53,7 @@ export function startNASAPlayer(socket, uiContainer, playerName){
 }
 
 // チーム選択UI
-function showTeamSelection(teams, leaders, callback){
+function showTeamSelection(teams, leaderIds, callback){
     container.innerHTML="";
     const box=document.createElement("div");
     box.className="nasa-ui";
@@ -58,7 +62,7 @@ function showTeamSelection(teams, leaders, callback){
     box.appendChild(h);
     teams.forEach(team=>{
         const btn=document.createElement("button");
-        btn.textContent = `${team} ${leaders.includes(team) ? "(リーダー候補)" : ""}`;
+        btn.textContent = `${team.name} ${leaderIds.includes(team.id) ? "(リーダー候補)" : ""}`;
         btn.onclick=()=>{ callback(team); };
         box.appendChild(btn);
     });
@@ -69,6 +73,7 @@ function showTeamSelection(teams, leaders, callback){
 function showAnswerPhase(items, isLeader, callback){
     window.showCorrectAgain = null;
     import("./nasa-ui.js").then(ui=>{
+        // itemsは {id, name} 形式にして渡す
         ui.createRankingUI(container, items, callback, "回答してください", false, isLeader);
     });
 }
