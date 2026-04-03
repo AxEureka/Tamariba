@@ -217,8 +217,8 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             items = data.get("items")
             correct = data.get("correct")
             if not items or not correct:
-                items = ["パラシュート", "箱に入ったマッチ", "宇宙食", ...]  # nasa-uiのデフォルト
-                correct = [8, 15, 4, 11, 12, 1, 6, 13, 3, 9, 14, 2, 7, 5, 10]
+                items: ["パラシュート", "箱に入ったマッチ", "宇宙食", "45口径ピストル2丁", "粉ミルク1ケース", "酸素ボンベ2本", "15mのナイロン製ロープ", "ソーラー発電式の携帯用ヒーター", "月面用の星図表", "自動的に膨らむ救命ボート", "方位磁石", "水19L", "注射器の入った救急箱", "太陽電池のFM送受信器", "照明弾"],
+                correct: [8, 15, 4, 11, 12, 1, 6, 13, 3, 9, 14, 2, 7, 5, 10]
             room["nasa"] = {"items": items, "correct": correct}
             room["nasa_answers"] = {}
             room["team_answers"] = {}
