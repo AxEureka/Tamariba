@@ -23,6 +23,12 @@ async def root():
 # =========================
 rooms = {}
 
+def get_name(room, user_id):
+    for m in room["members"]:
+        if m["id"] == user_id:
+            return m["name"]
+    return "Unknown"
+
 
 # =========================
 # ルーム作成
@@ -30,15 +36,17 @@ rooms = {}
 @app.post("/create_room")
 async def create_room(data: dict):
     room_id = str(uuid.uuid4())[:8]
-    host = data.get("host_name")
+    host_name = data.get("host_name")
     room_name = data.get("room_name")
     theme = data.get("theme", "mansion")
 
+    host_id = str(uuid.uuid4())[:8]
+
     rooms[room_id] = {
         "room": room_name,
-        "host": host,
+        "host": host_name,
         "theme": theme,
-        "members": [host],
+        "members": [{"id": host_id, "name": host_name}],
         "sockets": [],
         "answers": {},
         "nasa_answers": {},
@@ -68,10 +76,16 @@ async def get_room(room_id: str):
 async def join_room(room_id: str, data: dict):
     if room_id not in rooms:
         return {"ok": False}
+
     name = data.get("name")
-    if name and name not in rooms[room_id]["members"]:
-        rooms[room_id]["members"].append(name)
-    return {"ok": True}
+    user_id = str(uuid.uuid4())[:8]
+
+    rooms[room_id]["members"].append({
+        "id": user_id,
+        "name": name
+    })
+
+    return {"ok": True, "id": user_id}
 
 
 @app.get("/room/{room_id}/members")
@@ -87,8 +101,10 @@ async def kick_member(room_id: str, data: dict):
     if room_id not in rooms:
         return {"ok": False}
     name = data.get("name")
-    if name in rooms[room_id]["members"]:
-        rooms[room_id]["members"].remove(name)
+
+    # nameで削除（フロント互換のため）
+    rooms[room_id]["members"] = [m for m in rooms[room_id]["members"] if m["name"] != name]
+
     return {"ok": True}
 
 
@@ -124,10 +140,22 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             data = await websocket.receive_json()
             msg_type = data.get("type")
             print("WS受信:", data)
+
+            # nameもidも受ける（互換）
+            user_id = data.get("id")
+            name = data.get("name")
+
+            # nameしか来ない場合はidに変換
+            if not user_id and name:
+                for m in room["members"]:
+                    if m["name"] == name:
+                        user_id = m["id"]
+                        break
+
             print("現在のソケット数:", len(room["sockets"]))
 
             # =========================
-            # 親からのメッセージ（全体 or 個別）
+            # 親メッセージ
             # =========================
             if msg_type == "host_message":
                 text = data.get("text", "")
@@ -158,14 +186,15 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 })
 
             elif msg_type == "quiz_answer":
-                name = data.get("name")
                 choice = data.get("choice")
-                if name is not None:
-                    room["answers"][name] = choice
+                if user_id:
+                    room["answers"][user_id] = choice
+
                 votes = [0, 0, 0, 0]
                 for v in room["answers"].values():
                     if v is not None and 0 <= v < 4:
                         votes[v] += 1
+
                 await broadcast(room, {"type": "quiz_votes", "votes": votes})
 
             elif msg_type == "quiz_show_graph":
@@ -197,15 +226,17 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 await broadcast(room, {"type": "team_phase_start", "teams": room["teams"]})
 
             elif msg_type == "select_team":
-                name = data.get("name")
                 team = data.get("team")
-                if team in room["teams"]:
+
+                if team in room["teams"] and user_id:
                     for t in room["teams"]:
-                        if name in room["teams"][t]:
-                            room["teams"][t].remove(name)
-                    room["teams"][team].append(name)
+                        if user_id in room["teams"][t]:
+                            room["teams"][t].remove(user_id)
+                    room["teams"][team].append(user_id)
+
                 selected = sum(len(members) for members in room["teams"].values())
                 total = len(room["members"])
+
                 await broadcast(room, {"type": "team_update", "teams": room["teams"], "selected": selected, "total": total})
 
             elif msg_type == "start_leader_phase":
@@ -227,13 +258,13 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 })
 
             elif msg_type == "nasa_personal":
-                name = data.get("name")
                 ranks = data.get("ranks")
                 if not ranks or any(r is None for r in ranks):
-                    print("不正データ検出（personal）:", ranks)
                     continue
-                if name:
-                    room["nasa_answers"][name] = {"personal": ranks}
+
+                if user_id:
+                    room["nasa_answers"][user_id] = {"personal": ranks}
+
                 await broadcast(room, {
                     "type": "nasa_personal_progress",
                     "done": len([a for a in room["nasa_answers"].values() if "personal" in a]),
@@ -241,39 +272,34 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 })
 
             elif msg_type == "nasa_team":
-                name = data.get("name")
                 team = data.get("team")
                 ranks = data.get("ranks")
-                # ★追加
+
                 if not ranks or any(r is None for r in ranks):
-                    print("不正データ検出（team）:", ranks)
                     continue
+
                 if team:
                     room["team_answers"][team] = ranks
                     for member in room["teams"].get(team, []):
                         if member not in room["nasa_answers"]:
                             room["nasa_answers"][member] = {}
                         room["nasa_answers"][member]["team_name"] = team
+
                 await broadcast(room, {
                     "type": "nasa_team_progress",
                     "done": len(room["team_answers"]),
                     "total": len(room["teams"])
                 })
-                
-                # ★これ追加
-                await broadcast(room, {
-                    "type": "team_answer_done",
-                    "team": team
-                })
-             
+
+                await broadcast(room, {"type": "team_answer_done", "team": team})
+
             elif msg_type == "nasa_get_ranking":
                 correct = room["nasa"].get("correct", [])
-                my_name = data.get("name")
+                my_id = user_id
 
                 def calc(arr):
                     if not arr or not correct:
                         return 0
-                
                     score = 0
                     for i in range(min(len(arr), len(correct))):
                         try:
@@ -283,23 +309,27 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                         except:
                             continue
                     return score
+
                 personal_scores = []
                 team_scores = {}
+
                 for t, ranks in room["team_answers"].items():
                     team_scores[t] = [calc(ranks)]
 
                 my_personal = None
                 my_team = None
-                for name, a in room["nasa_answers"].items():
+
+                for uid, a in room["nasa_answers"].items():
                     if "personal" in a:
                         s = calc(a["personal"])
-                        personal_scores.append((name, s))
-                        if name == my_name:
+                        personal_scores.append((get_name(room, uid), s))
+                        if uid == my_id:
                             my_personal = s
-                    if name == my_name:
+                    if uid == my_id:
                         my_team = a.get("team_name")
 
                 personal_scores.sort(key=lambda x: x[1])
+
                 personal_avg = sum(s for _, s in personal_scores) / len(personal_scores) if personal_scores else 0
                 team_avg_dict = {t: sum(v) / len(v) for t, v in team_scores.items()}
                 team_top = sorted(team_avg_dict.items(), key=lambda x: x[1])
