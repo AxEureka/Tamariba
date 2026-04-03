@@ -244,28 +244,37 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 name = data.get("name")
                 team = data.get("team")
                 ranks = data.get("ranks")
-                # ★追加
                 if not ranks or any(r is None for r in ranks):
                     print("不正データ検出（team）:", ranks)
                     continue
                 if team:
+                    # チーム回答を保存
                     room["team_answers"][team] = ranks
+            
+                    # チームメンバー全員に team_name を付与
                     for member in room["teams"].get(team, []):
                         if member not in room["nasa_answers"]:
                             room["nasa_answers"][member] = {}
                         room["nasa_answers"][member]["team_name"] = team
+                        # 非リーダーには空の personal を作ることで送信完了扱いに
+                        if "personal" not in room["nasa_answers"][member]:
+                            room["nasa_answers"][member]["personal"] = None
+            
+                # 全体進捗計算（非リーダーもカウント）
+                done_count = sum(1 for m in room["nasa_answers"] if "team_name" in room["nasa_answers"][m])
+                total_teams = len(room["teams"])
+            
                 await broadcast(room, {
                     "type": "nasa_team_progress",
-                    "done": len(room["team_answers"]),
-                    "total": len(room["teams"])
+                    "done": done_count,
+                    "total": len(room["members"])  # ここを全員に変更
                 })
-                
+            
                 # ★これ追加
                 await broadcast(room, {
                     "type": "team_answer_done",
                     "team": team
-                })
-             
+                })             
             elif msg_type == "nasa_get_ranking":
                 correct = room["nasa"].get("correct", [])
                 my_name = data.get("name")
