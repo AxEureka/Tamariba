@@ -84,7 +84,6 @@ export function createItemEditor(container,onSubmit){
             inputs[0].value = DEFAULT_SET.items[i];
             inputs[1].value = DEFAULT_SET.correct[i];
         });
-        // ★変更反映
         setTimeout(() => {
             const event = new Event("change");
             itemArea.querySelectorAll("select").forEach(s => s.dispatchEvent(event));
@@ -110,7 +109,7 @@ export function createItemEditor(container,onSubmit){
 }
 
 // =========================
-// 回答UI
+// 回答UI（ID対応）
 // =========================
 export function createRankingUI(container, items, onSubmit, title, isTeam=false, isLeader=true){
     container.innerHTML="";
@@ -127,7 +126,7 @@ export function createRankingUI(container, items, onSubmit, title, isTeam=false,
         const row=document.createElement("div");
         row.className="rank-row";
         const label=document.createElement("span");
-        label.textContent=item;
+        label.textContent=`[ID:${item.id}] ${item.name}`;
         const select=document.createElement("select");
         if(!isLeader){ select.disabled=true; }
         const first=document.createElement("option");
@@ -159,7 +158,7 @@ export function createRankingUI(container, items, onSubmit, title, isTeam=false,
     }
 
     selects.forEach(s => s.addEventListener("change", checkDuplicate));
-    checkDuplicate(); // 初期チェック
+    checkDuplicate();
 
     btn.onclick=()=>{
         if(!isLeader){ alert("リーダーのみ操作できます"); return; }
@@ -171,7 +170,7 @@ export function createRankingUI(container, items, onSubmit, title, isTeam=false,
 }
 
 // =========================
-// 正解表示
+// 正解表示（ID表示）
 // =========================
 export function showCorrect(container,items,correct,onRanking){
     document.querySelectorAll(".ranking-wrap").forEach(el => el.remove());
@@ -187,7 +186,7 @@ export function showCorrect(container,items,correct,onRanking){
     items.forEach((item,i)=>{
         const div=document.createElement("div");
         div.className="result-item";
-        div.textContent=`${item} ： ${correct[i]}`;
+        div.textContent=`[ID:${item.id}] ${item.name} ： ${correct[i]}`;
         resultBox.appendChild(div);
     });
     box.appendChild(resultBox);
@@ -200,7 +199,7 @@ export function showCorrect(container,items,correct,onRanking){
 }
 
 // =========================
-// ランキング表示
+// ランキング表示（ID対応）
 // =========================
 export function showRanking(container,data,isHost){
     document.querySelectorAll(".ranking-wrap").forEach(el => el.remove());
@@ -220,8 +219,8 @@ export function showRanking(container,data,isHost){
     personal.className="ranking-box";
     let html1="<h2>🏆 個人ランキング</h2>";
     data.personal_top.forEach((p,i)=>{
-        const isMe = (!isHost && p.name === window.myName);
-        html1+= `<div style="${isMe ? 'color: yellow; font-weight: bold;' : ''}"> ${i+1}位：${p.name}（${p.score}） </div>`;
+        const isMe = (!isHost && p.id === window.myId);
+        html1+= `<div style="${isMe ? 'color: yellow; font-weight: bold;' : ''}"> ${i+1}位：[ID:${p.id}] ${p.name}（${p.score}） </div>`;
     });
     html1+=`<hr><div>平均：${data.personal_avg}</div>`;
     if(!isHost){ html1+=`<div>あなた：${data.my_personal ?? "-"}</div>`; }
@@ -231,7 +230,7 @@ export function showRanking(container,data,isHost){
     team.className="ranking-box";
     let html2="<h2>👥 チームランキング</h2>";
     data.team_top.forEach((t,i)=>{
-        const isMyTeam = (!isHost && t.name === data.my_team_name);
+        const isMyTeam = (!isHost && t.id === data.my_team_id);
         html2+= `<div style="${isMyTeam ? 'color: yellow; font-weight: bold;' : ''}"> ${i+1}位：${t.name}（${t.score}） </div>`;
     });
     html2+=`<hr><div>平均：${data.team_avg}</div>`;
