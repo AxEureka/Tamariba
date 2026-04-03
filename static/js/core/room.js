@@ -1,4 +1,4 @@
-// room.js 修正版（親・同名子対応）
+// room.js 完全版（親・同名子対応・ID基準統一）
 import { startQuizHost } from "/static/js/quiz/quiz-host.js";
 import { startQuizPlayer } from "/static/js/quiz/quiz-player.js";
 import { startNASAHost } from "/static/js/nasa/nasa-host.js";
@@ -11,30 +11,24 @@ let myId = params.get("id") || "";
 if (!myId) myId = crypto.randomUUID();
 
 let hostName = "";
+let hostId = ""; // 親ID
 let lastMembers = [];
 let joined = false;
 let missingCount = 0;
 const baseURL = location.origin;
-
 let socket;
 let currentGame = null;
 
-
 // =====================
-// 参加処理
+// ルームロード
 // =====================
-// =====================
-// 初期化用ホストID追加
-// =====================
-let hostId = "";  // ① hostId追加
-
 async function loadRoom() {
   const res = await fetch(`${baseURL}/room/${roomId}?name=${encodeURIComponent(myName)}&id=${encodeURIComponent(myId)}`);
   if (!res.ok) return;
 
   const data = await res.json();
   hostName = data.host;
-  hostId = data.hostId || hostName;  // ① hostId をサーバから取得、無ければ名前をID代わりに
+  hostId = data.hostId || hostName;  // 親ID取得
   if (!myName) myName = hostName;
 
   document.body.style.backgroundImage = `url('/static/themes/${data.theme}.jpg')`;
@@ -44,13 +38,8 @@ async function loadRoom() {
   if (myName === hostName) {
     document.getElementById("host-area").style.display = "block";
     document.getElementById("gameSelectBtn").style.display = "inline-block";
-
     const msgBtn = document.getElementById("msgAllBtn");
-    if (msgBtn) {
-      msgBtn.style.display = "inline-block";
-      msgBtn.onclick = sendMessageToAll;
-    }
-
+    if (msgBtn) { msgBtn.style.display = "inline-block"; msgBtn.onclick = sendMessageToAll; }
     const copyBtn = document.getElementById("copyJoinBtn");
     if (copyBtn) copyBtn.style.display = "inline-block";
   }
@@ -68,14 +57,12 @@ async function loadRoom() {
         body: JSON.stringify({ name: myName, id: myId })
       });
       joined = true;
-    } catch (e) {
-      console.error("参加処理でエラー", e);
-    }
+    } catch (e) { console.error("参加処理でエラー", e); }
   }
 }
 
 // =====================
-// updateMembers 修正版
+// メンバー更新
 // =====================
 async function updateMembers() {
   try {
@@ -83,30 +70,22 @@ async function updateMembers() {
     if (!res.ok) return;
     const data = await res.json();
 
-    // memberObj = {name, id} に統一
-    const memberObj = data.members.map(m => (typeof m === "string" ? {name:m, id:m} : m));
+    const memberObj = data.members.map(m => ({id: m.id, name: m.name}));
 
     // 自分が missing しているかチェック（親は除外）
     if (myId !== hostId && joined) {
       const found = memberObj.some(m => m.id === myId);
-      if (!found) {
-        missingCount++;
-        if (missingCount >= 2) {
-          location.href = "/static/kick.html";
-          return;
-        }
-      } else missingCount = 0;
+      if (!found) { missingCount++; if (missingCount >= 2) { location.href = "/static/kick.html"; return; } }
+      else missingCount = 0;
     }
 
-    document.getElementById("count").textContent = memberObj.length;
-
-    // lastMembers を {id,name} で保持
+    // 入退室ポップアップ（ID基準）
     const joinedList = memberObj.filter(m => !lastMembers.some(lm => lm.id === m.id));
     const leftList = lastMembers.filter(lm => !memberObj.some(m => m.id === lm.id));
-
     joinedList.forEach(m => { if (m.id !== myId && m.id !== hostId) showPopup(`${m.name}さんが入室しました`); });
     leftList.forEach(m => { if (m.id !== myId) showPopup(`${m.name}さんが退出しました`); });
 
+    // lastMembers 更新
     lastMembers = [...memberObj];
 
     // メンバー表示
@@ -118,21 +97,15 @@ async function updateMembers() {
         if (m.id === hostId) return;
         const msgId = `msgBtn_${m.id}`;
         const kickId = `kickBtn_${m.id}`;
-        list.push(`
-          ・${m.name}
-          <button id="${msgId}" class="msgBtn" data-target="${m.id}">💬</button>
-          <button id="${kickId}" class="kickBtn" data-target="${m.id}">退室</button>
-        `);
+        list.push(`・${m.name} <button id="${msgId}" class="msgBtn" data-target="${m.id}">💬</button> <button id="${kickId}" class="kickBtn" data-target="${m.id}">退室</button>`);
       });
     } else {
       list.push(`・${myName} (自分)`);
-      memberObj.forEach(m => {
-        if (m.id === hostId || m.id === myId) return;
-        list.push(`・${m.name}`);
-      });
+      memberObj.forEach(m => { if (m.id !== hostId && m.id !== myId) list.push(`・${m.name}`); });
     }
 
     document.getElementById("members").innerHTML = list.join("<br>");
+    document.getElementById("count").textContent = memberObj.length;
 
     // ボタン設定
     memberObj.forEach(m => {
@@ -143,9 +116,7 @@ async function updateMembers() {
       if (kickBtn) kickBtn.onclick = () => kickMember(m.id);
     });
 
-  } catch (e) {
-    console.error("メンバー更新エラー", e);
-  }
+  } catch (e) { console.error("メンバー更新エラー", e); }
 }
 
 // =====================
@@ -154,86 +125,39 @@ async function updateMembers() {
 async function kickMember(id) {
   const text = prompt(`退室させたい場合、確認のためEnterでOK`);
   if (text === null) return;
-  await fetch(`${baseURL}/room/${roomId}/kick`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id })
-  });
+  await fetch(`${baseURL}/room/${roomId}/kick`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
 }
 
-// =====================
-// 退室・Kick
-// =====================
 async function exitRoom() {
   if (!confirm("退室しますか？")) return;
 
-  if (myId !== hostId) {  // ② hostId で判定
-    await fetch(`${baseURL}/room/${roomId}/kick`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: myId })
-    });
+  if (myId !== hostId) {
+    await fetch(`${baseURL}/room/${roomId}/kick`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: myId }) });
   } else {
-    // 親は全員キックして退室
     const res = await fetch(`${baseURL}/room/${roomId}/members`);
     if (res.ok) {
       const data = await res.json();
       for (const m of data.members) {
         if (m.id !== myId) {
-          await fetch(`${baseURL}/room/${roomId}/kick`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: m.id })
-          });
+          await fetch(`${baseURL}/room/${roomId}/kick`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: m.id }) });
         }
       }
     }
   }
   location.href = "/static/kick.html";
 }
+
 // =====================
 // ユーティリティ
 // =====================
-function toggleMembers() {
-  const box = document.getElementById("members");
-  box.style.display = box.style.display === "none" ? "block" : "none";
-}
-
-function showPopup(text) {
-  const popup = document.getElementById("popup");
-  popup.textContent = text;
-  popup.style.display = "block";
-  setTimeout(() => popup.style.display = "none", 3000);
-}
-
-function copyURL() {
-  const input = document.getElementById("join-url");
-  navigator.clipboard.writeText(input.value);
-  showPopup("参加URLをコピーしました");
-}
-
-function sendMessageToAll() {
-  const text = prompt("全員に送るメッセージ");
-  if (!text) return;
-  if (socket && socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({ type: "host_message", text }));
-  }
-}
+function toggleMembers() { const box = document.getElementById("members"); box.style.display = box.style.display === "none" ? "block" : "none"; }
+function showPopup(text) { const popup = document.getElementById("popup"); popup.textContent = text; popup.style.display = "block"; setTimeout(() => popup.style.display = "none", 3000); }
+function copyURL() { const input = document.getElementById("join-url"); navigator.clipboard.writeText(input.value); showPopup("参加URLをコピーしました"); }
+function sendMessageToAll() { const text = prompt("全員に送るメッセージ"); if (!text) return; if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: "host_message", text })); }
+function sendMessageToId(id) { const member = lastMembers.find(m => m.id === id); if (!member) return; const text = prompt(`${member.name}さんに送るメッセージ`); if (!text) return; if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: "host_message", text, targetId: id })); }
 
 // =====================
-// 個別メッセージ整理
-// =====================
-function sendMessageToId(id) {
-  const member = lastMembers.find(m => m.id === id);
-  if (!member) return;
-  const text = prompt(`${member.name}さんに送るメッセージ`);
-  if (!text) return;
-  if (socket && socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({ type: "host_message", text, targetId: id }));
-  }
-}
-// =====================
-// 遊び選択
+// ゲーム選択
 // =====================
 function selectGame(type) {
   if (!socket || socket.readyState !== WebSocket.OPEN) return;
@@ -243,20 +167,8 @@ function selectGame(type) {
 
   if (myId !== hostId) return;
 
-  if (type === "quiz") {
-    currentGame = "quiz";
-    socket.send(JSON.stringify({ type: "start_quiz" }));
-    container.classList.add("active");
-    startQuizHost(socket, container);
-    document.getElementById("exitQuizBtn").style.display = "inline-block";
-  }
-  if (type === "nasa") {
-    currentGame = "nasa";
-    socket.send(JSON.stringify({ type: "start_nasa" }));
-    container.classList.add("active");
-    startNASAHost(socket, container);
-    document.getElementById("exitQuizBtn").style.display = "inline-block";
-  }
+  if (type === "quiz") { currentGame = "quiz"; socket.send(JSON.stringify({ type: "start_quiz" })); container.classList.add("active"); startQuizHost(socket, container); document.getElementById("exitQuizBtn").style.display = "inline-block"; }
+  if (type === "nasa") { currentGame = "nasa"; socket.send(JSON.stringify({ type: "start_nasa" })); container.classList.add("active"); startNASAHost(socket, container); document.getElementById("exitQuizBtn").style.display = "inline-block"; }
 }
 
 // =====================
@@ -267,38 +179,14 @@ function connectSocket() {
   socket = new WebSocket(`${protocol}://${location.host}/ws/${roomId}`);
 
   socket.onopen = () => { console.log("WebSocket connected"); window.socket = socket; };
-
   socket.onmessage = (e) => {
     let msg;
     try { msg = JSON.parse(e.data); } catch { return; }
 
-    if (msg.type === "host_message") {
-      if (msg.targetId && msg.targetId !== myId) return;
-      showPopup("📩 親： " + msg.text);
-    }
-
-    if (msg.type === "start_quiz") {
-      const container = document.getElementById("game-container");
-      container.classList.add("active");
-      document.getElementById("exitQuizBtn").style.display = "inline-block";
-      if (myId !== hostId) startQuizPlayer(socket, container);
-    }
-
-    if (msg.type === "start_nasa") {
-      const container = document.getElementById("game-container");
-      container.classList.add("active");
-      document.getElementById("exitQuizBtn").style.display = "inline-block";
-      if (myId !== hostId) startNASAPlayer(socket, container);
-    }
-
-    if (msg.type === "end_quiz" || msg.type === "end_nasa") {
-      const container = document.getElementById("game-container");
-      container.classList.remove("active");
-      container.innerHTML = "";
-      document.getElementById("exitQuizBtn").style.display = "none";
-      if (window.removeProgressUI) window.removeProgressUI();
-      currentGame = null;
-    }
+    if (msg.type === "host_message") { if (msg.targetId && msg.targetId !== myId) return; showPopup("📩 親： " + msg.text); }
+    if (msg.type === "start_quiz") { const container = document.getElementById("game-container"); container.classList.add("active"); document.getElementById("exitQuizBtn").style.display = "inline-block"; if (myId !== hostId) startQuizPlayer(socket, container); }
+    if (msg.type === "start_nasa") { const container = document.getElementById("game-container"); container.classList.add("active"); document.getElementById("exitQuizBtn").style.display = "inline-block"; if (myId !== hostId) startNASAPlayer(socket, container); }
+    if (msg.type === "end_quiz" || msg.type === "end_nasa") { const container = document.getElementById("game-container"); container.classList.remove("active"); container.innerHTML = ""; document.getElementById("exitQuizBtn").style.display = "none"; if (window.removeProgressUI) window.removeProgressUI(); currentGame = null; }
   };
 
   socket.onerror = (e) => console.error("WebSocket error", e);
@@ -306,7 +194,7 @@ function connectSocket() {
 }
 
 // =====================
-// UIクリック監視
+// 初期化
 // =====================
 document.addEventListener("click", (e) => {
   const gameDropdown = document.getElementById("gameDropdown");
@@ -316,14 +204,9 @@ document.addEventListener("click", (e) => {
   if (nasaBtn && nasaBtn.contains(e.target)) { e.stopPropagation(); selectGame("nasa"); return; }
   if (quizBtn && quizBtn.contains(e.target)) { e.stopPropagation(); selectGame("quiz"); return; }
 
-  if (gameDropdown && !gameDropdown.contains(e.target) && !e.target.closest("#gameSelectBtn")) {
-    gameDropdown.style.display = "none";
-  }
+  if (gameDropdown && !gameDropdown.contains(e.target) && !e.target.closest("#gameSelectBtn")) gameDropdown.style.display = "none";
 });
 
-// =====================
-// 初期化
-// =====================
 window.addEventListener("DOMContentLoaded", () => {
   const gameBtn = document.getElementById("gameSelectBtn");
   const gameDropdown = document.getElementById("gameDropdown");
@@ -332,11 +215,8 @@ window.addEventListener("DOMContentLoaded", () => {
   if (gameBtn) gameBtn.onclick = (e) => { e.stopPropagation(); gameDropdown.style.display = gameDropdown.style.display === "block" ? "none" : "block"; };
   if (exitQuizBtn) exitQuizBtn.onclick = () => {
     if (currentGame && socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: `end_${currentGame}` }));
-    const container = document.getElementById("game-container");
-    container.classList.remove("active"); container.innerHTML = "";
-    exitQuizBtn.style.display = "none";
-    if (window.removeProgressUI) window.removeProgressUI();
-    currentGame = null;
+    const container = document.getElementById("game-container"); container.classList.remove("active"); container.innerHTML = "";
+    exitQuizBtn.style.display = "none"; if (window.removeProgressUI) window.removeProgressUI(); currentGame = null;
   };
 
   connectSocket();
@@ -350,5 +230,4 @@ window.copyURL = copyURL;
 window.selectGame = selectGame;
 window.toggleMembers = toggleMembers;
 window.exitRoom = exitRoom;
-window.kickMember = kickMember;  // ③ kickMemberById → kickMember
-
+window.kickMember = kickMember;
