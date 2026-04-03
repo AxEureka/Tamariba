@@ -72,29 +72,33 @@ async def get_room(room_id: str):
     }
 
 
+# /room/{room_id}/join
 @app.post("/room/{room_id}/join")
 async def join_room(room_id: str, data: dict):
     if room_id not in rooms:
         return {"ok": False}
 
     name = data.get("name")
-    user_id = str(uuid.uuid4())[:8]
-
-    rooms[room_id]["members"].append({
-        "id": user_id,
-        "name": name
-    })
+    # 既に同じ名前がいないか確認（重複防止）
+    existing = next((m for m in rooms[room_id]["members"] if m["name"] == name), None)
+    if existing:
+        user_id = existing["id"]  # 既存IDを使う
+    else:
+        user_id = str(uuid.uuid4())[:8]
+        rooms[room_id]["members"].append({"id": user_id, "name": name})
 
     return {"ok": True, "id": user_id}
 
 
+# /room/{room_id}/members
 @app.get("/room/{room_id}/members")
 async def get_members(room_id: str):
     if room_id not in rooms:
         return {"members": [], "count": 0}
     members = rooms[room_id]["members"]
-    return {"members": members, "count": len(members)}
-
+    # 文字列だけのメンバーはいない想定で返す
+    return {"members": [{"id": m["id"], "name": m["name"]} for m in members],
+            "count": len(members)}
 
 @app.post("/room/{room_id}/kick")
 async def kick_member(room_id: str, data: dict):
