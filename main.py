@@ -260,16 +260,15 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                         if "personal" not in room["nasa_answers"][member]:
                             room["nasa_answers"][member]["personal"] = None
             
-                # 全体進捗計算（非リーダーもカウント）
-                done_count = sum(1 for m in room["nasa_answers"] if "team_name" in room["nasa_answers"][m])
-                total_teams = len(room["teams"])
-            
+                # 親画面向けチーム進捗
+                team_done_count = len(room["team_answers"])  # 回答済みチーム数
+                total_team_count = len(room["teams"])
+                
                 await broadcast(room, {
                     "type": "nasa_team_progress",
-                    "done": done_count,
-                    "total": len(room["members"])  # ここを全員に変更
-                })
-            
+                    "done": team_done_count,
+                    "total": total_team_count  # チーム数
+                })            
                 # ★これ追加
                 await broadcast(room, {
                     "type": "team_answer_done",
@@ -279,20 +278,20 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 correct = room["nasa"].get("correct", [])
                 my_name = data.get("name")
             
+                # 絶対誤差計算関数
                 def calc(arr):
                     if not arr or not correct:
                         return 0
                     score = 0
                     for i in range(min(len(arr), len(correct))):
-                        try:
-                            if arr[i] is None:
-                                continue
-                            score += abs(int(arr[i]) - correct[i])
-                        except:
+                        if arr[i] is None:
                             continue
+                        score += abs(int(arr[i]) - correct[i])
                     return score
             
+                # ------------------------
                 # 個人スコア
+                # ------------------------
                 personal_scores = []
                 my_personal = None
                 my_team = None
@@ -305,14 +304,19 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     if name == my_name:
                         my_team = a.get("team_name")
             
-                # チームスコア
-                team_scores = {}
-                for t, ranks in room["team_answers"].items():
-                    team_scores[t] = [calc(ranks)]
+                # ------------------------
+                # チームスコア（リーダーの回答のみ）
+                # ------------------------
+                team_scores = []
+                for team, ranks in room["team_answers"].items():
+                    s = calc(ranks)
+                    team_scores.append((team, s))
             
-                # ★同点処理付き上位3位生成
+                # ------------------------
+                # ランキング生成（昇順：スコア小さい方が上位）
+                # ------------------------
                 def make_rank_list(scores):
-                    sorted_scores = sorted(scores, key=lambda x: x[1])
+                    sorted_scores = sorted(scores, key=lambda x: x[1])  # スコア小さい順
                     result = []
                     prev_score = None
                     display_rank = 0
@@ -326,26 +330,24 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     return result
             
                 personal_top = make_rank_list(personal_scores)
-                team_avg_dict = {t: sum(v)/len(v) for t, v in team_scores.items()}
-                team_top = make_rank_list(list(team_avg_dict.items()))
+                team_top = make_rank_list(team_scores)
             
                 personal_avg = sum(s for _, s in personal_scores)/len(personal_scores) if personal_scores else 0
-                team_avg = sum(team_avg_dict.values())/len(team_avg_dict) if team_avg_dict else 0
-                my_team_score = next((team_scores[t][0] for t in team_scores if t == my_team), None)
+                team_avg = sum(s for _, s in team_scores)/len(team_scores) if team_scores else 0
+                my_team_score = next((s for t, s in team_scores if t == my_team), None)
                 my_diff = my_personal - my_team_score if my_personal is not None and my_team_score is not None else None
             
                 await websocket.send_json({
                     "type": "nasa_ranking",
                     "personal_top": personal_top,
                     "personal_avg": round(personal_avg, 1),
-                    "team_top": [{"name": n, "score": round(s, 1), "rank": r} for n, s, r in [(t, team_avg_dict[t], t_rank["rank"]) for t, t_rank in zip(team_avg_dict.keys(), make_rank_list(list(team_avg_dict.items()))) ]],
+                    "team_top": [{"name": n, "score": s, "rank": r} for n, s, r in [(t["name"], t["score"], t["rank"]) for t in team_top]],
                     "team_avg": round(team_avg, 1),
                     "my_personal": my_personal,
                     "my_team_score": my_team_score,
                     "my_diff": my_diff,
                     "my_team_name": my_team
                 })
-
             elif msg_type == "end_nasa":
                 await broadcast(room, {"type": "end_nasa"})
 
