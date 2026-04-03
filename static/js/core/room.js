@@ -207,6 +207,34 @@ function connectSocket() {
   socket.onclose = () => { setTimeout(connectSocket, 2000); };
 }
 
+// =========================
+// NASAゲーム デバッグ用チェック
+// =========================
+export function debugNASAStart(ws, containerId) {
+  const container = document.getElementById(containerId);
+  console.log("🛠 debugNASAStart container:", container);
+
+  import("/static/js/nasa/nasa-host.js").then(module => {
+    const startNASAHost = module.startNASAHost;
+    console.log("🛠 debugNASAStart startNASAHost type:", typeof startNASAHost);
+
+    if (!container) {
+      console.error("❌ container が取得できません。HTMLに <div id='" + containerId + "'></div> があるか確認してください");
+      return;
+    }
+
+    if (typeof startNASAHost !== "function") {
+      console.error("❌ startNASAHost が関数として読み込めません。パスや export を確認してください");
+      return;
+    }
+
+    console.log("✅ container と startNASAHost は OK。ゲームを起動します…");
+    startNASAHost(ws, container);
+  }).catch(err => {
+    console.error("❌ モジュール読み込みエラー:", err);
+  });
+}
+
 // =====================
 // 初期化
 // =====================
