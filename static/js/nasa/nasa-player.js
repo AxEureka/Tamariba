@@ -83,6 +83,13 @@ export function startNASAPlayer(ws,uiContainer){
       showRanking(container,data,false);
       showAdvancedMessages(data);
     }
+    
+    // 👇これ追加
+    if(data.type === "team_answer_done"){
+      if(data.team === myTeam){
+        container.innerHTML = "<h2>送信完了</h2>";
+      }
+    }
 
   });
 
