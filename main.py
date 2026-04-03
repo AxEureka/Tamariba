@@ -213,13 +213,18 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             # =========================
             # NASA
             # =========================
-            elif msg_type == "start_nasa":
-                room["nasa"] = {"items": data.get("items", []), "correct": data.get("correct", [])}
-                room["nasa_answers"] = {}
-                room["team_answers"] = {}
-                room["team_leaders"] = {}
-                await broadcast(room, {"type": "start_nasa", "items": room["nasa"]["items"]})
-
+           elif msg_type == "start_nasa":
+            items = data.get("items")
+            correct = data.get("correct")
+            if not items or not correct:
+                items = ["パラシュート", "箱に入ったマッチ", "宇宙食", ...]  # nasa-uiのデフォルト
+                correct = [8, 15, 4, 11, 12, 1, 6, 13, 3, 9, 14, 2, 7, 5, 10]
+            room["nasa"] = {"items": items, "correct": correct}
+            room["nasa_answers"] = {}
+            room["team_answers"] = {}
+            room["team_leaders"] = {}
+            await broadcast(room, {"type": "start_nasa", "items": room["nasa"]["items"]})
+        
             elif msg_type == "set_team_count":
                 room["team_count"] = data.get("count", 2)
                 room["team_names"] = data.get("names", [])
