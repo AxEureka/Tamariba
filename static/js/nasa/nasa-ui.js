@@ -142,7 +142,7 @@ container.appendChild(box);
 
 
 // =========================
-// 回答UI（★ここだけ修正）
+// 回答UI（★修正済み）
 // =========================
 export function createRankingUI(
   container,
@@ -150,110 +150,100 @@ export function createRankingUI(
   onSubmit,
   title,
   isTeam=false,
-  isLeader=true
+  isLeader=true,
+  userId=null,      // ★追加: プレイヤーID
+  userName=null     // ★追加: プレイヤー名
 ){
 
-container.innerHTML="";
+  container.innerHTML="";
 
-const box=document.createElement("div");
-box.className="nasa-ui";
+  const box=document.createElement("div");
+  box.className="nasa-ui";
 
-if(title){
-const h=document.createElement("h2");
-h.textContent=title;
-box.appendChild(h);
-}
+  if(title){
+    const h=document.createElement("h2");
+    h.textContent=title;
+    box.appendChild(h);
+  }
 
-const selects=[];
+  const selects=[];
 
-items.forEach(item=>{
+  items.forEach(item=>{
 
-const row=document.createElement("div");
-row.className="rank-row";
+    const row=document.createElement("div");
+    row.className="rank-row";
 
-const label=document.createElement("span");
-label.textContent=item;
+    const label=document.createElement("span");
+    label.textContent=item;
 
-const select=document.createElement("select");
+    const select=document.createElement("select");
 
-// ★ リーダー以外は操作不可
-if(!isLeader){
-select.disabled=true;
-}
+    if(!isLeader){
+      select.disabled=true;
+    }
 
-const first=document.createElement("option");
-first.value="";
-first.textContent="選択";
-first.disabled=true;
-first.selected=true;
-select.appendChild(first);
+    const first=document.createElement("option");
+    first.value="";
+    first.textContent="選択";
+    first.disabled=true;
+    first.selected=true;
+    select.appendChild(first);
 
-for(let i=1;i<=items.length;i++){
-const op=document.createElement("option");
-op.value=i;
-op.textContent=i;
-select.appendChild(op);
-}
+    for(let i=1;i<=items.length;i++){
+      const op=document.createElement("option");
+      op.value=i;
+      op.textContent=i;
+      select.appendChild(op);
+    }
 
-row.appendChild(label);
-row.appendChild(select);
-
-box.appendChild(row);
-selects.push(select);
-
-});
-
-const btn=document.createElement("button");
-btn.textContent="OK";
-
-// ★初期状態：押せない
-btn.disabled = true;
-
-// ★全て数字が入ったら押せる
-function checkDuplicate(){
-
-  const values = selects.map(s => s.value).filter(v => v !== "");
-
-  let dup = [];
-  values.forEach(v=>{
-    if(values.filter(x=>x===v).length > 1) dup.push(v);
+    row.appendChild(label);
+    row.appendChild(select);
+    box.appendChild(row);
+    selects.push(select);
   });
 
-  // 赤表示
-  selects.forEach(s=>{
-    s.style.background = dup.includes(s.value) ? "#ff6b6b" : "";
-  });
+  const btn=document.createElement("button");
+  btn.textContent="OK";
 
-  const hasEmpty = selects.some(s => s.value === "");
+  btn.disabled = true;
 
-  // ボタン制御
-  btn.disabled = dup.length > 0 || hasEmpty || !isLeader;
+  function checkDuplicate(){
+    const values = selects.map(s => s.value).filter(v => v !== "");
+    let dup = [];
+    values.forEach(v=>{
+      if(values.filter(x=>x===v).length > 1) dup.push(v);
+    });
+
+    selects.forEach(s=>{
+      s.style.background = dup.includes(s.value) ? "#ff6b6b" : "";
+    });
+
+    const hasEmpty = selects.some(s => s.value === "");
+    btn.disabled = dup.length > 0 || hasEmpty || !isLeader;
+  }
+
+  selects.forEach(s => s.addEventListener("change", checkDuplicate));
+  checkDuplicate();
+
+  btn.onclick=()=>{
+    if(!isLeader){
+      alert("リーダーのみ操作できます");
+      return;
+    }
+
+    const ranks = selects.map(s => parseInt(s.value));
+
+    // ★ID付きで送信
+    onSubmit({
+      id: userId,
+      name: userName,
+      ranks
+    });
+  };
+
+  box.appendChild(btn);
+  container.appendChild(box);
 }
-
-// イベント登録
-selects.forEach(s => s.addEventListener("change", checkDuplicate));
-
-// 初期チェック
-checkDuplicate();
-// 初期状態チェック（超重要）
-checkDuplicate();
-
-
-// ★クリック時ポップアップ
-btn.onclick=()=>{
-if(!isLeader){
-alert("リーダーのみ操作できます");
-return;
-}
-
-const ranks=selects.map(s=>parseInt(s.value));
-onSubmit(ranks);
-};
-
-box.appendChild(btn);
-container.appendChild(box);
-}
-
 
 // =========================
 // 正解表示（変更なし）
