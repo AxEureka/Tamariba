@@ -6,8 +6,8 @@ let ws;
 let container;
 let lastItems = null;
 let lastCorrect = null;
-let teamData = {};
-let playerData = {};
+let teamData = {};   // playerId => teamId
+let playerData = {}; // playerId => {name, ranks}
 
 export function startNASAHost(socket, uiContainer){
     ws = socket;
@@ -15,9 +15,10 @@ export function startNASAHost(socket, uiContainer){
 
     showTeamSetup(()=>{
         createItemEditor(container, (items, correct)=>{
-            lastItems = items;
+            // 内部処理はIDなしで名前だけ渡す
+            lastItems = items.map((name,i)=>({id:i+1, name}));
             lastCorrect = correct;
-            broadcast({type:"start_question", items:items});
+            broadcast({type:"start_question", items:lastItems});
         });
     });
 }
@@ -43,8 +44,8 @@ function broadcast(msg){
 }
 
 // プレイヤー回答受信
-function onPlayerSubmit(player, ranks){
-    playerData[player] = ranks;
+export function onPlayerSubmit(playerId, playerName, ranks){
+    playerData[playerId] = {name: playerName, ranks};
     // 全員揃ったら正解表示
     if(Object.keys(playerData).length === expectedPlayerCount()){
         broadcast({type:"show_correct", items:lastItems, correct:lastCorrect});
@@ -65,30 +66,29 @@ function showRankingPhase(data){
 
 // ランキング計算
 function calculateRanking(){
-    // 個人平均、チーム平均
     let personal_scores=[];
     let team_scores={};
-    for(let player in playerData){
-        const ranks = playerData[player];
+    for(let playerId in playerData){
+        const {name, ranks} = playerData[playerId];
         let score=0;
         ranks.forEach((v,i)=>{ score+=Math.abs(v - lastCorrect[i]); });
-        personal_scores.push({name:player, score:score});
-        if(teamData[player]){
-            const t = teamData[player];
-            if(!team_scores[t]) team_scores[t]=0;
-            team_scores[t]+=score;
+        personal_scores.push({id:playerId, name:name, score:score});
+        const teamId = teamData[playerId];
+        if(teamId){
+            if(!team_scores[teamId]) team_scores[teamId] = {name:"チーム"+teamId, score:0};
+            team_scores[teamId].score += score;
         }
     }
     personal_scores.sort((a,b)=>a.score-b.score);
     const personal_avg = personal_scores.reduce((a,b)=>a+b.score,0)/personal_scores.length;
-    const team_top = Object.entries(team_scores).map(([k,v])=>({name:k, score:v})).sort((a,b)=>a.score-b.score);
-    const team_avg = Object.values(team_scores).reduce((a,b)=>a+b,0)/Object.values(team_scores).length;
+    const team_top = Object.values(team_scores).sort((a,b)=>a.score-b.score);
+    const team_avg = Object.values(team_scores).reduce((a,b)=>a+b.score,0)/Object.values(team_scores).length;
     return {
         personal_top:personal_scores,
         team_top:team_top,
         personal_avg:personal_avg,
         team_avg:team_avg,
-        my_team_name:null,
+        my_team_id:null,
         my_team_score:null,
         my_personal:null
     };
