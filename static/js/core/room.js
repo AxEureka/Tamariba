@@ -1,15 +1,10 @@
-// room.js 完全版（親・同名子対応・ID基準統一）
+// room.js 完全版（親・同名子対応・ID基準統一・NASA起動修正版）
 import { startQuizHost } from "/static/js/quiz/quiz-host.js";
 import { startQuizPlayer } from "/static/js/quiz/quiz-player.js";
 import { startNASAHost } from "../nasa/nasa-host.js"; // 相対パス要確認
-
-console.log("startNASAHost", startNASAHost); // ここで undefined でなければ OK
-
-document.getElementById("nasaBtn").onclick = () => {
-  startNASAHost(socket, document.getElementById("game-container"));
-  console.log("NASA UI 呼び出し完了");
-};
 import { startNASAPlayer } from "/static/js/nasa/nasa-player.js";
+
+console.log("startNASAHost", startNASAHost); // undefined でなければ OK
 
 const params = new URLSearchParams(location.search);
 const roomId = params.get("room");
@@ -18,7 +13,7 @@ let myId = params.get("id") || "";
 if (!myId) myId = crypto.randomUUID();
 
 let hostName = "";
-let hostId = ""; // 親ID
+let hostId = "";
 let lastMembers = [];
 let joined = false;
 let missingCount = 0;
@@ -35,7 +30,7 @@ async function loadRoom() {
 
   const data = await res.json();
   hostName = data.host;
-  hostId = data.hostId || hostName;  // 親ID取得
+  hostId = data.hostId || hostName;
   if (!myName) myName = hostName;
 
   document.body.style.backgroundImage = `url('/static/themes/${data.theme}.jpg')`;
@@ -55,7 +50,6 @@ async function loadRoom() {
   document.getElementById("join-url").value = joinURL;
   if (typeof QRCode !== "undefined") new QRCode(document.getElementById("qrcode"), joinURL);
 
-  // 親は join 処理不要
   if (myName !== hostName && !joined) {
     try {
       await fetch(`${baseURL}/room/${roomId}/join`, {
@@ -79,23 +73,19 @@ async function updateMembers() {
 
     const memberObj = data.members.map(m => ({id: m.id, name: m.name}));
 
-    // 自分が missing しているかチェック（親は除外）
     if (myId !== hostId && joined) {
       const found = memberObj.some(m => m.id === myId);
       if (!found) { missingCount++; if (missingCount >= 2) { location.href = "/static/kick.html"; return; } }
       else missingCount = 0;
     }
 
-    // 入退室ポップアップ（ID基準）
     const joinedList = memberObj.filter(m => !lastMembers.some(lm => lm.id === m.id));
     const leftList = lastMembers.filter(lm => !memberObj.some(m => m.id === lm.id));
     joinedList.forEach(m => { if (m.id !== myId && m.id !== hostId) showPopup(`${m.name}さんが入室しました`); });
     leftList.forEach(m => { if (m.id !== myId) showPopup(`${m.name}さんが退出しました`); });
 
-    // lastMembers 更新
     lastMembers = [...memberObj];
 
-    // メンバー表示
     const list = [];
     list.push(`<strong>${hostName} (親)</strong>`);
 
@@ -114,7 +104,6 @@ async function updateMembers() {
     document.getElementById("members").innerHTML = list.join("<br>");
     document.getElementById("count").textContent = memberObj.length;
 
-    // ボタン設定
     memberObj.forEach(m => {
       if (m.id === hostId || m.id === myId) return;
       const msgBtn = document.getElementById(`msgBtn_${m.id}`);
@@ -167,7 +156,6 @@ function sendMessageToId(id) { const member = lastMembers.find(m => m.id === id)
 // ゲーム選択
 // =====================
 function selectGame(type) {
-  console.log(`🎮 selectGame called with type=${type}`);  // ←追加
   if (!socket || socket.readyState !== WebSocket.OPEN) return;
   const gameDropdown = document.getElementById("gameDropdown");
   if (gameDropdown) gameDropdown.style.display = "none";
@@ -175,21 +163,28 @@ function selectGame(type) {
 
   if (myId !== hostId) return;
 
-  if (type === "quiz") { currentGame = "quiz"; socket.send(JSON.stringify({ type: "start_quiz" })); container.classList.add("active"); startQuizHost(socket, container); document.getElementById("exitQuizBtn").style.display = "inline-block"; }
+  if (type === "quiz") {
+    currentGame = "quiz";
+    socket.send(JSON.stringify({ type: "start_quiz" }));
+    container.classList.add("active");
+    startQuizHost(socket, container);
+    document.getElementById("exitQuizBtn").style.display = "inline-block";
+  }
+
   if (type === "nasa") {
-    const container = document.getElementById("game-container");
     if (!container) { console.error("❌ game-container が見つかりません"); return; }
     if (typeof startNASAHost !== "function") { console.error("❌ startNASAHost が関数ではありません"); return; }
     currentGame = "nasa"; 
     const items = ["パラシュート", "箱に入ったマッチ", "宇宙食", "45口径ピストル2丁", "粉ミルク1ケース", "酸素ボンベ2本", "15mのナイロン製ロープ", "ソーラー発電式の携帯用ヒーター", "月面用の星図表", "自動的に膨らむ救命ボート", "方位磁石", "水19L", "注射器の入った救急箱", "太陽電池のFM送受信器", "照明弾"];
     const correct = [8,15,4,11,12,1,6,13,3,9,14,2,7,5,10];
-    console.log("🚀 start_nasaを送信します", items, correct);  // ←追加
-    socket.send(JSON.stringify({ type: "start_nasa", items, correct })); 
-    container.classList.add("active"); 
-    startNASAHost(socket, container); 
-    document.getElementById("exitQuizBtn").style.display = "inline-block"; 
-  } // ← この閉じ括弧が必須
-} 
+    console.log("🚀 start_nasa送信", items, correct);
+    socket.send(JSON.stringify({ type: "start_nasa", items, correct }));
+    container.classList.add("active");
+    startNASAHost(socket, container);
+    document.getElementById("exitQuizBtn").style.display = "inline-block";
+  }
+}
+
 // =====================
 // WebSocket接続
 // =====================
@@ -215,9 +210,6 @@ function connectSocket() {
 // =====================
 // 初期化
 // =====================
-// =====================
-// 初期化（修正版：NASAボタンはロード完了後に有効化）
-// =====================
 document.addEventListener("DOMContentLoaded", () => {
   const gameBtn = document.getElementById("gameSelectBtn");
   const gameDropdown = document.getElementById("gameDropdown");
@@ -225,7 +217,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const nasaBtn = document.getElementById("nasaBtn");
   const quizBtn = document.getElementById("quizBtn");
 
-  // NASAボタンをロード完了まで無効化
   if (nasaBtn) nasaBtn.disabled = true;
 
   if (gameBtn) gameBtn.onclick = (e) => { 
@@ -242,57 +233,19 @@ document.addEventListener("DOMContentLoaded", () => {
     currentGame = null;
   };
 
-  // WebSocket接続
   connectSocket();
 
-  // ルーム読み込み後にメンバー更新
   loadRoom().then(() => { 
     updateMembers(); 
     setInterval(updateMembers, 2000); 
-
-    // NASAボタンを有効化
-    if (nasaBtn) {
-      nasaBtn.disabled = false;
-      console.log("✅ NASAボタンが有効化されました");
-    }
+    if (nasaBtn) { nasaBtn.disabled = false; console.log("✅ NASAボタン有効化"); }
   });
 
-  // ゲーム選択ボタンクリック処理
   document.addEventListener("click", (e) => {
-    if (nasaBtn && nasaBtn.contains(e.target)) { 
-      e.stopPropagation(); 
-      if (!nasaBtn.disabled) {
-        console.log("✅ NASAボタンがクリックされた");
-        selectGame("nasa"); 
-      }
-      return; 
-    }
-    if (quizBtn && quizBtn.contains(e.target)) { 
-      e.stopPropagation(); 
-      selectGame("quiz"); 
-      return; 
-    }
-
-    if (gameDropdown && !gameDropdown.contains(e.target) && !e.target.closest("#gameSelectBtn")) {
-      gameDropdown.style.display = "none";
-    }
+    if (nasaBtn && nasaBtn.contains(e.target)) { e.stopPropagation(); if (!nasaBtn.disabled) selectGame("nasa"); return; }
+    if (quizBtn && quizBtn.contains(e.target)) { e.stopPropagation(); selectGame("quiz"); return; }
+    if (gameDropdown && !gameDropdown.contains(e.target) && !e.target.closest("#gameSelectBtn")) gameDropdown.style.display = "none";
   });
-});
-
-window.addEventListener("DOMContentLoaded", () => {
-  const gameBtn = document.getElementById("gameSelectBtn");
-  const gameDropdown = document.getElementById("gameDropdown");
-  const exitQuizBtn = document.getElementById("exitQuizBtn");
-
-  if (gameBtn) gameBtn.onclick = (e) => { e.stopPropagation(); gameDropdown.style.display = gameDropdown.style.display === "block" ? "none" : "block"; };
-  if (exitQuizBtn) exitQuizBtn.onclick = () => {
-    if (currentGame && socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: `end_${currentGame}` }));
-    const container = document.getElementById("game-container"); container.classList.remove("active"); container.innerHTML = "";
-    exitQuizBtn.style.display = "none"; if (window.removeProgressUI) window.removeProgressUI(); currentGame = null;
-  };
-
-  connectSocket();
-  loadRoom().then(() => { updateMembers(); setInterval(updateMembers, 2000); });
 });
 
 // =====================
