@@ -25,14 +25,22 @@ async function loadRoom() {
   const data = await res.json();
   hostName = data.host;
   if (!myName) myName = hostName;
-  
-  // ★追加：同名チェック
-  if (data.members.includes(myName) && myName !== hostName) {
-    alert("同じニックネームの人が既にいます。別の名前にしてください。");
-    location.href = "/static/index.html"; // トップに戻す
-    return;
-  }
 
+  // ★同名チェック（members API使う）
+  try {
+    const res2 = await fetch(`${baseURL}/room/${roomId}/members`);
+    if (res2.ok) {
+      const memberData = await res2.json();
+  
+      if (memberData.members.includes(myName) && myName !== hostName) {
+        alert("同じニックネームの人が既にいます。別の名前にしてください。");
+        location.href = "/static/index.html";
+        return;
+      }
+    }
+  } catch (e) {
+    console.error("メンバー取得失敗", e);
+  }
   document.body.style.backgroundImage = `url('/static/themes/${data.theme}.jpg')`;
   document.getElementById("room-title").textContent = `${data.room}（親：${data.host}さん）`;
   document.getElementById("room-id").textContent = roomId;
