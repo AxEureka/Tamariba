@@ -25,6 +25,13 @@ async function loadRoom() {
   const data = await res.json();
   hostName = data.host;
   if (!myName) myName = hostName;
+  
+  // ★追加：同名チェック
+  if (data.members.includes(myName) && myName !== hostName) {
+    alert("同じニックネームの人が既にいます。別の名前にしてください。");
+    location.href = "/static/index.html"; // トップに戻す
+    return;
+  }
 
   document.body.style.backgroundImage = `url('/static/themes/${data.theme}.jpg')`;
   document.getElementById("room-title").textContent = `${data.room}（親：${data.host}さん）`;
