@@ -34,7 +34,7 @@ async function loadRoom() {
   
       if (memberData.members.includes(myName) && myName !== hostName) {
         alert("同じニックネームの人が既にいます。別の名前にしてください。");
-        location.href = "/static/index.html";
+        location.href = "/static/join.html?room=${roomId}`;
         return;
       }
     }
