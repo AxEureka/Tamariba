@@ -139,9 +139,10 @@ button{
     ルームID：<strong id="room-id"></strong> /
     参加人数：<strong id="count">0</strong>人
   </span>
+  <!-- メンバー横のボタン -->
   <div style="display:flex; gap:6px;">
     <button onclick="toggleMembers()">メンバーを見る</button>
-    <button onclick="copyURL()">コピーで参加</button>
+    <button id="copyJoinBtn" onclick="copyURL()">コピーで参加</button>
   </div>
 </p>
 
