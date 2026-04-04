@@ -44,6 +44,7 @@ async function loadRoom() {
     // メンバー横のコピーで参加ボタンを表示
     const copyBtn = document.getElementById("copyJoinBtn");
     if (copyBtn) copyBtn.style.display = "inline-block";
+
   }
 
   const joinURL = window.location.origin + "/static/join.html?room=" + roomId;
