@@ -14,15 +14,13 @@ let answered = false;
 let graphVisible = false;
 
 export function startQuizPlayer(ws, uiContainer){
-  console.log("quiz player start");
   socket = ws;
   container = uiContainer;
 
-  socket.addEventListener("message",(e)=>{
+  socket.onmessage = (e)=>{
     let data;
     try{ data = JSON.parse(e.data); }catch{return;}
 
-    // 問題受信
     if(data.type === "quiz_question"){
       choices = data.choices;
       latestVotes = null;
@@ -41,42 +39,38 @@ export function startQuizPlayer(ws, uiContainer){
       }
     }
 
-    // タイマー終了通知
     if(data.type === "quiz_timer_end"){
       lockAnswers();
       const timer = document.getElementById("quiz-timer");
       if(timer) timer.textContent = "回答締切";
     }
 
-    // 投票更新
     if(data.type === "quiz_votes"){
       latestVotes = data.votes;
-      if(graphVisible) updateGraph(latestVotes, choices);
+      if(graphVisible){
+        updateGraph(latestVotes, choices);
+      }
     }
 
-    // グラフ表示
     if(data.type === "quiz_show_graph"){
       graphVisible = true;
-      if(latestVotes) updateGraph(latestVotes, choices);
+      latestVotes = data.votes;
+      updateGraph(latestVotes, choices);
     }
 
-    // 正解発表
     if(data.type === "quiz_correct"){
       showCorrectAnswer(data.correct);
     }
-  });
+  };
 }
 
 function sendAnswer(index){
   if(answered) return;
   answered = true;
 
-  const params = new URLSearchParams(location.search);
-  const name = params.get("name") || "guest";
-
   socket.send(JSON.stringify({
     type:"quiz_answer",
-    name:name,
+    name: window.myName,
     choice:index
   }));
 }
