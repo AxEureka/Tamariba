@@ -1,9 +1,6 @@
-import { startTimer } from "./quiz-ui.js";
-
 let socket;
-let votes = [0,0,0,0];
+let votes = [];
 let correctAnswer = 0;
-let timerInterval = null;
 
 export function startQuizHost(ws, container){
   socket = ws;
@@ -49,11 +46,15 @@ export function startQuizHost(ws, container){
   document.getElementById("show-graph").onclick = showGraph;
   document.getElementById("reveal-answer").onclick = revealAnswer;
 
-  socket.addEventListener("message", e=>{
+  socket.onmessage = (e)=>{
     let data;
     try{ data = JSON.parse(e.data); }catch{return;}
-    if(data.type === "quiz_votes") updateVotesFromServer(data.votes);
-  });
+
+    if(data.type === "quiz_votes"){
+      votes = data.votes;
+      updateVotes();
+    }
+  };
 }
 
 // 出題
@@ -63,7 +64,7 @@ function sendQuestion(){
   const answer = parseInt(document.getElementById("quiz-answer").value);
   const seconds = parseInt(document.getElementById("timerSeconds").value);
 
-  votes = [0,0,0,0];
+  votes = new Array(choicesArr.length).fill(0);
   correctAnswer = answer;
 
   socket.send(JSON.stringify({
@@ -72,23 +73,6 @@ function sendQuestion(){
     choices:choicesArr,
     timer: seconds
   }));
-
-  updateVotes();
-
-  // タイマー自動締切
-  if(seconds > 0){
-    let time = seconds;
-    const timerDisplay = document.getElementById("timerSeconds"); // UI表示用は必要なら別要素に
-    clearInterval(timerInterval);
-    timerInterval = setInterval(()=>{
-      time--;
-      if(time <= 0){
-        clearInterval(timerInterval);
-        // 全員に締切通知
-        socket.send(JSON.stringify({type:"quiz_timer_end"}));
-      }
-    },1000);
-  }
 }
 
 // グラフ表示
@@ -101,18 +85,10 @@ function revealAnswer(){
   socket.send(JSON.stringify({type:"quiz_correct", correct:correctAnswer}));
 }
 
-// 投票更新
-function updateVotesFromServer(serverVotes){
-  votes = serverVotes;
-  updateVotes();
-}
-
+// 投票表示
 function updateVotes(){
   const box = document.getElementById("vote-result");
   if(!box) return;
-  box.innerHTML =
-    "1: "+votes[0]+"票<br>"+
-    "2: "+votes[1]+"票<br>"+
-    "3: "+votes[2]+"票<br>"+
-    "4: "+votes[3]+"票";
+
+  box.innerHTML = votes.map((v,i)=>`${i+1}: ${v}票`).join("<br>");
 }
