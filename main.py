@@ -148,35 +148,72 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             # =========================
             elif msg_type == "start_quiz":
                 await broadcast(room, {"type": "start_quiz"})
-
+            
+            
             elif msg_type == "quiz_question":
                 room["answers"] = {}
+            
+                # ★択数保存（超重要）
+                room["last_choices"] = data.get("choices", [])
+            
                 await broadcast(room, {
                     "type": "quiz_question",
                     "question": data.get("question"),
-                    "choices": data.get("choices")
+                    "choices": room["last_choices"],
+                    "timer": data.get("timer")  # ★追加
                 })
-
+            
+            
             elif msg_type == "quiz_answer":
                 name = data.get("name")
                 choice = data.get("choice")
+            
                 if name is not None:
                     room["answers"][name] = choice
-                votes = [0, 0, 0, 0]
+            
+                # ★択数に応じたvotes生成
+                choice_len = len(room.get("last_choices", []))
+                votes = [0] * choice_len
+            
                 for v in room["answers"].values():
-                    if v is not None and 0 <= v < 4:
+                    if v is not None and 0 <= v < choice_len:
                         votes[v] += 1
-                await broadcast(room, {"type": "quiz_votes", "votes": votes})
-
+            
+                await broadcast(room, {
+                    "type": "quiz_votes",
+                    "votes": votes
+                })
+            
+            
             elif msg_type == "quiz_show_graph":
-                await broadcast(room, {"type": "quiz_show_graph"})
-
+                # ★ここが一番重要（votesを一緒に送る）
+                choice_len = len(room.get("last_choices", []))
+                votes = [0] * choice_len
+            
+                for v in room["answers"].values():
+                    if v is not None and 0 <= v < choice_len:
+                        votes[v] += 1
+            
+                await broadcast(room, {
+                    "type": "quiz_show_graph",
+                    "votes": votes
+                })
+            
+            
+            elif msg_type == "quiz_timer_end":
+                # ★追加（playerが待ってる）
+                await broadcast(room, {"type": "quiz_timer_end"})
+            
+            
             elif msg_type == "quiz_correct":
-                await broadcast(room, {"type": "quiz_correct", "correct": data.get("correct")})
-
+                await broadcast(room, {
+                    "type": "quiz_correct",
+                    "correct": data.get("correct")
+                })
+            
+            
             elif msg_type == "end_quiz":
                 await broadcast(room, {"type": "end_quiz"})
-
             # =========================
             # NASA
             # =========================
