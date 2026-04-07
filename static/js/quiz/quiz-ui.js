@@ -11,18 +11,15 @@ export function createQuestionUI(container, question, choices, sendAnswer){
   const wrapper = document.createElement("div");
   wrapper.className = "quiz-ui";
 
-  // 問題文
   const q = document.createElement("h2");
   q.textContent = question || "";
   wrapper.appendChild(q);
 
-  // タイマーUI
   const timer = document.createElement("div");
   timer.id = "quiz-timer";
   timer.style.margin = "10px 0";
   wrapper.appendChild(timer);
 
-  // ボタンエリア
   const btnArea = document.createElement("div");
   btnArea.className = "quiz-buttons";
 
@@ -32,29 +29,25 @@ export function createQuestionUI(container, question, choices, sendAnswer){
       btn.textContent = String(choice ?? "");
       btn.onclick = ()=>{
 
-  if(sendAnswer) sendAnswer(i);
+        if(sendAnswer) sendAnswer(i);
 
-  btnArea.querySelectorAll("button").forEach(b=>{
-    b.disabled = true;
-  });
+        btnArea.querySelectorAll("button").forEach(b=>{
+          b.disabled = true;
+        });
 
-  // ★選んだボタンを記録
-  btn.classList.add("selected-answer");
-
-};
+        btn.classList.add("selected-answer");
+      };
       btnArea.appendChild(btn);
     });
   }
 
   wrapper.appendChild(btnArea);
 
-  // 投票グラフ
   const graph = document.createElement("div");
   graph.id = "quiz-graph";
   graph.style.marginTop = "20px";
   wrapper.appendChild(graph);
 
-  // 戻るボタン
   const backBtn = document.createElement("button");
   backBtn.textContent = "ルームに戻る";
   backBtn.style.marginTop = "20px";
@@ -63,7 +56,6 @@ export function createQuestionUI(container, question, choices, sendAnswer){
   };
   wrapper.appendChild(backBtn);
 
-  // UI表示
   container.appendChild(wrapper);
   container.classList.add("active");
 }
@@ -106,24 +98,23 @@ export function lockAnswers(){
 export function updateGraph(votes,choices){
   const graph = document.getElementById("quiz-graph");
   if(!graph) return;
+
   graph.innerHTML="";
-  if(!Array.isArray(votes)){
-    const arr=[0,0,0,0];
-    Object.values(votes).forEach(v=>{
-      if(arr[v]!==undefined) arr[v]++;
-    });
-    votes=arr;
-  }
+
   votes.forEach((v,i)=>{
     const row=document.createElement("div");
     row.style.marginBottom="6px";
+
     const label=document.createElement("span");
     label.textContent=(choices && choices[i] ? choices[i] : "")+" ";
+
     const bar=document.createElement("div");
     bar.className="vote-bar";
     bar.style.width=(v*40)+"px";
+
     const count=document.createElement("span");
     count.textContent=v ?? 0;
+
     row.appendChild(label);
     row.appendChild(bar);
     row.appendChild(count);
@@ -137,15 +128,16 @@ export function updateGraph(votes,choices){
 export function showCorrectAnswer(answerIndex){
   const graph=document.getElementById("quiz-graph");
   if(!graph) return;
-  const rows=graph.children;
-  if(!rows || !rows[answerIndex]) return;
- rows[answerIndex].classList.add("correct-bar");
 
-// ★選択肢ボタンも光る
-const buttons = document.querySelectorAll(".quiz-buttons button");
-if(buttons[answerIndex]){
-  buttons[answerIndex].classList.add("correct-button");
-}
+  const rows=graph.children;
+  if(rows[answerIndex]){
+    rows[answerIndex].classList.add("correct-bar");
+  }
+
+  const buttons = document.querySelectorAll(".quiz-buttons button");
+  if(buttons[answerIndex]){
+    buttons[answerIndex].classList.add("correct-button");
+  }
 }
 
 // =========================
