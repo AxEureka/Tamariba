@@ -73,4 +73,7 @@ function sendAnswer(index){
     name: window.myName,
     choice:index
   }));
+
+  // 👇これ追加（UIロック強化）
+  lockAnswers();
 }
