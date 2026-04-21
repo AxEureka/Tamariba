@@ -59,6 +59,7 @@ export function startQuizHost(ws, container){
       updateVotes();
     }
   };
+}
 
 // 出題
 function sendQuestion(){
