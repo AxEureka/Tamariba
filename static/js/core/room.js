@@ -60,6 +60,9 @@ async function loadRoom() {
     const copyBtn = document.getElementById("copyJoinBtn");
     if (copyBtn) copyBtn.style.display = "inline-block";
 
+    const qrBtn = document.getElementById("showQRBtn");
+    if (qrBtn) qrBtn.style.display = "inline-block";
+
   }
 
   const joinURL = window.location.origin + "/static/join.html?room=" + roomId;
@@ -213,6 +216,24 @@ function copyURL() {
   const input = document.getElementById("join-url");
   navigator.clipboard.writeText(input.value);
   showPopup("参加URLをコピーしました");
+}
+
+function openQR() {
+  const modal = document.getElementById("qrModal");
+  const box = document.getElementById("qrModalCode");
+
+  modal.style.display = "flex";
+  box.innerHTML = ""; // 毎回リセット
+
+  const url = document.getElementById("join-url").value;
+
+  if (typeof QRCode !== "undefined") {
+    new QRCode(box, url);
+  }
+}
+
+function closeQR() {
+  document.getElementById("qrModal").style.display = "none";
 }
 
 function sendMessageToAll() {
@@ -393,3 +414,5 @@ window.selectGame = selectGame;
 window.toggleMembers = toggleMembers;
 window.exitRoom = exitRoom;
 window.kickMember = kickMember;
+window.openQR = openQR;
+window.closeQR = closeQR;
