@@ -50,7 +50,7 @@ export function startQuizHost(ws, container){
   generateChoices(); // 初期表示
 
 
-  socket.onmessage = (e)=>{
+  socket.addEventListener("message", (e)=>{
     let data;
     try{ data = JSON.parse(e.data); }catch{return;}
 
