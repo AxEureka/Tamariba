@@ -52,6 +52,10 @@ font-weight:bold;
 margin:10px 0;
 }
 
+#quiz-host-ui{
+  pointer-events:auto;
+}
+
 /* =========================
    選択肢ボタン
 ========================= */
