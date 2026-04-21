@@ -63,7 +63,7 @@ export function createQuestionUI(container, question, choices, sendAnswer){
 // =========================
 // タイマー
 // =========================
-export function startTimer(seconds,onFinish){
+export function startTimer(seconds, onFinish){
   const timer = document.getElementById("quiz-timer");
   if(!timer) return;
 
@@ -79,11 +79,18 @@ export function startTimer(seconds,onFinish){
       clearInterval(timerInterval);
       timer.textContent = "回答締切";
       lockAnswers();
+
+      // 👇これ追加（超重要）
+      if(window.socket && window.socket.readyState === WebSocket.OPEN){
+        window.socket.send(JSON.stringify({
+          type:"quiz_timer_end"
+        }));
+      }
+
       if(onFinish) onFinish();
     }
   },1000);
 }
-
 // =========================
 // 回答ロック
 // =========================
