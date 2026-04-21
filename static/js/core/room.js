@@ -68,10 +68,6 @@ async function loadRoom() {
   const joinURL = window.location.origin + "/static/join.html?room=" + roomId;
   document.getElementById("join-url").value = joinURL;
 
-  if (typeof QRCode !== "undefined") {
-    new QRCode(document.getElementById("qrcode"), joinURL);
-  }
-
   if (myName !== hostName && !joined) {
     joined = true;
     try {
