@@ -51,6 +51,23 @@ button{
   border-top:1px solid rgba(255,255,255,0.3);
 }
 
+#qrModal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.7);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
+
+#qrBox{
+  background:#111;
+  padding:24px;
+  border-radius:16px;
+  text-align:center;
+}
+
 /* メンバー */
 #members{
   margin-top:10px;
@@ -143,6 +160,7 @@ button{
   <div style="display:flex; gap:6px;">
     <button onclick="toggleMembers()">メンバーを見る</button>
     <button id="copyJoinBtn" onclick="copyURL()" style="display:none;">コピーで参加</button>
+    <button id="showQRBtn" onclick="openQR()" style="display:none;">QR表示</button>
   </div>
 </p>
 
@@ -161,5 +179,15 @@ button{
 <div id="game-container"></div>
 
 <script type="module" src="/static/js/core/room.js"></script>
+
+<!-- QRモーダル -->
+<div id="qrModal" style="display:none;">
+  <div id="qrBox">
+    <h3>参加用QRコード</h3>
+    <div id="qrModalCode"></div>
+    <button onclick="closeQR()">閉じる</button>
+  </div>
+  
+</div>
 </body>
 </html>
