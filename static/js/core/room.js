@@ -219,13 +219,18 @@ function openQR() {
   const box = document.getElementById("qrModalCode");
 
   modal.style.display = "flex";
-  box.innerHTML = ""; // 毎回リセット
+  box.innerHTML = "";
 
-  const url = document.getElementById("join-url").value;
+  const url = `${location.origin}/static/join.html?room=${roomId}`;
 
-  if (typeof QRCode !== "undefined") {
-    new QRCode(box, url);
-  }
+  console.log("QR URL:", url);
+
+  new QRCode(box, {
+    text: url,
+    width: 256,
+    height: 256,
+    correctLevel: QRCode.CorrectLevel.H
+  });
 }
 
 function closeQR() {
