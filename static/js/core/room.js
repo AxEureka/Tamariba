@@ -226,11 +226,11 @@ function openQR() {
   console.log("QR URL:", url);
 
   new QRCode(box, {
-    text: url,
-    width: 256,
-    height: 256,
-    correctLevel: QRCode.CorrectLevel.H
-  });
+  text: url,
+  width: 360,
+  height: 360,
+  correctLevel: QRCode.CorrectLevel.L
+});
 }
 
 function closeQR() {
