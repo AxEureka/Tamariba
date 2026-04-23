@@ -231,14 +231,27 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
 
             elif msg_type == "quiz_get_ranking":
                 scores = room.get("scores", {})
-                
-                ranking = sorted(scores.items(), key=lambda x: -x[1])[:5]
+            
+                sorted_scores = sorted(scores.items(), key=lambda x: -x[1])
+            
+                ranking = []
+                prev_score = None
+                rank = 0
+            
+                for i, (name, score) in enumerate(sorted_scores):
+                    if score != prev_score:
+                        rank = i + 1
+                        prev_score = score
+            
+                    ranking.append((rank, name, score))
+            
+                    if len(ranking) >= 5:
+                        break
             
                 await broadcast(room, {
                     "type": "quiz_ranking",
                     "ranking": ranking
                 })
-            
             
             elif msg_type == "end_quiz":
                 await broadcast(room, {"type": "end_quiz"})
