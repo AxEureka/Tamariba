@@ -2,22 +2,17 @@ import {
   createQuestionUI,
   updateGraph,
   showCorrectAnswer,
-  startTimer,
   lockAnswers,
   updateScore
 } from "./quiz-ui.js";
 
 let socket;
-let container;
 let choices = [];
-let latestVotes = null;
-let graphVisible = false;
 let answered = false;
 
-export function startQuizPlayer(ws, uiContainer){
+export function startQuizPlayer(ws, container){
   socket = ws;
-  window.socket = ws; // ★重要
-  container = uiContainer;
+  window.socket = ws;
 
   socket.onmessage = (e)=>{
     let data;
@@ -26,23 +21,15 @@ export function startQuizPlayer(ws, uiContainer){
     if(data.type === "quiz_question"){
       choices = data.choices;
       answered = false;
-      graphVisible = false;
-      latestVotes = null; // ←追加
 
       createQuestionUI(container, data.question, data.choices, sendAnswer);
-
-      if(data.timer>0){
-        startTimer(data.timer);
-      }
     }
 
-   if(data.type === "quiz_votes"){
-      latestVotes = data.votes;
-      updateGraph(latestVotes, choices); // ← 常に更新
+    if(data.type === "quiz_votes"){
+      // 無視（親のみ表示）
     }
 
     if(data.type === "quiz_show_graph"){
-      graphVisible = true;
       updateGraph(data.votes, choices);
     }
 
@@ -54,14 +41,9 @@ export function startQuizPlayer(ws, uiContainer){
       updateScore(data.scores);
     }
 
-   if(data.type === "quiz_timer_end"){
-    lockAnswers();
-  
-    const timer = document.getElementById("quiz-timer");
-    if(timer){
-      timer.textContent = "回答締切";
+    if(data.type === "quiz_timer_end"){
+      lockAnswers();
     }
-  }
   };
 }
 
