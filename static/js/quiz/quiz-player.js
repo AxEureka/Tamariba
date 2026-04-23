@@ -27,6 +27,7 @@ export function startQuizPlayer(ws, uiContainer){
       choices = data.choices;
       answered = false;
       graphVisible = false;
+      latestVotes = null; // ←追加
 
       createQuestionUI(container, data.question, data.choices, sendAnswer);
 
@@ -35,11 +36,9 @@ export function startQuizPlayer(ws, uiContainer){
       }
     }
 
-    if(data.type === "quiz_votes"){
+   if(data.type === "quiz_votes"){
       latestVotes = data.votes;
-      if(graphVisible){
-        updateGraph(latestVotes, choices);
-      }
+      updateGraph(latestVotes, choices); // ← 常に更新
     }
 
     if(data.type === "quiz_show_graph"){
@@ -55,9 +54,14 @@ export function startQuizPlayer(ws, uiContainer){
       updateScore(data.scores);
     }
 
-    if(data.type === "quiz_timer_end"){
-      lockAnswers();
+   if(data.type === "quiz_timer_end"){
+    lockAnswers();
+  
+    const timer = document.getElementById("quiz-timer");
+    if(timer){
+      timer.textContent = "回答締切";
     }
+  }
   };
 }
 
