@@ -3,18 +3,20 @@ import {
   updateGraph,
   showCorrectAnswer,
   startTimer,
-  lockAnswers
+  lockAnswers,
+  updateScore
 } from "./quiz-ui.js";
 
 let socket;
 let container;
 let choices = [];
 let latestVotes = null;
-let answered = false;
 let graphVisible = false;
+let answered = false;
 
 export function startQuizPlayer(ws, uiContainer){
   socket = ws;
+  window.socket = ws; // ★重要
   container = uiContainer;
 
   socket.onmessage = (e)=>{
@@ -23,26 +25,14 @@ export function startQuizPlayer(ws, uiContainer){
 
     if(data.type === "quiz_question"){
       choices = data.choices;
-      latestVotes = null;
-      graphVisible = false;
       answered = false;
+      graphVisible = false;
 
-      createQuestionUI(
-        container,
-        data.question,
-        data.choices,
-        (index)=>sendAnswer(index)
-      );
+      createQuestionUI(container, data.question, data.choices, sendAnswer);
 
-      if(data.timer > 0){
+      if(data.timer>0){
         startTimer(data.timer);
       }
-    }
-
-    if(data.type === "quiz_timer_end"){
-      lockAnswers();
-      const timer = document.getElementById("quiz-timer");
-      if(timer) timer.textContent = "回答締切";
     }
 
     if(data.type === "quiz_votes"){
@@ -54,12 +44,19 @@ export function startQuizPlayer(ws, uiContainer){
 
     if(data.type === "quiz_show_graph"){
       graphVisible = true;
-      latestVotes = data.votes;
-      updateGraph(latestVotes, choices);
+      updateGraph(data.votes, choices);
     }
 
     if(data.type === "quiz_correct"){
       showCorrectAnswer(data.correct);
+    }
+
+    if(data.type === "quiz_score_update"){
+      updateScore(data.scores);
+    }
+
+    if(data.type === "quiz_timer_end"){
+      lockAnswers();
     }
   };
 }
@@ -74,6 +71,5 @@ function sendAnswer(index){
     choice:index
   }));
 
-  // 👇これ追加（UIロック強化）
   lockAnswers();
 }
