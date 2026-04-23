@@ -208,14 +208,26 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             elif msg_type == "quiz_score":
                 score_map = data.get("scores")
             
+                print("=== 配点処理開始 ===")
+                print("answers:", room["answers"])
+                print("score_map:", score_map)
+            
                 if "scores" not in room:
                     room["scores"] = {}
             
                 for name, choice in room["answers"].items():
+                    print(f"{name} の選択:", choice)
+            
                     if name not in room["scores"]:
                         room["scores"][name] = 0
             
-                    room["scores"][name] += score_map.get(choice, 0)
+                    add = score_map.get(str(choice), 0)
+                    print(f"加点:", add)
+            
+                    room["scores"][name] += add
+            
+                print("最終scores:", room["scores"])
+                print("=== 配点処理終了 ===")
             
                 await broadcast(room, {
                     "type": "quiz_score_update",
