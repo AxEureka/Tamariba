@@ -48,9 +48,15 @@ export function updateGraph(votes, choices){
     const row = document.createElement("div");
 
     row.innerHTML = `
-      ${choices[i]} 
-      <div style="display:inline-block;height:20px;background:#69f;width:${v*40}px"></div>
-      ${v}
+      <div style="margin:8px 0">
+        ${choices[i]} (${v}人)
+        <div style="
+          height:20px;
+          background:#69f;
+          width:${v*30}px;
+          transition:0.3s;
+        "></div>
+      </div>
     `;
 
     graph.appendChild(row);
