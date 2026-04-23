@@ -52,7 +52,7 @@ export function startQuizPlayer(ws, container){
 
       const area = document.getElementById("quiz-area");
       createQuestionUI(area, data.question, data.choices, sendAnswer);
-      const buttons = document.querySelectorAll(".quiz-choice-btn");
+      const buttons = area.querySelectorAll(".quiz-choice-btn");
       buttons.forEach(btn=>{
         btn.style.transition = "all 0.3s ease";
       });
@@ -73,31 +73,27 @@ export function startQuizPlayer(ws, container){
     if(data.type === "quiz_correct"){
       const correct = data.correct;
     
-      const buttons = document.querySelectorAll(".quiz-choice-btn");
+      const area = document.getElementById("quiz-area");
+      const buttons = area.querySelectorAll(".quiz-choice-btn");
     
       buttons.forEach((btn, i)=>{
     
-        // 正解
         if(i === correct){
-          btn.style.background = "#4CAF50"; // 緑
+          btn.style.background = "#4CAF50";
           btn.style.color = "#fff";
           btn.style.fontWeight = "bold";
-          btn.style.boxShadow = "0 0 10px rgba(0,0,0,0.5)";
-          btn.style.transition = "all 0.4s ease";
         }
     
-        // 自分の選択（外れ）
         if(i === myChoice && i !== correct){
-          btn.style.background = "#f44336"; // 赤
+          btn.style.background = "#f44336";
           btn.style.color = "#fff";
           btn.style.fontWeight = "bold";
-          btn.style.boxShadow = "0 0 10px rgba(0,0,0,0.5)";
-          btn.style.transition = "all 0.4s ease";
         }
       });
     }
 
     if(data.type === "quiz_score_update"){
+      console.log("score受信:", data.scores);
       updateScore(data.scores);
     
       const myName = window.myName;
@@ -114,7 +110,7 @@ export function startQuizPlayer(ws, container){
     }
 
     if(data.type === "quiz_ranking"){
-      const box = container;
+      const box = document.getElementById("quiz-area");
       const myName = window.myName;
     
       box.innerHTML = `
@@ -141,24 +137,24 @@ function sendAnswer(index){
   if(answered) return;
   answered = true;
 
-  myChoice = index; // ★追加（超重要）
+  myChoice = index;
 
-  const buttons = document.querySelectorAll(".quiz-choice-btn");
+  const area = document.getElementById("quiz-area");
+  const buttons = area.querySelectorAll(".quiz-choice-btn");
 
   buttons.forEach((btn, i)=>{
     btn.disabled = true;
-  
+
     if(i === index){
       btn.style.background = "#ffcc00";
       btn.style.color = "#000";
       btn.style.fontWeight = "bold";
-  
+
       btn.style.transform = "scale(1.1)";
       setTimeout(()=>{
         btn.style.transform = "scale(1)";
       }, 150);
     }else{
-      // ★これ戻す
       btn.style.opacity = "0.5";
     }
   });
@@ -168,6 +164,8 @@ function sendAnswer(index){
     name: window.myName,
     choice:index
   }));
+
+  document.getElementById("send-status").style.display = "block";
 
   lockAnswers();
 }
