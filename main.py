@@ -203,12 +203,40 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             elif msg_type == "quiz_timer_end":
                 # ★追加（playerが待ってる）
                 await broadcast(room, {"type": "quiz_timer_end"})
+
+
+            elif msg_type == "quiz_score":
+                score_map = data.get("scores")
+            
+                if "scores" not in room:
+                    room["scores"] = {}
+            
+                for name, choice in room["answers"].items():
+                    if name not in room["scores"]:
+                        room["scores"][name] = 0
+            
+                    room["scores"][name] += score_map.get(choice, 0)
+            
+                await broadcast(room, {
+                    "type": "quiz_score_update",
+                    "scores": room["scores"]
+                })
             
             
             elif msg_type == "quiz_correct":
                 await broadcast(room, {
                     "type": "quiz_correct",
                     "correct": data.get("correct")
+                })
+
+            elif msg_type == "quiz_get_ranking":
+                scores = room.get("scores", {})
+                
+                ranking = sorted(scores.items(), key=lambda x: -x[1])[:5]
+            
+                await broadcast(room, {
+                    "type": "quiz_ranking",
+                    "ranking": ranking
                 })
             
             
