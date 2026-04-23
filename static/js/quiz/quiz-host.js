@@ -50,15 +50,15 @@ export function startQuizHost(ws, container){
   generateChoices(); // 初期表示
 
 
-  socket.addEventListener("message", (e)=>{
-    let data;
-    try{ data = JSON.parse(e.data); }catch{return;}
+ socket.addEventListener("message", (e)=>{
+  let data;
+  try{ data = JSON.parse(e.data); }catch{return;}
 
-    if(data.type === "quiz_votes"){
-      votes = data.votes;
-      updateVotes();
-    }
-  };
+  if(data.type === "quiz_votes"){
+    votes = data.votes;
+    updateVotes();
+  }
+});
 }
 
 // 出題
