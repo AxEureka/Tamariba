@@ -45,15 +45,13 @@ export function startQuizHost(ws, container){
 
     <br><br>
     <button id="send-question">出題</button>
-    <button id="show-graph">グラフ表示</button>
     <button id="reveal-answer">正解発表</button>
 
-    <h3>投票結果</h3>
-    <div id="vote-result"></div>
+    <button id="show-graph">投票結果</button>
 
-    <h3>グラフ</h3>
     <div id="quiz-graph"></div>
 
+    
     <h3>配点</h3>
     <div id="score-area"></div>
     <button id="send-score">配点決定</button>
@@ -89,11 +87,6 @@ export function startQuizHost(ws, container){
     let data;
     try{ data = JSON.parse(e.data); }catch{return;}
 
-    if(data.type === "quiz_votes"){
-      votes = data.votes;
-      updateVotes();
-    }
-
     if(data.type === "quiz_show_graph"){
       votes = data.votes;
       updateGraph(votes, getChoices());
@@ -124,8 +117,6 @@ function sendQuestion(){
 
   votes = new Array(choicesArr.length).fill(0);
   correctAnswer = answer;
-
-  document.getElementById("quiz-graph").innerHTML = "";
 
   createScoreInputs(choicesArr.length);
 
@@ -160,13 +151,6 @@ function generateChoices(){
   createScoreInputs(count);
 }
 
-// =========================
-// 投票表示
-// =========================
-function updateVotes(){
-  const box = document.getElementById("vote-result");
-  box.innerHTML = votes.map((v,i)=>`${i+1}: ${v}票`).join("<br>");
-}
 
 // =========================
 // 選択肢取得
