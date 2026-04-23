@@ -123,9 +123,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
         while True:
             data = await websocket.receive_json()
             msg_type = data.get("type")
-            print("WS受信:", data)
-            print("現在のソケット数:", len(room["sockets"]))
-
+           
             # =========================
             # 親からのメッセージ（全体 or 個別）
             # =========================
@@ -152,7 +150,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             
             elif msg_type == "quiz_question":
                 room["answers"] = {}
-            
+                room["scores"] = {}
                 # ★択数保存（超重要）
                 room["last_choices"] = data.get("choices", [])
             
@@ -186,7 +184,6 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             
             
             elif msg_type == "quiz_show_graph":
-                # ★ここが一番重要（votesを一緒に送る）
                 choice_len = len(room.get("last_choices", []))
                 votes = [0] * choice_len
             
@@ -196,7 +193,8 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             
                 await broadcast(room, {
                     "type": "quiz_show_graph",
-                    "votes": votes
+                    "votes": votes,
+                    "choices": room.get("last_choices", [])
                 })
             
             
