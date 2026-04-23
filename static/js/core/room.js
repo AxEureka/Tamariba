@@ -8,6 +8,7 @@ import { startNASAPlayer } from "/static/js/nasa/nasa-player.js";
 const params = new URLSearchParams(location.search);
 const roomId = params.get("room");
 let myName = params.get("name") || "";
+window.myName = myName;
 let hostName = "";
 let lastMembers = [];
 let joined = false;
