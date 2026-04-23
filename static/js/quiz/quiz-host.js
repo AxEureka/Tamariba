@@ -17,7 +17,8 @@ function setPhase(phase){
   show("show-graph", phase==="answering");
   show("reveal-answer", phase==="result");
   show("send-score", phase==="score");
-  show("show-ranking", phase==="ranking");
+  show("next-question", phase==="ranking");
+  show("show-ranking", true); // 常に表示でもOK
 }
 
 // =========================
@@ -56,6 +57,7 @@ export function startQuizHost(ws, container){
     <div id="score-area"></div>
     <button id="send-score">配点決定</button>
 
+    <button id="next-question">次の問題</button>
     <button id="show-ranking">結果発表</button>
   </div>
   `;
@@ -73,6 +75,13 @@ export function startQuizHost(ws, container){
     sendScore();
     setPhase("ranking");
   };
+
+  document.getElementById("next-question").onclick = ()=>{
+  document.getElementById("quiz-question").value = "";
+  generateChoices();
+  setPhase("question");
+};
+
   document.getElementById("show-ranking").onclick = ()=>{
     socket.send(JSON.stringify({type:"quiz_get_ranking"}));
   };
@@ -97,9 +106,19 @@ export function startQuizHost(ws, container){
     }
 
     if(data.type === "quiz_ranking"){
-      alert(
-        data.ranking.map(r=>`${r[0]}位 ${r[1]}: ${r[2]}点`).join("\n")
-      );
+      const box = document.getElementById("quiz-graph");
+    
+      box.innerHTML = `
+        <h3>ランキング</h3>
+        ${data.ranking.map(r=>`
+          <div style="margin:6px 0">
+            ${r[0]}位 ${r[1]} : ${r[2]}点
+          </div>
+        `).join("")}
+      `;
+    
+      // ★これ追加
+      setPhase("ranking");
     }
   });
 }
