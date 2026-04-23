@@ -1,158 +1,91 @@
-let timerInterval = null;
+let timerInterval=null;
 
-// =========================
-// クイズUI表示
-// =========================
+// UI生成
 export function createQuestionUI(container, question, choices, sendAnswer){
+  container.innerHTML="";
 
-  if (!container) return;
-  container.innerHTML = "";
+  const wrap=document.createElement("div");
 
-  const wrapper = document.createElement("div");
-  wrapper.className = "quiz-ui";
+  wrap.innerHTML=`
+    <h2>${question}</h2>
+    <div id="quiz-timer"></div>
+    <div id="quiz-buttons"></div>
+    <div id="quiz-graph"></div>
+    <div id="score-display"></div>
+  `;
 
-  const q = document.createElement("h2");
-  q.textContent = question || "";
-  wrapper.appendChild(q);
+  const btnArea = wrap.querySelector("#quiz-buttons");
 
-  const timer = document.createElement("div");
-  timer.id = "quiz-timer";
-  timer.style.margin = "10px 0";
-  wrapper.appendChild(timer);
+  choices.forEach((c,i)=>{
+    const btn=document.createElement("button");
+    btn.textContent=c;
+    btn.onclick=()=>{
+      sendAnswer(i);
+      btnArea.querySelectorAll("button").forEach(b=>b.disabled=true);
+      btn.classList.add("selected-answer");
+    };
+    btnArea.appendChild(btn);
+  });
 
-  const btnArea = document.createElement("div");
-  btnArea.className = "quiz-buttons";
-
-  if (Array.isArray(choices)){
-    choices.forEach((choice,i)=>{
-      const btn = document.createElement("button");
-      btn.textContent = String(choice ?? "");
-      btn.onclick = ()=>{
-
-        if(sendAnswer) sendAnswer(i);
-
-        btnArea.querySelectorAll("button").forEach(b=>{
-          b.disabled = true;
-        });
-
-        btn.classList.add("selected-answer");
-      };
-      btnArea.appendChild(btn);
-    });
-  }
-
-  wrapper.appendChild(btnArea);
-
-  const graph = document.createElement("div");
-  graph.id = "quiz-graph";
-  graph.style.marginTop = "20px";
-  wrapper.appendChild(graph);
-
-  const backBtn = document.createElement("button");
-  backBtn.textContent = "ルームに戻る";
-  backBtn.style.marginTop = "20px";
-  backBtn.onclick = ()=>{
-    closeQuizUI(container);
-  };
-  wrapper.appendChild(backBtn);
-
-  container.appendChild(wrapper);
-  container.classList.add("active");
+  container.appendChild(wrap);
 }
 
-// =========================
 // タイマー
-// =========================
-export function startTimer(seconds, onFinish){
-  const timer = document.getElementById("quiz-timer");
-  if(!timer) return;
+export function startTimer(sec){
+  const el=document.getElementById("quiz-timer");
+  let t=sec;
+  el.textContent=`残り ${t}`;
 
   clearInterval(timerInterval);
-  let time = seconds;
-  timer.textContent = `残り ${time} 秒`;
-
-  timerInterval = setInterval(()=>{
-    time--;
-    timer.textContent = `残り ${time} 秒`;
-
-    if(time<=0){
+  timerInterval=setInterval(()=>{
+    t--;
+    el.textContent=`残り ${t}`;
+    if(t<=0){
       clearInterval(timerInterval);
-      timer.textContent = "回答締切";
+      el.textContent="締切";
       lockAnswers();
 
-      // 👇これ追加（超重要）
-      if(window.socket && window.socket.readyState === WebSocket.OPEN){
-        window.socket.send(JSON.stringify({
-          type:"quiz_timer_end"
-        }));
+      if(window.socket){
+        window.socket.send(JSON.stringify({type:"quiz_timer_end"}));
       }
-
-      if(onFinish) onFinish();
     }
   },1000);
 }
-// =========================
-// 回答ロック
-// =========================
+
+// ロック
 export function lockAnswers(){
-  document.querySelectorAll(".quiz-buttons button")
-    .forEach(b=>{b.disabled=true;});
+  document.querySelectorAll("button").forEach(b=>b.disabled=true);
 }
 
-// =========================
-// グラフ更新
-// =========================
+// グラフ
 export function updateGraph(votes,choices){
-  const graph = document.getElementById("quiz-graph");
-  if(!graph) return;
-
+  const graph=document.getElementById("quiz-graph");
   graph.innerHTML="";
 
   votes.forEach((v,i)=>{
-    const row=document.createElement("div");
-    row.style.marginBottom="6px";
-
-    const label=document.createElement("span");
-    label.textContent=(choices && choices[i] ? choices[i] : "")+" ";
-
-    const bar=document.createElement("div");
-    bar.className="vote-bar";
-    bar.style.width=(v*40)+"px";
-
-    const count=document.createElement("span");
-    count.textContent=v ?? 0;
-
-    row.appendChild(label);
-    row.appendChild(bar);
-    row.appendChild(count);
-    graph.appendChild(row);
+    graph.innerHTML+=`
+      <div>${choices[i]} 
+        <div style="background:#4caf50;height:10px;width:${v*40}px"></div>
+        ${v}
+      </div>
+    `;
   });
 }
 
-// =========================
-// 正解表示
-// =========================
-export function showCorrectAnswer(answerIndex){
-  const graph=document.getElementById("quiz-graph");
-  if(!graph) return;
-
-  const rows=graph.children;
-  if(rows[answerIndex]){
-    rows[answerIndex].classList.add("correct-bar");
-  }
-
-  const buttons = document.querySelectorAll(".quiz-buttons button");
-  if(buttons[answerIndex]){
-    buttons[answerIndex].classList.add("correct-button");
-  }
+// 正解
+export function showCorrectAnswer(i){
+  const rows=document.getElementById("quiz-graph").children;
+  if(rows[i]) rows[i].style.background="yellow";
 }
 
-// =========================
-// クイズUI閉じる
-// =========================
-export function closeQuizUI(container){
-  if(!container) return;
-  clearInterval(timerInterval);
-  container.innerHTML="";
-  container.classList.remove("active");
+// スコア表示
+export function updateScore(scores){
+  const box=document.getElementById("score-display");
+  if(!box) return;
+
+  let html="<h3>スコア</h3>";
+  for(const name in scores){
+    html+=`${name}: ${scores[name]}<br>`;
+  }
+  box.innerHTML=html;
 }
