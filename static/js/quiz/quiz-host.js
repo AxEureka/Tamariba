@@ -39,10 +39,14 @@ export function startQuizHost(ws, container){
 
     <h3>投票結果</h3>
     <div id="vote-result"></div>
+    
+    <h3>グラフ</h3>
+    <div id="quiz-graph"></div>
 
     <h3>配点</h3>
     <div id="score-area"></div>
     <button id="send-score">配点決定</button>
+    <button id="show-ranking">ランキング</button>
   </div>
   `;
 
@@ -54,6 +58,9 @@ export function startQuizHost(ws, container){
     socket.send(JSON.stringify({type:"quiz_correct", correct:correctAnswer}));
   };
   document.getElementById("send-score").onclick = sendScore;
+  document.getElementById("show-ranking").onclick = ()=>{
+    socket.send(JSON.stringify({type:"quiz_get_ranking"}));
+  };
 
   document.getElementById("generateChoices").onclick = generateChoices;
   document.getElementById("choiceCount").onchange = generateChoices;
@@ -63,11 +70,18 @@ export function startQuizHost(ws, container){
   socket.addEventListener("message", (e)=>{
     let data;
     try{ data = JSON.parse(e.data); }catch{return;}
-
+  
     if(data.type === "quiz_votes"){
       votes = data.votes;
       updateVotes();
       updateGraph(votes, getChoices());
+    }
+  
+    // ★これ追加
+    if(data.type === "quiz_ranking"){
+      alert(
+        data.ranking.map((r,i)=>`${i+1}位 ${r[0]}: ${r[1]}点`).join("\n")
+      );
     }
   });
 }
@@ -85,6 +99,10 @@ function sendQuestion(){
 
   votes = new Array(choicesArr.length).fill(0);
   correctAnswer = answer;
+  
+  // ★ここ追加
+  updateVotes();
+  updateGraph(votes, choicesArr);
 
   createScoreInputs(choicesArr.length);
 
@@ -112,6 +130,7 @@ function generateChoices(){
     area.innerHTML += `<input class="quiz-choice" placeholder="選択肢${i+1}"><br>`;
     select.innerHTML += `<option value="${i}">${i+1}</option>`;
   }
+  createScoreInputs(count); // ★追加
 }
 
 // 投票表示
