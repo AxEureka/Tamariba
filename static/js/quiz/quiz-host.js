@@ -80,7 +80,7 @@ export function startQuizHost(ws, container){
     // ★これ追加
     if(data.type === "quiz_ranking"){
       alert(
-        data.ranking.map((r,i)=>`${i+1}位 ${r[0]}: ${r[1]}点`).join("\n")
+        data.ranking.map(r=>`${r[0]}位 ${r[1]}: ${r[2]}点`)
       );
     }
   });
