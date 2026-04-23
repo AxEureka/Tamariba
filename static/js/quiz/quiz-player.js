@@ -48,15 +48,18 @@ export function startQuizPlayer(ws, container){
     if(data.type === "quiz_question"){
       choices = data.choices;
       answered = false;
-      myChoice = null; 
-
+      myChoice = null;
+    
       const area = document.getElementById("quiz-area");
       createQuestionUI(area, data.question, data.choices, sendAnswer);
+    
       const buttons = area.querySelectorAll(".quiz-choice-btn");
       buttons.forEach(btn=>{
         btn.style.transition = "all 0.3s ease";
       });
-      const status = document.getElementById("send-status");
+    
+      // ★これが安全版
+      const status = container.querySelector("#send-status");
       if(status){
         status.style.display = "none";
       }
@@ -73,15 +76,17 @@ export function startQuizPlayer(ws, container){
     if(data.type === "quiz_correct"){
       const correct = data.correct;
     
-      const area = document.getElementById("quiz-area");
-      const buttons = area.querySelectorAll(".quiz-choice-btn");
+      const buttons = document.querySelectorAll(".quiz-choice-btn");
     
       buttons.forEach((btn, i)=>{
+    
+        btn.style.transition = "all 0.3s ease";
     
         if(i === correct){
           btn.style.background = "#4CAF50";
           btn.style.color = "#fff";
           btn.style.fontWeight = "bold";
+          btn.style.transform = "scale(1.05)";
         }
     
         if(i === myChoice && i !== correct){
@@ -91,7 +96,6 @@ export function startQuizPlayer(ws, container){
         }
       });
     }
-
     if(data.type === "quiz_score_update"){
       console.log("score受信:", data.scores);
       updateScore(data.scores);
@@ -137,10 +141,9 @@ function sendAnswer(index){
   if(answered) return;
   answered = true;
 
-  myChoice = index;
+  myChoice = index; // ★重要
 
-  const area = document.getElementById("quiz-area");
-  const buttons = area.querySelectorAll(".quiz-choice-btn");
+  const buttons = document.querySelectorAll(".quiz-choice-btn");
 
   buttons.forEach((btn, i)=>{
     btn.disabled = true;
@@ -150,22 +153,27 @@ function sendAnswer(index){
       btn.style.color = "#000";
       btn.style.fontWeight = "bold";
 
-      btn.style.transform = "scale(1.1)";
+      // 気持ちよさ（追加）
+      btn.style.transform = "scale(1.08)";
+      btn.style.transition = "all 0.15s ease";
       setTimeout(()=>{
         btn.style.transform = "scale(1)";
-      }, 150);
+      }, 120);
+
     }else{
       btn.style.opacity = "0.5";
     }
   });
+
+  // ✔ 送信完了UI（ここに移すのが安定）
+  const status = document.getElementById("send-status");
+  if(status) status.style.display = "block";
 
   socket.send(JSON.stringify({
     type:"quiz_answer",
     name: window.myName,
     choice:index
   }));
-
-  document.getElementById("send-status").style.display = "block";
 
   lockAnswers();
 }
