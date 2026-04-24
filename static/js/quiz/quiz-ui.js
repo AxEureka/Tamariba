@@ -9,7 +9,7 @@ export function createQuestionUI(container, question, choices, sendAnswer){
 
     <div class="quiz-buttons"></div>
 
-    <div id="send-status">✔ 送信しました</div>
+    <div id="send-status" style="display:none;">✔ 送信しました</div>
 
     <div id="quiz-graph"></div>
     <div id="quiz-score"></div>
@@ -40,14 +40,17 @@ export function updateGraph(votes, choices){
 
   votes.forEach((v,i)=>{
     const row = document.createElement("div");
+    row.className = "vote-row";
 
-    row.innerHTML = `
-      <div class="vote-row">
-        ${choices[i]} (${v}人)
-        <div class="vote-bar" style="width:${v*30}px"></div>
-      </div>
-    `;
+    const label = document.createElement("div");
+    label.textContent = `${choices[i]} (${v}人)`;
 
+    const bar = document.createElement("div");
+    bar.className = "vote-bar";
+    bar.style.width = `${v * 30}px`;
+
+    row.appendChild(label);
+    row.appendChild(bar);
     graph.appendChild(row);
   });
 }
@@ -56,13 +59,19 @@ export function updateGraph(votes, choices){
 // スコア表示
 // =========================
 export function updateScore(scores){
-  const container = document.getElementById("quiz-score");
-  if(!container) return;
+  const scoreBox = document.getElementById("quiz-score");
+  if(!scoreBox) return;
 
-  container.innerHTML = Object.entries(scores)
-    .map(([name,score])=>{
-      const isMe = name === window.myName;
-      return `<div class="${isMe ? "my-score" : ""}">${name}: ${score}点</div>`;
+  scoreBox.replaceChildren(
+    ...Object.entries(scores).map(([name,score])=>{
+      const div = document.createElement("div");
+      div.textContent = `${name}: ${score}点`;
+
+      if(name === window.myName){
+        div.className = "my-score";
+      }
+
+      return div;
     })
-    .join("");
+  );
 }
