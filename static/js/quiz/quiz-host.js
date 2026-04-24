@@ -8,6 +8,15 @@ let votes = [];
 export function startQuizHost(ws, container){
   socket = ws;
 
+  socket.onmessage = (e)=>{
+    let data;
+    try{ data = JSON.parse(e.data); }catch{return;}
+  
+    if(data.type === "quiz_show_graph"){
+      updateGraph(data.votes, currentChoices);
+    }
+  };
+  
   container.innerHTML = `
   <div class="quiz-ui">
     <h2>クイズ出題</h2>
