@@ -150,15 +150,16 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             
             elif msg_type == "quiz_question":
                 room["answers"] = {}
-                room["scores"] = {}
-                # ★択数保存（超重要）
-                room["last_choices"] = data.get("choices", [])
+            
+                # ★ここに追加（ここが正解位置）
+                choices = data.get("choices", [])
+                room["last_choices"] = choices
             
                 await broadcast(room, {
                     "type": "quiz_question",
                     "question": data.get("question"),
-                    "choices": room["last_choices"],
-                    "timer": data.get("timer")  # ★追加
+                    "choices": choices,
+                    "timer": data.get("timer")
                 })
             
             
@@ -178,10 +179,10 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                         votes[v] += 1
             
                 await broadcast(room, {
-                    "type": "quiz_votes",
-                    "votes": votes
-                })
-            
+                    "type": "quiz_show_graph",
+                    "votes": votes,
+                    "choices": room.get("last_choices", [])
+                })            
             
             elif msg_type == "quiz_show_graph":
                 choice_len = len(room.get("last_choices", []))
