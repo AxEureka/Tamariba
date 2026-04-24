@@ -47,7 +47,8 @@ export function updateGraph(votes, choices){
 
     const bar = document.createElement("div");
     bar.className = "vote-bar";
-    bar.style.width = `${v * 30}px`;
+    const max = Math.max(...votes, 1);
+    bar.style.width = `${(v / max) * 100}%`;
 
     row.appendChild(label);
     row.appendChild(bar);
@@ -66,11 +67,9 @@ export function updateScore(scores){
   scoreBox.replaceChildren(
     ...Object.entries(scores).map(([name,score])=>{
       const div = document.createElement("div");
-      div.className = name === window.myName ? "my-score" : "";
 
-      if(name === window.myName){
-        div.className = "my-score";
-      }
+      div.textContent = `${name}: ${score}点`;
+      div.className = name === window.myName ? "my-score" : "";
 
       return div;
     })
