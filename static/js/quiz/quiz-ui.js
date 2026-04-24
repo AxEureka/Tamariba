@@ -9,7 +9,7 @@ export function createQuestionUI(container, question, choices, sendAnswer){
 
     <div class="quiz-buttons"></div>
 
-    <div id="send-status" style="display:none;">✔ 送信しました</div>
+    <div id="send-status"></div>
 
     <div id="quiz-graph"></div>
     <div id="quiz-score"></div>
@@ -51,6 +51,7 @@ export function updateGraph(votes, choices){
 
     row.appendChild(label);
     row.appendChild(bar);
+
     graph.appendChild(row);
   });
 }
@@ -65,7 +66,7 @@ export function updateScore(scores){
   scoreBox.replaceChildren(
     ...Object.entries(scores).map(([name,score])=>{
       const div = document.createElement("div");
-      div.textContent = `${name}: ${score}点`;
+      div.className = name === window.myName ? "my-score" : "";
 
       if(name === window.myName){
         div.className = "my-score";
