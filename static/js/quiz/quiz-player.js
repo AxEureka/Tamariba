@@ -14,6 +14,7 @@ export function startQuizPlayer(ws, container){
   <div id="my-score">あなたの点数: 0点</div>
   <div id="send-status">✔ 送信しました</div>
   <div id="quiz-area"></div>
+  <div id="quiz-ranking"></div>
   `;
 
   socket = ws;
@@ -30,10 +31,16 @@ export function startQuizPlayer(ws, container){
       answered = false;
       myChoice = null;
 
-      document.getElementById("send-status").classList.remove("show");
-
+      window.currentChoices = data.choices; // ★これ追加
+    
+      const area = document.getElementById("quiz-area");
+      area.innerHTML = "";   // ←ここ追加
+    
+      const status = document.getElementById("send-status");
+      if(status) status.style.display = "none";
+    
       createQuestionUI(
-        document.getElementById("quiz-area"),
+        area,
         data.question,
         data.choices,
         sendAnswer
@@ -44,7 +51,7 @@ export function startQuizPlayer(ws, container){
     // グラフ
     // =========================
     if(data.type === "quiz_show_graph"){
-      updateGraph(data.votes, data.choices || []);
+      updateGraph(data.votes, window.currentChoices || []);
     }
 
     // =========================
@@ -83,7 +90,7 @@ export function startQuizPlayer(ws, container){
     // ランキング
     // =========================
     if(data.type === "quiz_ranking"){
-      const box = document.getElementById("quiz-area");
+     const box = document.getElementById("quiz-ranking");
 
       box.innerHTML = `
         <h3>ランキング</h3>
@@ -123,7 +130,9 @@ function sendAnswer(index){
     }
   });
 
-  document.getElementById("send-status").classList.add("show");
+  // ★ここに入れる
+  const status = document.getElementById("send-status");
+  if(status) status.style.display = "block";
 
   socket.send(JSON.stringify({
     type:"quiz_answer",
