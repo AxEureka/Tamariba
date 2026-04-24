@@ -12,7 +12,7 @@ export function startQuizPlayer(ws, container){
 
   container.innerHTML = `
   <div id="my-score">あなたの点数: 0点</div>
-  <div id="send-status">✔ 送信しました</div>
+  <div id="send-status"></div>
   <div id="quiz-area"></div>
   <div id="quiz-ranking"></div>
   `;
@@ -31,7 +31,8 @@ export function startQuizPlayer(ws, container){
       answered = false;
       myChoice = null;
 
-      window.currentChoices = data.choices; // ★これ追加
+      if(!window.quizState) window.quizState = {};
+      window.quizState.choices = data.choices;
     
       const area = document.getElementById("quiz-area");
       area.innerHTML = "";   // ←ここ追加
