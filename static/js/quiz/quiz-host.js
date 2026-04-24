@@ -2,6 +2,7 @@ import { updateGraph } from "./quiz-ui.js";
 
 let socket;
 let correctAnswer = 0;
+let currentChoices = [];
 let votes = [];
 
 export function startQuizHost(ws, container){
@@ -38,7 +39,10 @@ export function startQuizHost(ws, container){
   };
 
   document.getElementById("graph").onclick = ()=>{
-    socket.send(JSON.stringify({type:"quiz_show_graph"}));
+    socket.send(JSON.stringify({
+      type:"quiz_show_graph",
+      choices: currentChoices   // ★追加
+    }));
   };
 
   document.getElementById("ranking").onclick = ()=>{
@@ -50,17 +54,17 @@ export function startQuizHost(ws, container){
 
 // =========================
 function sendQuestion(){
-  const q = document.getElementById("quiz-question").value;
-  const choices = getChoices();
+  const q = document.getElementById("quiz-question").value.trim();
+  currentChoices = getChoices();   // ★追加
 
   correctAnswer = parseInt(document.getElementById("quiz-answer").value);
 
-  votes = new Array(choices.length).fill(0);
+  votes = new Array(currentChoices.length).fill(0);
 
   socket.send(JSON.stringify({
     type:"quiz_question",
     question:q,
-    choices
+    choices: currentChoices
   }));
 }
 
