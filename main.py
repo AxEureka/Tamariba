@@ -444,27 +444,28 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     "my_team_name": my_team
                 })
             elif msg_type == "end_nasa":
-    await broadcast(room, {"type": "end_nasa"})
+                await broadcast(room, {"type": "end_nasa"})
 
-# =========================
-# 相性診断終了
-# =========================
-elif msg_type == "end_compatibility":
-    await broadcast(room, {
-        "type": "end_compatibility"
-    })
-
-# =========================
-# 相性診断開始
-# =========================
-elif msg_type == "start_compatibility":
-
-    room["compatibility_answers"] = {}
-    room["compatibility_groups"] = {}
-
-    await broadcast(room, {
-        "type": "start_compatibility"
-    })
+            # =========================
+            # 相性診断終了
+            # =========================
+            elif msg_type == "end_compatibility":
+                await broadcast(room, {
+                    "type": "end_compatibility"
+                })
+            
+            # =========================
+            # 相性診断開始
+            # =========================
+            elif msg_type == "start_compatibility":
+            
+                room["compatibility_answers"] = {}
+                room["compatibility_groups"] = {}
+                room["compatibility_results"] = {}
+            
+                await broadcast(room, {
+                    "type": "start_compatibility"
+                })
 
     
     except WebSocketDisconnect:
