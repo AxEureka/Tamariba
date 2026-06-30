@@ -158,18 +158,18 @@ button{
 </div>
 
 <!-- ルームIDと人数、メンバーボタン -->
-<p style="display:flex; align-items:center; justify-content:space-between;">
+<div style="display:flex; align-items:center; justify-content:space-between;">
   <span>
     ルームID：<strong id="room-id"></strong> /
     参加人数：<strong id="count">0</strong>人
   </span>
-  <!-- メンバー横のボタン -->
+
   <div style="display:flex; gap:6px;">
     <button onclick="toggleMembers()">メンバーを見る</button>
     <button id="copyJoinBtn" onclick="copyURL()" style="display:none;">コピーで参加</button>
     <button id="showQRBtn" onclick="openQR()" style="display:none;">QR表示</button>
   </div>
-</p>
+</div>
 
 <div id="members" style="display:none;"></div>
 
