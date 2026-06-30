@@ -4,6 +4,8 @@ import { startQuizHost } from "/static/js/quiz/quiz-host.js";
 import { startQuizPlayer } from "/static/js/quiz/quiz-player.js";
 import { startNASAHost } from "/static/js/nasa/nasa-host.js";
 import { startNASAPlayer } from "/static/js/nasa/nasa-player.js";
+import { startCompatibilityHost } from "/static/js/compatibility/compatibility-host.js";
+import { startCompatibilityPlayer } from "/static/js/compatibility/compatibility-player.js";
 
 const params = new URLSearchParams(location.search);
 const roomId = params.get("room");
@@ -285,15 +287,22 @@ function selectGame(type) {
     }
   }
 
-  if (type === "nasa") {
-    if (myName === hostName) {
+ if (type === "nasa") {
+  if (myName === hostName) {
       currentGame = "nasa";
-      socket.send(JSON.stringify({ type: "start_nasa" }));
       container.classList.add("active");
       startNASAHost(socket, container);
-      document.getElementById("exitQuizBtn").style.display = "inline-block";
-    }
   }
+}
+
+ if (type === "compatibility") {
+  if (myName === hostName) {
+      currentGame = "compatibility";
+      container.classList.add("active");
+      startCompatibilityHost(socket, container);
+      document.getElementById("exitQuizBtn").style.display = "inline-block";
+      }
+    }
 }
 
 let socket;
@@ -334,7 +343,15 @@ function connectSocket() {
       if (myName !== hostName) startNASAPlayer(socket, container);
     }
 
-    if (msg.type === "end_quiz" || msg.type === "end_nasa") {
+    if (msg.type === "start_compatibility") {
+      const container = document.getElementById("game-container");
+      container.classList.add("active");
+      document.getElementById("exitQuizBtn").style.display = "inline-block";
+      if (myName !== hostName) {startCompatibilityPlayer(socket, container);
+    }
+}
+
+    if (msg.type === "end_quiz" || msg.type === "end_nasa" || msg.type === "end_compatibility") {
       const container = document.getElementById("game-container");
       container.classList.remove("active");
       container.innerHTML = "";
@@ -357,6 +374,7 @@ document.addEventListener("click", (e) => {
   const gameDropdown = document.getElementById("gameDropdown");
   const nasaBtn = document.getElementById("nasaBtn");
   const quizBtn = document.getElementById("quizBtn");
+  const compatibilityBtn =document.getElementById("compatibilityBtn");
 
   if (nasaBtn && nasaBtn.contains(e.target)) {
     e.stopPropagation();
@@ -367,6 +385,12 @@ document.addEventListener("click", (e) => {
   if (quizBtn && quizBtn.contains(e.target)) {
     e.stopPropagation();
     selectGame("quiz");
+    return;
+  }
+
+  if (compatibilityBtn && compatibilityBtn.contains(e.target)){
+    e.stopPropagation();
+    selectGame("compatibility");
     return;
   }
 
