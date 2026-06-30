@@ -35,19 +35,22 @@ async def create_room(data: dict):
     theme = data.get("theme", "mansion")
 
     rooms[room_id] = {
-        "room": room_name,
-        "host": host,
-        "theme": theme,
-        "members": [host],
-        "sockets": [],
-        "answers": {},
-        "nasa_answers": {},
-        "nasa": {},
-        "team_answers": {},
-        "teams": {},
-        "team_count": 0,
-        "team_leaders": {}
-    }
+    "room": room_name,
+    "host": host,
+    "theme": theme,
+    "members": [host],
+    "sockets": [],
+    "answers": {},
+    "nasa_answers": {},
+    "nasa": {},
+    "team_answers": {},
+    "teams": {},
+    "team_count": 0,
+    "team_leaders": {},
+    "compatibility_answers": {},
+    "compatibility_groups": {},
+    "compatibility_results": {}
+}
 
     return {"room_id": room_id}
 
@@ -113,7 +116,10 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             "team_answers": {},
             "teams": {},
             "team_count": 0,
-            "team_leaders": {}
+            "team_leaders": {},
+            "compatibility_answers": {},
+            "compatibility_groups": {},
+            "compatibility_results": {}
         }
 
     room = rooms[room_id]
@@ -438,19 +444,27 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     "my_team_name": my_team
                 })
             elif msg_type == "end_nasa":
-                await broadcast(room, {"type": "end_nasa"})
+    await broadcast(room, {"type": "end_nasa"})
 
-            # =========================
-            # 相性診断
-            # =========================
-            elif msg_type == "start_compatibility":
+# =========================
+# 相性診断終了
+# =========================
+elif msg_type == "end_compatibility":
+    await broadcast(room, {
+        "type": "end_compatibility"
+    })
 
-                room["compatibility_answers"] = {}
-                room["compatibility_groups"] = {}
+# =========================
+# 相性診断開始
+# =========================
+elif msg_type == "start_compatibility":
 
-                await broadcast(room, {
-                    "type": "start_compatibility"
-                })
+    room["compatibility_answers"] = {}
+    room["compatibility_groups"] = {}
+
+    await broadcast(room, {
+        "type": "start_compatibility"
+    })
 
     
     except WebSocketDisconnect:
