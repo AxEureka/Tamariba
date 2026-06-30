@@ -440,9 +440,23 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             elif msg_type == "end_nasa":
                 await broadcast(room, {"type": "end_nasa"})
 
+            # =========================
+            # 相性診断
+            # =========================
+            elif msg_type == "start_compatibility":
+
+                room["compatibility_answers"] = {}
+                room["compatibility_groups"] = {}
+
+                await broadcast(room, {
+                    "type": "start_compatibility"
+                })
+
+    
     except WebSocketDisconnect:
         if websocket in room["sockets"]:
             room["sockets"].remove(websocket)
+          
 
 
 # =========================
