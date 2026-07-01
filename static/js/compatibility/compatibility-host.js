@@ -1,8 +1,11 @@
+console.log("compatibility-host loaded");
+
 export function startCompatibilityHost(
     socket,
     container
 ){
-
+    console.log("startCompatibilityHost");
+    
     container.innerHTML="";
 
     const title=
