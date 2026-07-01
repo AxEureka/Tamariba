@@ -559,7 +559,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 
                     room["compatibility"]["similarities"] = similarities
                 
-                   await broadcast(room,{
+                    await broadcast(room,{
                         "type":"compatibility_all_done",
                         "player_count": len(names)
                     })
