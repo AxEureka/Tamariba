@@ -528,10 +528,68 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 })
             
                 if done >= total:
-            
+
+                    answers =
+                        room["compatibility"]["answers"]
+                
+                    names =
+                        list(answers.keys())
+                
+                    similarities = {}
+                
+                    for i in range(len(names)):
+                        for j in range(i+1,len(names)):
+                
+                            n1 = names[i]
+                            n2 = names[j]
+                
+                            a1 = answers[n1]
+                            a2 = answers[n2]
+                
+                            same = 0
+                
+                            for x,y in zip(a1,a2):
+                                if x == y:
+                                    same += 1
+                
+                            rate = round(
+                                same / len(a1) * 100,
+                                1
+                            )
+                
+                            similarities[f"{n1}|{n2}"] = rate
+                
+                    room["compatibility"]["similarities"] = similarities
+                
                     await broadcast(room,{
                         "type":"compatibility_all_done"
-                    })            
+                    })
+
+
+            elif msg_type == "compatibility_make_team":
+            
+                team_size = data.get(
+                    "team_size",
+                    4
+                )
+            
+                high_weight = data.get(
+                    "high_weight",
+                    100
+                )
+            
+                low_weight = data.get(
+                    "low_weight",
+                    0
+                )
+            
+                room["compatibility"]["team_size"] = team_size
+                room["compatibility"]["high_weight"] = high_weight
+                room["compatibility"]["low_weight"] = low_weight
+            
+                await broadcast(room,{
+                    "type":"compatibility_team_created"
+                })
             # =========================
             # 相性診断終了
             # =========================
