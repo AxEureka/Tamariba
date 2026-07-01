@@ -296,6 +296,7 @@ function selectGame(type) {
 }
 
  if (type === "compatibility") {
+  console.log("selectGame compatibility");
   if (myName === hostName) {
       currentGame = "compatibility";
       container.classList.add("active");
@@ -389,6 +390,7 @@ document.addEventListener("click", (e) => {
   }
 
   if (compatibilityBtn && compatibilityBtn.contains(e.target)){
+    console.log("compatibility button clicked");
     e.stopPropagation();
     selectGame("compatibility");
     return;
