@@ -3,6 +3,8 @@ from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 import uuid
 import os
+import json
+import random
 
 app = FastAPI()
 
@@ -12,6 +14,23 @@ app = FastAPI()
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+COMPATIBILITY_FILE = os.path.join(
+    STATIC_DIR,
+    "data",
+    "compatibility-pool.json"
+)
+
+try:
+    with open(
+        COMPATIBILITY_FILE,
+        encoding="utf-8"
+    ) as f:
+        COMPATIBILITY_POOL = json.load(f)
+
+except Exception as e:
+    print("相性診断問題の読み込み失敗:", e)
+    COMPATIBILITY_POOL = []
 
 @app.get("/")
 async def root():
@@ -47,7 +66,7 @@ async def create_room(data: dict):
     "teams": {},
     "team_count": 0,
     "team_leaders": {},
-   "compatibility": {
+    "compatibility": {
         "question_count": 10,
         "answers": {},
         "groups": {},
@@ -278,6 +297,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             
             elif msg_type == "end_quiz":
                 await broadcast(room, {"type": "end_quiz"})
+            
             # =========================
             # NASA
             # =========================
@@ -459,18 +479,33 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
 
                 question_count = data.get("question_count", 10)
             
+                if not COMPATIBILITY_POOL:
+                    await websocket.send_json({
+                        "type":"error",
+                        "message":"相性診断問題が存在しません"
+                    })
+                    continue
+                
+                selected_questions = random.sample(
+                    COMPATIBILITY_POOL,
+                    min(
+                        question_count,
+                        len(COMPATIBILITY_POOL)
+                    )
+                )
+                
                 room["compatibility"] = {
-                    "question_count": question_count,
+                    "question_count": len(selected_questions),
+                    "questions": selected_questions,
                     "answers": {},
                     "groups": {},
                     "results": {}
                 }
-
+            
                 await broadcast(room,{
                     "type":"start_compatibility",
-                    "question_count": question_count
+                    "questions": selected_questions
                 })
-
             
             elif msg_type == "compatibility_answer":
 
