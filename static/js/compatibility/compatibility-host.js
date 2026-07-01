@@ -5,79 +5,77 @@ export function startCompatibilityHost(
     container
 ){
     console.log("startCompatibilityHost");
-    
+
     container.innerHTML="";
 
-    const title=
-        document.createElement("h2");
-
-    title.textContent=
-        "相性診断";
-
-    const count=
-        document.createElement("input");
-
-    count.type="number";
-    count.min=3;
-    count.max=20;
-    count.value=10;
-
-    const start=
-        document.createElement("button");
-
-    start.textContent=
-        "開始";
-
-    const progress=
+    const wrapper =
         document.createElement("div");
 
-    start.onclick=()=>{
+    wrapper.className =
+        "compatibility-ui";
+
+    const title =
+        document.createElement("h2");
+
+    title.textContent =
+        "相性診断";
+
+    const count =
+        document.createElement("input");
+
+    count.type = "number";
+    count.min = 3;
+    count.max = 20;
+    count.value = 10;
+
+    const start =
+        document.createElement("button");
+
+    start.textContent =
+        "開始";
+
+    const progress =
+        document.createElement("div");
+
+    start.onclick = ()=>{
 
         socket.send(
             JSON.stringify({
-
-                type:
-                "start_compatibility",
-
+                type:"start_compatibility",
                 question_count:
-                parseInt(
-                    count.value
-                )
-
+                    parseInt(count.value)
             })
         );
     };
 
-    container.appendChild(title);
-    container.appendChild(count);
-    container.appendChild(start);
-    container.appendChild(progress);
+    wrapper.appendChild(title);
+    wrapper.appendChild(count);
+    wrapper.appendChild(start);
+    wrapper.appendChild(progress);
+
+    container.appendChild(wrapper);
 
     socket.addEventListener(
         "message",
         (event)=>{
 
-            const data=
+            const data =
                 JSON.parse(event.data);
 
             if(
-                data.type===
+                data.type ===
                 "compatibility_progress"
             ){
-
-                progress.textContent=
+                progress.textContent =
                     `${data.done}/${data.total} 回答済み`;
-
             }
 
             if(
-                data.type===
+                data.type ===
                 "compatibility_all_done"
             ){
-
-                progress.textContent=
+                progress.textContent =
                     "全員回答完了";
-
             }
         }
     );
