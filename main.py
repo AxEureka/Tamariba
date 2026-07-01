@@ -47,9 +47,12 @@ async def create_room(data: dict):
     "teams": {},
     "team_count": 0,
     "team_leaders": {},
-    "compatibility_answers": {},
-    "compatibility_groups": {},
-    "compatibility_results": {}
+   "compatibility": {
+        "question_count": 10,
+        "answers": {},
+        "groups": {},
+        "results": {}
+    },
 }
 
     return {"room_id": room_id}
@@ -117,9 +120,12 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             "teams": {},
             "team_count": 0,
             "team_leaders": {},
-            "compatibility_answers": {},
-            "compatibility_groups": {},
-            "compatibility_results": {}
+           "compatibility": {
+                "question_count": 10,
+                "answers": {},
+                "groups": {},
+                "results": {}
+            },        
         }
 
     room = rooms[room_id]
@@ -447,6 +453,51 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 await broadcast(room, {"type": "end_nasa"})
 
             # =========================
+            # 相性診断開始
+            # =========================
+            elif msg_type == "start_compatibility":
+
+                question_count = data.get("question_count", 10)
+            
+                room["compatibility"] = {
+                    "question_count": question_count,
+                    "answers": {},
+                    "groups": {},
+                    "results": {}
+                }
+
+                await broadcast(room,{
+                    "type":"start_compatibility",
+                    "question_count": question_count
+                })
+
+            
+            elif msg_type == "compatibility_answer":
+
+                name = data.get("name")
+                answers = data.get("answers", [])
+            
+                # 既回答なら無視
+                if name in room["compatibility"]["answers"]:
+                    continue
+            
+                room["compatibility"]["answers"][name] = answers
+            
+                done = len(room["compatibility"]["answers"])
+                total = len(room["members"]) - 1
+            
+                await broadcast(room,{
+                    "type":"compatibility_progress",
+                    "done": done,
+                    "total": total
+                })
+            
+                if done >= total:
+            
+                    await broadcast(room,{
+                        "type":"compatibility_all_done"
+                    })            
+            # =========================
             # 相性診断終了
             # =========================
             elif msg_type == "end_compatibility":
@@ -454,19 +505,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     "type": "end_compatibility"
                 })
             
-            # =========================
-            # 相性診断開始
-            # =========================
-            elif msg_type == "start_compatibility":
-            
-                room["compatibility_answers"] = {}
-                room["compatibility_groups"] = {}
-                room["compatibility_results"] = {}
-            
-                await broadcast(room, {
-                    "type": "start_compatibility"
-                })
-
+           
     
     except WebSocketDisconnect:
         if websocket in room["sockets"]:
