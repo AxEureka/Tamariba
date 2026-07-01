@@ -1,62 +1,122 @@
 [
-  {
-    "question": "休日はどう過ごしたい？",
-    "choices": ["家でゆっくり", "外出したい"]
-  },
-  {
-    "question": "朝型？夜型？",
-    "choices": ["朝型", "夜型"]
-  },
-  {
-    "question": "犬派？猫派？",
-    "choices": ["犬", "猫"]
-  },
-  {
-    "question": "旅行は？",
-    "choices": ["計画派", "ノープラン派"]
-  },
-  {
-    "question": "恋愛は？",
-    "choices": ["慎重派", "直感派"]
-  },
-  {
-    "question": "好きな飲み会は？",
-    "choices": ["少人数", "大人数"]
-  },
-  {
-    "question": "映画を見るなら？",
-    "choices": ["家", "映画館"]
-  },
-  {
-    "question": "ゲームは？",
-    "choices": ["協力", "対戦"]
-  },
-  {
-    "question": "休日の起床時間は？",
-    "choices": ["早い", "遅い"]
-  },
-  {
-    "question": "海と山なら？",
-    "choices": ["海", "山"]
-  },
-  {
-    "question": "買い物は？",
-    "choices": ["実店舗", "ネット"]
-  },
-  {
-    "question": "恋人とは？",
-    "choices": ["毎日連絡", "必要な時だけ"]
-  },
-  {
-    "question": "デートは？",
-    "choices": ["計画重視", "その場重視"]
-  },
-  {
-    "question": "プレゼントは？",
-    "choices": ["実用品", "サプライズ"]
-  },
-  {
-    "question": "新しい環境では？",
-    "choices": ["すぐ話しかける", "様子を見る"]
-  }
+{
+"id": 1,
+"question": "休日はどう過ごしたい？",
+"choices": [
+{ "id": 0, "text": "家でゆっくり" },
+{ "id": 1, "text": "外出したい" }
+]
+},
+{
+"id": 2,
+"question": "朝型？夜型？",
+"choices": [
+{ "id": 0, "text": "朝型" },
+{ "id": 1, "text": "夜型" }
+]
+},
+{
+"id": 3,
+"question": "犬派？猫派？",
+"choices": [
+{ "id": 0, "text": "犬" },
+{ "id": 1, "text": "猫" }
+]
+},
+{
+"id": 4,
+"question": "旅行は？",
+"choices": [
+{ "id": 0, "text": "計画派" },
+{ "id": 1, "text": "ノープラン派" }
+]
+},
+{
+"id": 5,
+"question": "恋愛は？",
+"choices": [
+{ "id": 0, "text": "慎重派" },
+{ "id": 1, "text": "直感派" }
+]
+},
+{
+"id": 6,
+"question": "好きな飲み会は？",
+"choices": [
+{ "id": 0, "text": "少人数" },
+{ "id": 1, "text": "大人数" }
+]
+},
+{
+"id": 7,
+"question": "映画を見るなら？",
+"choices": [
+{ "id": 0, "text": "家" },
+{ "id": 1, "text": "映画館" }
+]
+},
+{
+"id": 8,
+"question": "ゲームは？",
+"choices": [
+{ "id": 0, "text": "協力" },
+{ "id": 1, "text": "対戦" }
+]
+},
+{
+"id": 9,
+"question": "休日の起床時間は？",
+"choices": [
+{ "id": 0, "text": "早い" },
+{ "id": 1, "text": "遅い" }
+]
+},
+{
+"id": 10,
+"question": "海と山なら？",
+"choices": [
+{ "id": 0, "text": "海" },
+{ "id": 1, "text": "山" }
+]
+},
+{
+"id": 11,
+"question": "買い物は？",
+"choices": [
+{ "id": 0, "text": "実店舗" },
+{ "id": 1, "text": "ネット" }
+]
+},
+{
+"id": 12,
+"question": "恋人とは？",
+"choices": [
+{ "id": 0, "text": "毎日連絡" },
+{ "id": 1, "text": "必要な時だけ" }
+]
+},
+{
+"id": 13,
+"question": "デートは？",
+"choices": [
+{ "id": 0, "text": "計画重視" },
+{ "id": 1, "text": "その場重視" }
+]
+},
+{
+"id": 14,
+"question": "プレゼントは？",
+"choices": [
+{ "id": 0, "text": "実用品" },
+{ "id": 1, "text": "サプライズ" }
+]
+},
+{
+"id": 15,
+"question": "新しい環境では？",
+"choices": [
+{ "id": 0, "text": "すぐ話しかける" },
+{ "id": 1, "text": "様子を見る" }
+]
+}
 ]
