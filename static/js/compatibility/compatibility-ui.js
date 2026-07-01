@@ -7,6 +7,7 @@ export function createCompatibilityUI(
     container.innerHTML="";
 
     const box=document.createElement("div");
+    box.className="compatibility-ui";
 
     const title=document.createElement("h2");
     title.textContent="相性診断";
