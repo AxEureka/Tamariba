@@ -1,1 +1,7 @@
-
+.compatibility-ui{
+    background:rgba(0,0,0,0.75);
+    padding:30px;
+    border-radius:16px;
+    min-width:400px;
+    text-align:center;
+}
