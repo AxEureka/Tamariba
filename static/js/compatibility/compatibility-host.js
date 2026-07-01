@@ -16,7 +16,7 @@ export function startCompatibilityHost(
 
     count.type="number";
     count.min=3;
-    count.max=15;
+    count.max=20;
     count.value=10;
 
     const start=
