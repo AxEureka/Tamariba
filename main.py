@@ -529,11 +529,9 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             
                 if done >= total:
 
-                    answers =
-                        room["compatibility"]["answers"]
+                    answers = room["compatibility"]["answers"]
                 
-                    names =
-                        list(answers.keys())
+                    names = list(answers.keys())
                 
                     similarities = {}
                 
@@ -561,8 +559,9 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 
                     room["compatibility"]["similarities"] = similarities
                 
-                    await broadcast(room,{
-                        "type":"compatibility_all_done"
+                   await broadcast(room,{
+                        "type":"compatibility_all_done",
+                        "player_count": len(names)
                     })
 
 
