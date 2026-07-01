@@ -32,7 +32,7 @@ export function createCompatibilityUI(
             radio.value=cIndex;
 
             label.appendChild(radio);
-            label.append(" "+choice);
+            label.append(" "+choice.text);
 
             area.appendChild(label);
             area.appendChild(
