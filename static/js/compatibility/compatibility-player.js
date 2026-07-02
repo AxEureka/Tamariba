@@ -92,7 +92,12 @@ export function startCompatibilityPlayer(
                                 メンバー:
                                 ${team.members.join(", ")}
                                 </div>
-                            `;
+
+                                <div>
+                                相性:
+                                ${team.shown_score}%
+                                </div>
+                        `;
                         }
                     }
                 );
