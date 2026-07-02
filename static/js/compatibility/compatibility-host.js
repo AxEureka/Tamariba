@@ -98,11 +98,15 @@ export function startCompatibilityHost(
                 high.min=0;
                 high.max=100;
                 high.value=100;
+
+                const low =
+                    document.createElement("input");
                 
                 low.type="number";
                 low.min=0;
                 low.max=100;
-                low.value=0;            
+                low.value=0;
+                           
                 const makeBtn =
                     document.createElement("button");
             
