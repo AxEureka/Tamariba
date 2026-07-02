@@ -582,8 +582,6 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 )
             
                 player_count = len(players)
-
-                team["shown_score"] = random.choice([20,90])
             
                 # =====================
                 # チーム数決定
@@ -821,6 +819,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     )
             
                     team["score"] = avg
+                    team["shown_score"] = random.choice([20,90])
             
                 room["compatibility"]["teams"] = teams
             
