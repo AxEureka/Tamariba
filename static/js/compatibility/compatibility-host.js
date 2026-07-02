@@ -191,7 +191,37 @@ export function startCompatibilityHost(
         ){
         
             progress.textContent =
-                "チーム作成条件を受信しました";
+                "チーム作成完了";
+        
+            config.innerHTML="";
+        
+            Object.entries(
+                data.teams
+            ).forEach(
+        
+                ([teamName,team])=>{
+        
+                    const box=
+                        document.createElement("div");
+        
+                    box.className=
+                        "team-box";
+        
+                    box.innerHTML=`
+                        <h3>${teamName}</h3>
+                        <div>
+                            メンバー:
+                            ${team.members.join(", ")}
+                        </div>
+                        <div>
+                            平均一致率:
+                            ${team.score}%
+                        </div>
+                    `;
+        
+                    config.appendChild(box);
+                }
+            );
         }
         }
     );
