@@ -566,6 +566,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
 
 
             elif msg_type == "compatibility_make_team":
+                print("チーム作成開始")
 
                 team_size = data.get("team_size", 4)
             
@@ -856,6 +857,17 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 
                 for team_name, score in zip(low_team_names, low_scores):
                     teams[team_name]["shown_score"] = score
+
+                room["compatibility"]["teams"] = teams
+                
+                await broadcast(
+                    room,
+                    {
+                        "type": "compatibility_team_created",
+                        "teams": teams
+                    }
+                  )
+                print("チーム作成完了")
 
                 
             
