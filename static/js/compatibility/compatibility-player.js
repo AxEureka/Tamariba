@@ -66,8 +66,9 @@ export function startCompatibilityPlayer(
             ){
 
                 const myName =
-                    window.myName;
-
+                    window.myName ||
+                    sessionStorage.getItem("playerName");
+                
                 Object.entries(
                     data.teams
                 ).forEach(
