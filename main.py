@@ -655,7 +655,8 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 # =====================
                 # 高類似チーム
                 # =====================
-            
+                high_team_names = []
+
                 for team_index in range(high_team_count):
             
                     target_size = sizes[team_index]
@@ -703,13 +704,19 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                         members.append(best_player)
                         unused.remove(best_player)
             
-                    teams[f"チーム{team_index+1}"] = {
+                    team_name = f"チーム{team_index+1}"
+
+                    teams[team_name] = {
                         "members": members
                     }
-            
+                    
+                    high_team_names.append(team_name)
+
+                            
                 # =====================
                 # 低類似チーム
                 # =====================
+                low_team_names = []
             
                 for low_index in range(low_team_count):
             
@@ -760,9 +767,13 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                         members.append(best_player)
                         unused.remove(best_player)
             
-                    teams[f"チーム{team_index+1}"] = {
+                    team_name = f"チーム{team_index+1}"
+
+                    teams[team_name] = {
                         "members": members
                     }
+                    
+                    low_team_names.append(team_name)
             
                 # =====================
                 # 余りゼロ化
@@ -819,17 +830,34 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     )
             
                     team["score"] = avg
-                    team["shown_score"] = random.choice([20,90])
-            
-                room["compatibility"]["teams"] = teams
-            
-                await broadcast(
-                    room,
-                    {
-                        "type":"compatibility_team_created",
-                        "teams":teams
-                    }
-                )            
+
+                # =====================
+                # 表示相性割り振り
+                # =====================
+                
+                random.shuffle(high_team_names)
+                random.shuffle(low_team_names)
+                
+                high_scores = (
+                    [90] * (len(high_team_names) // 2)
+                    + [20] * (len(high_team_names) - len(high_team_names) // 2)
+                )
+                
+                low_scores = (
+                    [90] * (len(low_team_names) // 2)
+                    + [20] * (len(low_team_names) - len(low_team_names) // 2)
+                )
+                
+                random.shuffle(high_scores)
+                random.shuffle(low_scores)
+                
+                for team_name, score in zip(high_team_names, high_scores):
+                    teams[team_name]["shown_score"] = score
+                
+                for team_name, score in zip(low_team_names, low_scores):
+                    teams[team_name]["shown_score"] = score
+
+                
             
             # =========================
             # 相性診断終了
