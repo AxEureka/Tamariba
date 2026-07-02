@@ -12,11 +12,14 @@ export function startCompatibilityPlayer(
         "message",
         (event)=>{
 
-            const data=
+            const data =
                 JSON.parse(event.data);
 
+            // =====================
+            // 相性診断開始
+            // =====================
             if(
-                data.type===
+                data.type ===
                 "start_compatibility"
             ){
 
@@ -40,7 +43,7 @@ export function startCompatibilityPlayer(
                             })
                         );
 
-                        container.innerHTML=`
+                        container.innerHTML = `
                             <h2>
                             回答を送信しました
                             </h2>
@@ -50,6 +53,46 @@ export function startCompatibilityPlayer(
                             待っています
                             </p>
                         `;
+                    }
+                );
+            }
+
+            // =====================
+            // チーム作成完了
+            // =====================
+            if(
+                data.type ===
+                "compatibility_team_created"
+            ){
+
+                const myName =
+                    window.myName;
+
+                Object.entries(
+                    data.teams
+                ).forEach(
+
+                    ([teamName,team])=>{
+
+                        if(
+                            team.members.includes(
+                                myName
+                            )
+                        ){
+
+                            container.innerHTML = `
+                                <h2>
+                                あなたは
+                                ${teamName}
+                                です
+                                </h2>
+
+                                <div>
+                                メンバー:
+                                ${team.members.join(", ")}
+                                </div>
+                            `;
+                        }
                     }
                 );
             }
