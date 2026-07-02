@@ -566,28 +566,74 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
 
 
             elif msg_type == "compatibility_make_team":
+
+                team_size = data.get("team_size",4)
             
-                team_size = data.get(
-                    "team_size",
-                    4
+                similarities = room["compatibility"].get(
+                    "similarities",
+                    {}
                 )
             
-                high_weight = data.get(
-                    "high_weight",
-                    100
+                names = list(
+                    room["compatibility"]["answers"].keys()
                 )
             
-                low_weight = data.get(
-                    "low_weight",
-                    0
-                )
+                random.shuffle(names)
             
-                room["compatibility"]["team_size"] = team_size
-                room["compatibility"]["high_weight"] = high_weight
-                room["compatibility"]["low_weight"] = low_weight
+                teams = {}
+                team_no = 1
+            
+                while names:
+            
+                    team_members = names[:team_size]
+                    names = names[team_size:]
+            
+                    team_name = f"チーム{team_no}"
+            
+                    teams[team_name] = {
+                        "members": team_members,
+                        "average": 0
+                    }
+            
+                    team_no += 1
+            
+                for team_name, team in teams.items():
+            
+                    members = team["members"]
+            
+                    pair_scores = []
+            
+                    for i in range(len(members)):
+                        for j in range(i+1,len(members)):
+            
+                            n1 = members[i]
+                            n2 = members[j]
+            
+                            key1 = f"{n1}|{n2}"
+                            key2 = f"{n2}|{n1}"
+            
+                            rate = similarities.get(
+                                key1,
+                                similarities.get(key2,0)
+                            )
+            
+                            pair_scores.append(rate)
+            
+                    avg = (
+                        round(
+                            sum(pair_scores)/len(pair_scores),
+                            1
+                        )
+                        if pair_scores else 100
+                    )
+            
+                    team["average"] = avg
+            
+                room["compatibility"]["teams"] = teams
             
                 await broadcast(room,{
-                    "type":"compatibility_team_created"
+                    "type":"compatibility_team_created",
+                    "teams": teams
                 })
             # =========================
             # 相性診断終了
