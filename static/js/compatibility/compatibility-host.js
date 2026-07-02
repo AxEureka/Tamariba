@@ -211,15 +211,22 @@ export function startCompatibilityHost(
                     box.className=
                         "team-box";
         
-                    box.innerHTML=`
+                   box.innerHTML=`
                         <h3>${teamName}</h3>
+                    
                         <div>
                             メンバー:
                             ${team.members.join(", ")}
                         </div>
+                    
                         <div>
-                            平均一致率:
+                            実際の平均一致率:
                             ${team.score}%
+                        </div>
+                    
+                        <div>
+                            子画面への提示:
+                            ${team.shown_score}%
                         </div>
                     `;
         
