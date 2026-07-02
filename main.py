@@ -582,6 +582,8 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 )
             
                 player_count = len(players)
+
+                team["shown_score"] = random.choice([20,90])
             
                 # =====================
                 # チーム数決定
@@ -828,7 +830,9 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                         "type":"compatibility_team_created",
                         "teams":teams
                     }
-                )            # =========================
+                )            
+            
+            # =========================
             # 相性診断終了
             # =========================
             elif msg_type == "end_compatibility":
