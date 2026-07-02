@@ -118,9 +118,16 @@ button{
 #game-container{
   position:fixed;
   inset:0;
+
   display:flex;
-  align-items:center;
   justify-content:center;
+
+  align-items:flex-start;
+
+  overflow-y:auto;
+
+  padding:20px;
+
   pointer-events:none;
   z-index:10;
 }
@@ -148,6 +155,7 @@ button{
 
   <div style="display:flex; gap:6px;">
     <button id="gameSelectBtn" style="display:none;">🎮 遊びを選ぶ</button>
+    <button onclick="toggleMembers()">メンバーを見る</button>
     <button id="msgAllBtn" style="display:none;">📩 全体メッセージ</button>
   </div>
 
@@ -168,7 +176,6 @@ button{
   </span>
 
   <div style="display:flex; gap:6px;">
-    <button onclick="toggleMembers()">メンバーを見る</button>
     <button id="copyJoinBtn" onclick="copyURL()" style="display:none;">コピーで参加</button>
     <button id="showQRBtn" onclick="openQR()" style="display:none;">QR表示</button>
   </div>
