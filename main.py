@@ -567,35 +567,223 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
 
             elif msg_type == "compatibility_make_team":
 
-                team_size = data.get("team_size",4)
+                team_size = data.get("team_size", 4)
+            
+                high_weight = data.get("high_weight", 100)
+                low_weight = data.get("low_weight", 0)
             
                 similarities = room["compatibility"].get(
                     "similarities",
                     {}
                 )
             
-                names = list(
+                players = list(
                     room["compatibility"]["answers"].keys()
                 )
             
-                random.shuffle(names)
+                player_count = len(players)
+            
+                # =====================
+                # チーム数決定
+                # =====================
+            
+                team_count = max(
+                    1,
+                    round(player_count / team_size)
+                )
+            
+                base_size = player_count // team_count
+                remainder = player_count % team_count
+            
+                sizes = []
+            
+                for i in range(team_count):
+            
+                    if i < remainder:
+                        sizes.append(base_size + 1)
+            
+                    else:
+                        sizes.append(base_size)
+            
+                # =====================
+                # 高類似・低類似チーム数
+                # =====================
+            
+                total_weight = high_weight + low_weight
+            
+                if total_weight == 0:
+                    high_team_count = team_count
+                else:
+                    high_team_count = round(
+                        team_count *
+                        high_weight /
+                        total_weight
+                    )
+            
+                low_team_count = (
+                    team_count -
+                    high_team_count
+                )
+            
+                # =====================
+                # 類似度ペア作成
+                # =====================
+            
+                pairs = []
+            
+                for key, score in similarities.items():
+            
+                    p1, p2 = key.split("|")
+            
+                    pairs.append(
+                        (score, p1, p2)
+                    )
+            
+                high_pairs = sorted(
+                    pairs,
+                    reverse=True
+                )
+            
+                low_pairs = sorted(
+                    pairs
+                )
+            
+                unused = set(players)
             
                 teams = {}
-                team_no = 1
             
-                while names:
+                # =====================
+                # 高類似チーム
+                # =====================
             
-                    team_members = names[:team_size]
-                    names = names[team_size:]
+                for team_index in range(high_team_count):
             
-                    team_name = f"チーム{team_no}"
+                    target_size = sizes[team_index]
             
-                    teams[team_name] = {
-                        "members": team_members,
-                        "average": 0
+                    members = []
+            
+                    for score, p1, p2 in high_pairs:
+            
+                        if p1 in unused and p2 in unused:
+            
+                            members.extend([p1, p2])
+            
+                            unused.remove(p1)
+                            unused.remove(p2)
+            
+                            break
+            
+                    while len(members) < target_size:
+            
+                        best_player = None
+                        best_score = -1
+            
+                        for candidate in unused:
+            
+                            total = 0
+            
+                            for m in members:
+            
+                                key1 = f"{candidate}|{m}"
+                                key2 = f"{m}|{candidate}"
+            
+                                total += similarities.get(
+                                    key1,
+                                    similarities.get(key2, 0)
+                                )
+            
+                            if total > best_score:
+            
+                                best_score = total
+                                best_player = candidate
+            
+                        if best_player is None:
+                            break
+            
+                        members.append(best_player)
+                        unused.remove(best_player)
+            
+                    teams[f"チーム{team_index+1}"] = {
+                        "members": members
                     }
             
-                    team_no += 1
+                # =====================
+                # 低類似チーム
+                # =====================
+            
+                for low_index in range(low_team_count):
+            
+                    team_index = high_team_count + low_index
+            
+                    target_size = sizes[team_index]
+            
+                    members = []
+            
+                    for score, p1, p2 in low_pairs:
+            
+                        if p1 in unused and p2 in unused:
+            
+                            members.extend([p1, p2])
+            
+                            unused.remove(p1)
+                            unused.remove(p2)
+            
+                            break
+            
+                    while len(members) < target_size:
+            
+                        best_player = None
+                        best_score = 999999
+            
+                        for candidate in unused:
+            
+                            total = 0
+            
+                            for m in members:
+            
+                                key1 = f"{candidate}|{m}"
+                                key2 = f"{m}|{candidate}"
+            
+                                total += similarities.get(
+                                    key1,
+                                    similarities.get(key2, 0)
+                                )
+            
+                            if total < best_score:
+            
+                                best_score = total
+                                best_player = candidate
+            
+                        if best_player is None:
+                            break
+            
+                        members.append(best_player)
+                        unused.remove(best_player)
+            
+                    teams[f"チーム{team_index+1}"] = {
+                        "members": members
+                    }
+            
+                # =====================
+                # 余りゼロ化
+                # =====================
+            
+                unused = list(unused)
+            
+                while unused:
+            
+                    smallest_team = min(
+                        teams.values(),
+                        key=lambda t: len(t["members"])
+                    )
+            
+                    smallest_team["members"].append(
+                        unused.pop()
+                    )
+            
+                # =====================
+                # 平均一致率計算
+                # =====================
             
                 for team_name, team in teams.items():
             
@@ -604,7 +792,8 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     pair_scores = []
             
                     for i in range(len(members)):
-                        for j in range(i+1,len(members)):
+            
+                        for j in range(i+1, len(members)):
             
                             n1 = members[i]
                             n2 = members[j]
@@ -612,30 +801,34 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                             key1 = f"{n1}|{n2}"
                             key2 = f"{n2}|{n1}"
             
-                            rate = similarities.get(
+                            score = similarities.get(
                                 key1,
-                                similarities.get(key2,0)
+                                similarities.get(key2, 0)
                             )
             
-                            pair_scores.append(rate)
+                            pair_scores.append(score)
             
                     avg = (
                         round(
-                            sum(pair_scores)/len(pair_scores),
+                            sum(pair_scores) /
+                            len(pair_scores),
                             1
                         )
-                        if pair_scores else 100
+                        if pair_scores
+                        else 100
                     )
             
-                    team["average"] = avg
+                    team["score"] = avg
             
                 room["compatibility"]["teams"] = teams
             
-                await broadcast(room,{
-                    "type":"compatibility_team_created",
-                    "teams": teams
-                })
-            # =========================
+                await broadcast(
+                    room,
+                    {
+                        "type":"compatibility_team_created",
+                        "teams":teams
+                    }
+                )            # =========================
             # 相性診断終了
             # =========================
             elif msg_type == "end_compatibility":
