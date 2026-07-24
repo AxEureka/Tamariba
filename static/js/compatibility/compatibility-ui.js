@@ -78,3 +78,114 @@ export function createCompatibilityUI(
 
     container.appendChild(box);
 }
+
+export function createRankingUI(
+    container,
+    question,
+    players,
+    onSubmit
+){
+
+    container.innerHTML="";
+
+
+    const box=document.createElement("div");
+    box.className="ranking-ui";
+
+
+    const title=document.createElement("h2");
+    title.textContent="ランキング予想";
+
+    box.appendChild(title);
+
+
+
+    const q=document.createElement("h3");
+
+    q.textContent =
+        question.question;
+
+    box.appendChild(q);
+
+
+
+    const selects=[];
+
+
+
+    for(let i=0;i<3;i++){
+
+        const label=document.createElement("label");
+
+        label.textContent =
+            `${i+1}位：`;
+
+
+        const select=document.createElement("select");
+
+
+        players.forEach(player=>{
+
+            const option=document.createElement("option");
+
+            option.value=player;
+            option.textContent=player;
+
+            select.appendChild(option);
+
+        });
+
+
+        label.appendChild(select);
+
+        box.appendChild(label);
+
+        box.appendChild(
+            document.createElement("br")
+        );
+
+
+        selects.push(select);
+
+    }
+
+
+
+    const btn=document.createElement("button");
+
+    btn.textContent="予想する";
+
+
+    btn.onclick=()=>{
+
+
+        const ranking =
+            selects.map(
+                s=>s.value
+            );
+
+
+        if(
+            new Set(ranking).size!==3
+        ){
+
+            alert(
+                "同じ人を複数順位にできません"
+            );
+
+            return;
+
+        }
+
+
+        onSubmit(ranking);
+
+    };
+
+
+    box.appendChild(btn);
+
+
+    container.appendChild(box);
+
+}
