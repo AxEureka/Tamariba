@@ -1,903 +1,2260 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+
 import uuid
 import os
 import json
 import random
+import itertools
+
 
 app = FastAPI()
 
-# =========================
-# 静的ファイル
-# =========================
+
+# ==================================================
+# Static
+# ==================================================
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
-COMPATIBILITY_FILE = os.path.join(
-    STATIC_DIR,
-    "data",
-    "compatibility-pool.json"
+app.mount(
+    "/static",
+    StaticFiles(directory=STATIC_DIR),
+    name="static"
 )
 
-try:
-    with open(
-        COMPATIBILITY_FILE,
-        encoding="utf-8"
-    ) as f:
-        COMPATIBILITY_POOL = json.load(f)
 
-except Exception as e:
-    print("相性診断問題の読み込み失敗:", e)
-    COMPATIBILITY_POOL = []
+# ==================================================
+# 問題データ読み込み
+# ==================================================
 
-@app.get("/")
-async def root():
-    return RedirectResponse(url="/static/index.html")
+def load_json(path):
+
+    try:
+        with open(
+            path,
+            encoding="utf-8"
+        ) as f:
+            return json.load(f)
+
+    except Exception as e:
+        print("読み込み失敗:", path, e)
+        return []
 
 
-# =========================
-# ルーム管理
-# =========================
+COMPATIBILITY_POOL = load_json(
+    os.path.join(
+        STATIC_DIR,
+        "data",
+        "compatibility-pool.json"
+    )
+)
+
+
+RANKING_POOL = load_json(
+    os.path.join(
+        STATIC_DIR,
+        "data",
+        "ranking-question.json"
+    )
+)
+
+
+
+# ==================================================
+# Room
+# ==================================================
+
 rooms = {}
 
 
-# =========================
-# ルーム作成
-# =========================
-@app.post("/create_room")
-async def create_room(data: dict):
-    room_id = str(uuid.uuid4())[:8]
-    host = data.get("host_name")
-    room_name = data.get("room_name")
-    theme = data.get("theme", "mansion")
 
-    rooms[room_id] = {
-    "room": room_name,
-    "host": host,
-    "theme": theme,
-    "members": [host],
-    "sockets": [],
-    "answers": {},
-    "nasa_answers": {},
-    "nasa": {},
-    "team_answers": {},
-    "teams": {},
-    "team_count": 0,
-    "team_leaders": {},
-    "compatibility": {
-        "question_count": 10,
-        "answers": {},
-        "groups": {},
-        "results": {}
-    },
-}
+def create_room_data(
+    room_name="room",
+    host="",
+    theme="mansion"
+):
 
-    return {"room_id": room_id}
-
-
-@app.get("/room/{room_id}")
-async def get_room(room_id: str):
-    if room_id not in rooms:
-        return JSONResponse({"error": "room not found"}, status_code=404)
-    room = rooms[room_id]
     return {
-        "room": room["room"],
-        "host": room["host"],
-        "theme": room["theme"]
+
+        "room": room_name,
+        "host": host,
+        "theme": theme,
+
+
+        "members": [],
+        "sockets": [],
+
+
+        # ----------------
+        # Quiz
+        # ----------------
+
+        "answers": {},
+        "last_choices": [],
+        "scores": {},
+
+
+
+        # ----------------
+        # NASA
+        # ----------------
+
+        "nasa": {},
+
+        "nasa_answers": {},
+
+        "team_answers": {},
+
+        "teams": {},
+
+        "team_count": 0,
+
+        "team_names": [],
+
+        "team_leaders": {},
+
+
+
+        # ----------------
+        # Compatibility
+        # ----------------
+
+        "compatibility": {
+
+            "question_count":0,
+
+            "questions":[],
+
+            "answers":{},
+
+            "groups":{},
+
+            "results":{},
+
+            "similarities":{},
+
+            "teams":{},
+
+
+
+            # ranking game
+
+            "ranking_game":{
+
+                "mode":"",
+
+                "question_count":0,
+
+                "current_index":0,
+
+                "questions":[],
+
+                "current_question":{},
+
+                "answerers":[],
+
+                "current_answerer":None,
+
+                "true_answers":{},
+
+                "predictions":{},
+
+                "scores":{}
+
+            }
+        }
     }
 
 
-@app.post("/room/{room_id}/join")
-async def join_room(room_id: str, data: dict):
+
+# ==================================================
+# Root
+# ==================================================
+
+@app.get("/")
+async def root():
+
+    return RedirectResponse(
+        url="/static/index.html"
+    )
+
+
+
+# ==================================================
+# Room API
+# ==================================================
+
+@app.post("/create_room")
+async def create_room(data:dict):
+
+    room_id = str(uuid.uuid4())[:8]
+
+
+    host=data.get("host_name")
+
+    room_name=data.get("room_name")
+
+    theme=data.get(
+        "theme",
+        "mansion"
+    )
+
+
+    rooms[room_id]=create_room_data(
+        room_name,
+        host,
+        theme
+    )
+
+
+    rooms[room_id]["members"].append(host)
+
+
+    return {
+        "room_id":room_id
+    }
+
+
+
+
+@app.get("/room/{room_id}")
+async def get_room(room_id:str):
+
     if room_id not in rooms:
-        return {"ok": False}
-    name = data.get("name")
-    if name and name not in rooms[room_id]["members"]:
+
+        return JSONResponse(
+            {
+                "error":"room not found"
+            },
+            status_code=404
+        )
+
+
+    room=rooms[room_id]
+
+
+    return {
+
+        "room":room["room"],
+
+        "host":room["host"],
+
+        "theme":room["theme"]
+
+    }
+
+
+
+@app.post("/room/{room_id}/join")
+async def join_room(
+    room_id:str,
+    data:dict
+):
+
+    if room_id not in rooms:
+        return {
+            "ok":False
+        }
+
+
+    name=data.get("name")
+
+
+    if (
+        name
+        and name not in rooms[room_id]["members"]
+    ):
         rooms[room_id]["members"].append(name)
-    return {"ok": True}
+
+
+
+    return {
+        "ok":True
+    }
+
+
 
 
 @app.get("/room/{room_id}/members")
-async def get_members(room_id: str):
+async def get_members(room_id:str):
+
     if room_id not in rooms:
-        return {"members": [], "count": 0}
-    members = rooms[room_id]["members"]
-    return {"members": members, "count": len(members)}
+
+        return {
+            "members":[],
+            "count":0
+        }
+
+
+    members=rooms[room_id]["members"]
+
+
+    return {
+
+        "members":members,
+
+        "count":len(members)
+
+    }
+
 
 
 @app.post("/room/{room_id}/kick")
-async def kick_member(room_id: str, data: dict):
-    if room_id not in rooms:
-        return {"ok": False}
-    name = data.get("name")
-    if name in rooms[room_id]["members"]:
-        rooms[room_id]["members"].remove(name)
-    return {"ok": True}
+async def kick_member(
+    room_id:str,
+    data:dict
+):
+
+    name=data.get("name")
 
 
-# =========================
+    if room_id in rooms:
+
+        if name in rooms[room_id]["members"]:
+
+            rooms[room_id]["members"].remove(name)
+
+
+    return {
+        "ok":True
+    }
+
+
+
+
+
+# ==================================================
 # WebSocket
-# =========================
+# ==================================================
+
 @app.websocket("/ws/{room_id}")
-async def websocket_endpoint(websocket: WebSocket, room_id: str):
+async def websocket_endpoint(
+    websocket:WebSocket,
+    room_id:str
+):
+
     await websocket.accept()
-    print("WS接続:", room_id)
+
+
+    print(
+        "WS接続:",
+        room_id
+    )
+
+
 
     if room_id not in rooms:
-        rooms[room_id] = {
-            "room": "room",
-            "host": "",
-            "theme": "mansion",
-            "members": [],
-            "sockets": [],
-            "answers": {},
-            "nasa_answers": {},
-            "nasa": {},
-            "team_answers": {},
-            "teams": {},
-            "team_count": 0,
-            "team_leaders": {},
-           "compatibility": {
-                "question_count": 10,
-                "answers": {},
-                "groups": {},
-                "results": {}
-            },        
-        }
 
-    room = rooms[room_id]
+        rooms[room_id]=create_room_data()
+
+
+
+    room=rooms[room_id]
+
+
     room["sockets"].append(websocket)
 
+
+
     try:
+
         while True:
-            data = await websocket.receive_json()
-            msg_type = data.get("type")
-           
-            # =========================
-            # 親からのメッセージ（全体 or 個別）
-            # =========================
-            if msg_type == "host_message":
-                text = data.get("text", "")
-                target = data.get("target")
+
+            data=await websocket.receive_json()
+
+            msg_type=data.get("type")
+
+
+
+            # ----------------------------
+            # Host message
+            # ----------------------------
+
+            if msg_type=="host_message":
+
+                text=data.get(
+                    "text",
+                    ""
+                )
+
+                target=data.get(
+                    "target"
+                )
+
+
                 if not text:
                     continue
-                if not target:
-                    await broadcast(room, {"type": "host_message", "text": text})
-                else:
+
+
+
+                if target:
+
                     for socket in room["sockets"]:
-                        try:
-                            await socket.send_json({"type": "host_message", "text": text, "target": target})
-                        except:
-                            pass
 
-            # =========================
-            # クイズ
-            # =========================
-            elif msg_type == "start_quiz":
-                await broadcast(room, {"type": "start_quiz"})
-            
-            
-            elif msg_type == "quiz_question":
-                room["answers"] = {}
-            
-                # ★ここに追加（ここが正解位置）
-                choices = data.get("choices", [])
-                room["last_choices"] = choices
-            
-                await broadcast(room, {
-                    "type": "quiz_question",
-                    "question": data.get("question"),
-                    "choices": choices,
-                    "timer": data.get("timer")
-                })
-            
-            
-            elif msg_type == "quiz_answer":
-                name = data.get("name")
-                choice = data.get("choice")
-            
-                if name is not None:
-                    room["answers"][name] = choice
-            
-                # ★択数に応じたvotes生成
-                choice_len = len(room.get("last_choices", []))
-                votes = [0] * choice_len
-            
-                for v in room["answers"].values():
-                    if v is not None and 0 <= v < choice_len:
-                        votes[v] += 1
-            
-                await broadcast(room, {
-                    "type": "quiz_show_graph",
-                    "votes": votes,
-                    "choices": room.get("last_choices", [])
-                })            
-            
-            elif msg_type == "quiz_show_graph":
-                choice_len = len(room.get("last_choices", []))
-                votes = [0] * choice_len
-            
-                for v in room["answers"].values():
-                    if v is not None and 0 <= v < choice_len:
-                        votes[v] += 1
-            
-                await broadcast(room, {
-                    "type": "quiz_show_graph",
-                    "votes": votes,
-                    "choices": room.get("last_choices", [])
-                })
-            
-            
-            elif msg_type == "quiz_timer_end":
-                # ★追加（playerが待ってる）
-                await broadcast(room, {"type": "quiz_timer_end"})
-
-
-            elif msg_type == "quiz_score":
-                score_map = data.get("scores")
-            
-                print("=== 配点処理開始 ===")
-                print("answers:", room["answers"])
-                print("score_map:", score_map)
-            
-                if "scores" not in room:
-                    room["scores"] = {}
-            
-                for name, choice in room["answers"].items():
-                    print(f"{name} の選択:", choice)
-            
-                    if name not in room["scores"]:
-                        room["scores"][name] = 0
-            
-                    add = score_map.get(str(choice), 0)
-                    print(f"加点:", add)
-            
-                    room["scores"][name] += add
-            
-                print("最終scores:", room["scores"])
-                print("=== 配点処理終了 ===")
-            
-                await broadcast(room, {
-                    "type": "quiz_score_update",
-                    "scores": room["scores"]
-                })
-            
-            
-            elif msg_type == "quiz_correct":
-                await broadcast(room, {
-                    "type": "quiz_correct",
-                    "correct": data.get("correct")
-                })
-
-            elif msg_type == "quiz_get_ranking":
-                scores = room.get("scores", {})
-            
-                sorted_scores = sorted(scores.items(), key=lambda x: -x[1])
-            
-                ranking = []
-                prev_score = None
-                rank = 0
-            
-                for i, (name, score) in enumerate(sorted_scores):
-                    if score != prev_score:
-                        rank = i + 1
-                        prev_score = score
-            
-                    ranking.append((rank, name, score))
-            
-                    if len(ranking) >= 5:
-                        break
-            
-                await broadcast(room, {
-                    "type": "quiz_ranking",
-                    "ranking": ranking
-                })
-            
-            elif msg_type == "end_quiz":
-                await broadcast(room, {"type": "end_quiz"})
-            
-            # =========================
-            # NASA
-            # =========================
-            elif msg_type == "start_nasa":
-                room["nasa"] = {"items": data.get("items", []), "correct": data.get("correct", [])}
-                room["nasa_answers"] = {}
-                room["team_answers"] = {}
-                room["team_leaders"] = {}
-                await broadcast(room, {"type": "start_nasa", "items": room["nasa"]["items"]})
-
-            elif msg_type == "set_team_count":
-                room["team_count"] = data.get("count", 2)
-                room["team_names"] = data.get("names", [])
-
-            elif msg_type == "start_team_phase":
-                names = room.get("team_names", [])
-                room["teams"] = {(names[i] if i < len(names) else f"チーム{i+1}"): [] for i in range(room.get("team_count", 2))}
-                await broadcast(room, {"type": "team_phase_start", "teams": room["teams"]})
-
-            elif msg_type == "select_team":
-                name = data.get("name")
-                team = data.get("team")
-                if team in room["teams"]:
-                    for t in room["teams"]:
-                        if name in room["teams"][t]:
-                            room["teams"][t].remove(name)
-                    room["teams"][team].append(name)
-                selected = sum(len(members) for members in room["teams"].values())
-                total = len(room["members"])
-                await broadcast(room, {"type": "team_update", "teams": room["teams"], "selected": selected, "total": total})
-
-            elif msg_type == "start_leader_phase":
-                await broadcast(room, {"type": "leader_phase_start", "teams": room["teams"]})
-
-            elif msg_type == "set_team_leader":
-                team = data.get("team")
-                leader = data.get("leader")
-                if team:
-                    room["team_leaders"][team] = leader
-                await broadcast(room, {"type": "team_leader_set", "team": team, "leader": leader})
-
-            elif msg_type == "nasa_show_result":
-                await broadcast(room, {
-                    "type": "nasa_result",
-                    "correct": room["nasa"].get("correct", []),
-                    "personal_answers": room["nasa_answers"],
-                    "team_answers": room["team_answers"]
-                })
-
-            elif msg_type == "nasa_personal":
-                name = data.get("name")
-                ranks = data.get("ranks")
-                if not ranks or any(r is None for r in ranks):
-                    print("不正データ検出（personal）:", ranks)
-                    continue
-                if name:
-                    room["nasa_answers"][name] = {"personal": ranks}
-                await broadcast(room, {
-                    "type": "nasa_personal_progress",
-                    "done": len([a for a in room["nasa_answers"].values() if "personal" in a]),
-                    "total": len(room["members"])
-                })
-
-            elif msg_type == "nasa_team":
-                name = data.get("name")
-                team = data.get("team")
-                ranks = data.get("ranks")
-                if not ranks or any(r is None for r in ranks):
-                    print("不正データ検出（team）:", ranks)
-                    continue
-                if team:
-                    # チーム回答を保存
-                    room["team_answers"][team] = ranks
-            
-                    # チームメンバー全員に team_name を付与
-                    for member in room["teams"].get(team, []):
-                        if member not in room["nasa_answers"]:
-                            room["nasa_answers"][member] = {}
-                        room["nasa_answers"][member]["team_name"] = team
-                        # 非リーダーには空の personal を作ることで送信完了扱いに
-                        if "personal" not in room["nasa_answers"][member]:
-                            room["nasa_answers"][member]["personal"] = None
-            
-                # 親画面向けチーム進捗
-                team_done_count = len(room["team_answers"])  # 回答済みチーム数
-                total_team_count = len(room["teams"])
-                
-                await broadcast(room, {
-                    "type": "nasa_team_progress",
-                    "done": team_done_count,
-                    "total": total_team_count  # チーム数
-                })            
-                # ★これ追加
-                await broadcast(room, {
-                    "type": "team_answer_done",
-                    "team": team
-                })             
-            elif msg_type == "nasa_get_ranking":
-                correct = room["nasa"].get("correct", [])
-                my_name = data.get("name")
-            
-                # 絶対誤差計算関数
-                def calc(arr):
-                    if not arr or not correct:
-                        return 0
-                    score = 0
-                    for i in range(min(len(arr), len(correct))):
-                        if arr[i] is None:
-                            continue
-                        score += abs(int(arr[i]) - correct[i])
-                    return score
-            
-                # ------------------------
-                # 個人スコア
-                # ------------------------
-                personal_scores = []
-                my_personal = None
-                my_team = None
-                for name, a in room["nasa_answers"].items():
-                    if "personal" in a:
-                        s = calc(a["personal"])
-                        personal_scores.append((name, s))
-                        if name == my_name:
-                            my_personal = s
-                    if name == my_name:
-                        my_team = a.get("team_name")
-            
-                # ------------------------
-                # チームスコア（リーダーの回答のみ）
-                # ------------------------
-                team_scores = []
-                for team, ranks in room["team_answers"].items():
-                    s = calc(ranks)
-                    team_scores.append((team, s))
-            
-                # ------------------------
-                # ランキング生成（昇順：スコア小さい方が上位）
-                # ------------------------
-                def make_rank_list(scores):
-                    sorted_scores = sorted(scores, key=lambda x: x[1])  # スコア小さい順
-                    result = []
-                    prev_score = None
-                    display_rank = 0
-                    for i, (name, score) in enumerate(sorted_scores):
-                        if score != prev_score:
-                            display_rank += 1
-                            prev_score = score
-                        if display_rank > 3:
-                            break
-                        result.append({"name": name, "score": score, "rank": display_rank})
-                    return result
-            
-                personal_top = make_rank_list(personal_scores)
-                team_top = make_rank_list(team_scores)
-            
-                personal_avg = sum(s for _, s in personal_scores)/len(personal_scores) if personal_scores else 0
-                team_avg = sum(s for _, s in team_scores)/len(team_scores) if team_scores else 0
-                my_team_score = next((s for t, s in team_scores if t == my_team), None)
-                my_diff = my_personal - my_team_score if my_personal is not None and my_team_score is not None else None
-            
-                await websocket.send_json({
-                    "type": "nasa_ranking",
-                    "personal_top": personal_top,
-                    "personal_avg": round(personal_avg, 1),
-                    "team_top": [{"name": n, "score": s, "rank": r} for n, s, r in [(t["name"], t["score"], t["rank"]) for t in team_top]],
-                    "team_avg": round(team_avg, 1),
-                    "my_personal": my_personal,
-                    "my_team_score": my_team_score,
-                    "my_diff": my_diff,
-                    "my_team_name": my_team
-                })
-            elif msg_type == "end_nasa":
-                await broadcast(room, {"type": "end_nasa"})
-
-            # =========================
-            # 相性診断開始
-            # =========================
-            elif msg_type == "start_compatibility":
-
-                question_count = data.get("question_count", 10)
-            
-                if not COMPATIBILITY_POOL:
-                    await websocket.send_json({
-                        "type":"error",
-                        "message":"相性診断問題が存在しません"
-                    })
-                    continue
-                
-                selected_questions = random.sample(
-                    COMPATIBILITY_POOL,
-                    min(
-                        question_count,
-                        len(COMPATIBILITY_POOL)
-                    )
-                )
-                
-                room["compatibility"] = {
-                    "question_count": len(selected_questions),
-                    "questions": selected_questions,
-                    "answers": {},
-                    "groups": {},
-                    "results": {}
-                }
-            
-                await broadcast(room,{
-                    "type":"start_compatibility",
-                    "questions": selected_questions
-                })
-            
-            elif msg_type == "compatibility_answer":
-
-                name = data.get("name")
-                answers = data.get("answers", [])
-            
-                # 既回答なら無視
-                if name in room["compatibility"]["answers"]:
-                    continue
-            
-                room["compatibility"]["answers"][name] = answers
-            
-                done = len(room["compatibility"]["answers"])
-                total = len(room["members"]) - 1
-            
-                await broadcast(room,{
-                    "type":"compatibility_progress",
-                    "done": done,
-                    "total": total
-                })
-            
-                if done >= total:
-
-                    answers = room["compatibility"]["answers"]
-                
-                    names = list(answers.keys())
-                
-                    similarities = {}
-                
-                    for i in range(len(names)):
-                        for j in range(i+1,len(names)):
-                
-                            n1 = names[i]
-                            n2 = names[j]
-                
-                            a1 = answers[n1]
-                            a2 = answers[n2]
-                
-                            same = 0
-                
-                            for x,y in zip(a1,a2):
-                                if x == y:
-                                    same += 1
-                
-                            rate = round(
-                                same / len(a1) * 100,
-                                1
-                            )
-                
-                            similarities[f"{n1}|{n2}"] = rate
-                
-                    room["compatibility"]["similarities"] = similarities
-                
-                    await broadcast(room,{
-                        "type":"compatibility_all_done",
-                        "player_count": len(names)
-                    })
-
-
-            elif msg_type == "compatibility_make_team":
-                print("チーム作成開始")
-
-                team_size = data.get("team_size", 4)
-            
-                high_weight = data.get("high_weight", 100)
-                low_weight = data.get("low_weight", 0)
-            
-                similarities = room["compatibility"].get(
-                    "similarities",
-                    {}
-                )
-            
-                players = list(
-                    room["compatibility"]["answers"].keys()
-                )
-            
-                player_count = len(players)
-            
-                # =====================
-                # チーム数決定
-                # =====================
-            
-                team_count = max(
-                    1,
-                    round(player_count / team_size)
-                )
-            
-                base_size = player_count // team_count
-                remainder = player_count % team_count
-            
-                sizes = []
-            
-                for i in range(team_count):
-            
-                    if i < remainder:
-                        sizes.append(base_size + 1)
-            
-                    else:
-                        sizes.append(base_size)
-            
-                # =====================
-                # 高類似・低類似チーム数
-                # =====================
-            
-                total_weight = high_weight + low_weight
-            
-                if total_weight == 0:
-                    high_team_count = team_count
-                else:
-                    high_team_count = round(
-                        team_count *
-                        high_weight /
-                        total_weight
-                    )
-            
-                low_team_count = (
-                    team_count -
-                    high_team_count
-                )
-            
-                # =====================
-                # 類似度ペア作成
-                # =====================
-            
-                pairs = []
-            
-                for key, score in similarities.items():
-            
-                    p1, p2 = key.split("|")
-            
-                    pairs.append(
-                        (score, p1, p2)
-                    )
-            
-                high_pairs = sorted(
-                    pairs,
-                    reverse=True
-                )
-            
-                low_pairs = sorted(
-                    pairs
-                )
-            
-                unused = set(players)
-            
-                teams = {}
-            
-                # =====================
-                # 高類似チーム
-                # =====================
-                high_team_names = []
-
-                for team_index in range(high_team_count):
-            
-                    target_size = sizes[team_index]
-            
-                    members = []
-            
-                    for score, p1, p2 in high_pairs:
-            
-                        if p1 in unused and p2 in unused:
-            
-                            members.extend([p1, p2])
-            
-                            unused.remove(p1)
-                            unused.remove(p2)
-            
-                            break
-            
-                    while len(members) < target_size:
-            
-                        best_player = None
-                        best_score = -1
-            
-                        for candidate in unused:
-            
-                            total = 0
-            
-                            for m in members:
-            
-                                key1 = f"{candidate}|{m}"
-                                key2 = f"{m}|{candidate}"
-            
-                                total += similarities.get(
-                                    key1,
-                                    similarities.get(key2, 0)
-                                )
-            
-                            if total > best_score:
-            
-                                best_score = total
-                                best_player = candidate
-            
-                        if best_player is None:
-                            break
-            
-                        members.append(best_player)
-                        unused.remove(best_player)
-            
-                    team_name = f"チーム{team_index+1}"
-
-                    teams[team_name] = {
-                        "members": members
-                    }
-                    
-                    high_team_names.append(team_name)
-
-                            
-                # =====================
-                # 低類似チーム
-                # =====================
-                low_team_names = []
-            
-                for low_index in range(low_team_count):
-            
-                    team_index = high_team_count + low_index
-            
-                    target_size = sizes[team_index]
-            
-                    members = []
-            
-                    for score, p1, p2 in low_pairs:
-            
-                        if p1 in unused and p2 in unused:
-            
-                            members.extend([p1, p2])
-            
-                            unused.remove(p1)
-                            unused.remove(p2)
-            
-                            break
-            
-                    while len(members) < target_size:
-            
-                        best_player = None
-                        best_score = 999999
-            
-                        for candidate in unused:
-            
-                            total = 0
-            
-                            for m in members:
-            
-                                key1 = f"{candidate}|{m}"
-                                key2 = f"{m}|{candidate}"
-            
-                                total += similarities.get(
-                                    key1,
-                                    similarities.get(key2, 0)
-                                )
-            
-                            if total < best_score:
-            
-                                best_score = total
-                                best_player = candidate
-            
-                        if best_player is None:
-                            break
-            
-                        members.append(best_player)
-                        unused.remove(best_player)
-            
-                    team_name = f"チーム{team_index+1}"
-
-                    teams[team_name] = {
-                        "members": members
-                    }
-                    
-                    low_team_names.append(team_name)
-            
-                # =====================
-                # 余りゼロ化
-                # =====================
-            
-                unused = list(unused)
-            
-                while unused:
-            
-                    smallest_team = min(
-                        teams.values(),
-                        key=lambda t: len(t["members"])
-                    )
-            
-                    smallest_team["members"].append(
-                        unused.pop()
-                    )
-            
-                # =====================
-                # 平均一致率計算
-                # =====================
-            
-                for team_name, team in teams.items():
-            
-                    members = team["members"]
-            
-                    pair_scores = []
-            
-                    for i in range(len(members)):
-            
-                        for j in range(i+1, len(members)):
-            
-                            n1 = members[i]
-                            n2 = members[j]
-            
-                            key1 = f"{n1}|{n2}"
-                            key2 = f"{n2}|{n1}"
-            
-                            score = similarities.get(
-                                key1,
-                                similarities.get(key2, 0)
-                            )
-            
-                            pair_scores.append(score)
-            
-                    avg = (
-                        round(
-                            sum(pair_scores) /
-                            len(pair_scores),
-                            1
+                        await socket.send_json(
+                            {
+                                "type":"host_message",
+                                "text":text,
+                                "target":target
+                            }
                         )
-                        if pair_scores
-                        else 100
+
+
+                else:
+
+                    await broadcast(
+                        room,
+                        {
+                            "type":"host_message",
+                            "text":text
+                        }
                     )
-            
-                    team["score"] = avg
 
-                # =====================
-                # 表示相性割り振り
-                # =====================
-                
-                random.shuffle(high_team_names)
-                random.shuffle(low_team_names)
-                
-                high_scores = (
-                    [90] * (len(high_team_names) // 2)
-                    + [20] * (len(high_team_names) - len(high_team_names) // 2)
-                )
-                
-                low_scores = (
-                    [90] * (len(low_team_names) // 2)
-                    + [20] * (len(low_team_names) - len(low_team_names) // 2)
-                )
-                
-                random.shuffle(high_scores)
-                random.shuffle(low_scores)
-                
-                for team_name, score in zip(high_team_names, high_scores):
-                    teams[team_name]["shown_score"] = score
-                
-                for team_name, score in zip(low_team_names, low_scores):
-                    teams[team_name]["shown_score"] = score
 
-                room["compatibility"]["teams"] = teams
-                
+
+            # ----------------------------
+            # Quiz
+            # ----------------------------
+
+            elif msg_type.startswith("quiz"):
+
+                await handle_quiz(
+                    room,
+                    data
+                )
+
+
+
+            # ----------------------------
+            # NASA
+            # ----------------------------
+
+            elif msg_type.startswith("nasa"):
+
+                await handle_nasa(
+                    room,
+                    data
+                )
+
+
+
+            # ----------------------------
+            # Compatibility
+            # ----------------------------
+
+            elif msg_type.startswith(
+                "compatibility"
+            ):
+
+                await handle_compatibility(
+                    room,
+                    data
+                )
+
+
+
+            # ----------------------------
+            # Ranking
+            # ----------------------------
+
+            elif msg_type.startswith(
+                "ranking"
+            ):
+
+                await handle_ranking(
+                    room,
+                    data
+                )
+
+
+
+            elif msg_type=="end_quiz":
+
                 await broadcast(
                     room,
                     {
-                        "type": "compatibility_team_created",
-                        "teams": teams
+                        "type":"end_quiz"
                     }
-                  )
-                print("チーム作成完了")
+                )
 
-                
-            
-            # =========================
-            # 相性診断終了
-            # =========================
-            elif msg_type == "end_compatibility":
-                await broadcast(room, {
-                    "type": "end_compatibility"
-                })
-            
-           
-    
+
+            elif msg_type=="end_nasa":
+
+                await broadcast(
+                    room,
+                    {
+                        "type":"end_nasa"
+                    }
+                )
+
+
+            elif msg_type=="end_compatibility":
+
+                await broadcast(
+                    room,
+                    {
+                        "type":"end_compatibility"
+                    }
+                )
+
+
+
     except WebSocketDisconnect:
+
+
         if websocket in room["sockets"]:
+
             room["sockets"].remove(websocket)
-          
 
 
-# =========================
-# broadcast
-# =========================
-async def broadcast(room, message):
-    dead_sockets = []
+# ==================================================
+# Quiz
+# ==================================================
+
+async def handle_quiz(room,data):
+
+    msg_type=data.get("type")
+
+
+
+    if msg_type=="start_quiz":
+
+        await broadcast(
+            room,
+            {
+                "type":"start_quiz"
+            }
+        )
+
+
+
+    elif msg_type=="quiz_question":
+
+        room["answers"]={}
+
+        choices=data.get(
+            "choices",
+            []
+        )
+
+
+        room["last_choices"]=choices
+
+
+
+        await broadcast(
+            room,
+            {
+
+                "type":"quiz_question",
+
+                "question":data.get(
+                    "question"
+                ),
+
+                "choices":choices,
+
+                "timer":data.get(
+                    "timer"
+                )
+
+            }
+        )
+
+
+
+
+    elif msg_type=="quiz_answer":
+
+
+        name=data.get("name")
+
+        choice=data.get("choice")
+
+
+
+        room["answers"][name]=choice
+
+
+
+        votes=[
+            0
+            for _ in room["last_choices"]
+        ]
+
+
+
+        for v in room["answers"].values():
+
+            if (
+                v is not None
+                and v < len(votes)
+            ):
+
+                votes[v]+=1
+
+
+
+        await broadcast(
+            room,
+            {
+
+                "type":"quiz_show_graph",
+
+                "votes":votes,
+
+                "choices":room["last_choices"]
+
+            }
+        )
+
+
+
+
+    elif msg_type=="quiz_score":
+
+
+        score_map=data.get(
+            "scores",
+            {}
+        )
+
+
+
+        for name,choice in room["answers"].items():
+
+            room["scores"].setdefault(
+                name,
+                0
+            )
+
+
+            room["scores"][name]+=score_map.get(
+                str(choice),
+                0
+            )
+
+
+
+        await broadcast(
+            room,
+            {
+
+                "type":"quiz_score_update",
+
+                "scores":room["scores"]
+
+            }
+        )
+
+
+
+
+    elif msg_type=="quiz_correct":
+
+        await broadcast(
+            room,
+            {
+
+                "type":"quiz_correct",
+
+                "correct":data.get(
+                    "correct"
+                )
+
+            }
+        )
+
+
+
+
+    elif msg_type=="quiz_get_ranking":
+
+
+        ranking=sorted(
+            room["scores"].items(),
+            key=lambda x:-x[1]
+        )
+
+
+
+        await broadcast(
+            room,
+            {
+
+                "type":"quiz_ranking",
+
+                "ranking":ranking[:5]
+
+            }
+        )
+# ==================================================
+# NASA GAME
+# ==================================================
+
+async def handle_nasa(room, data):
+
+    msg_type = data.get("type")
+
+
+    # ----------------------------------
+    # NASA開始
+    # ----------------------------------
+
+    if msg_type == "start_nasa":
+
+        room["nasa"] = {
+
+            "items":
+                data.get(
+                    "items",
+                    []
+                ),
+
+            "correct":
+                data.get(
+                    "correct",
+                    []
+                )
+        }
+
+
+        room["nasa_answers"]={}
+        room["team_answers"]={}
+        room["team_leaders"]={}
+
+
+
+        await broadcast(
+            room,
+            {
+
+                "type":"start_nasa",
+
+                "items":
+                    room["nasa"]["items"]
+
+            }
+        )
+
+
+
+    # ----------------------------------
+    # チーム数設定
+    # ----------------------------------
+
+    elif msg_type=="set_team_count":
+
+
+        room["team_count"]=data.get(
+            "count",
+            2
+        )
+
+
+        room["team_names"]=data.get(
+            "names",
+            []
+        )
+
+
+
+    # ----------------------------------
+    # チーム選択開始
+    # ----------------------------------
+
+    elif msg_type=="start_team_phase":
+
+
+        names=room.get(
+            "team_names",
+            []
+        )
+
+
+        count=room.get(
+            "team_count",
+            2
+        )
+
+
+        room["teams"]={}
+
+
+        for i in range(count):
+
+            team_name = (
+                names[i]
+                if i<len(names)
+                else f"チーム{i+1}"
+            )
+
+
+            room["teams"][team_name]=[]
+
+
+
+        await broadcast(
+            room,
+            {
+
+                "type":
+                    "team_phase_start",
+
+                "teams":
+                    room["teams"]
+
+            }
+        )
+
+
+
+
+    # ----------------------------------
+    # チーム選択
+    # ----------------------------------
+
+    elif msg_type=="select_team":
+
+
+        name=data.get("name")
+
+        team=data.get("team")
+
+
+
+        if team in room["teams"]:
+
+
+            # 以前の所属解除
+
+            for t in room["teams"]:
+
+                if name in room["teams"][t]:
+
+                    room["teams"][t].remove(name)
+
+
+
+            room["teams"][team].append(
+                name
+            )
+
+
+
+        selected=sum(
+            len(v)
+            for v in room["teams"].values()
+        )
+
+
+        total=len(
+            room["members"]
+        )
+
+
+
+        await broadcast(
+            room,
+            {
+
+                "type":
+                    "team_update",
+
+                "teams":
+                    room["teams"],
+
+                "selected":
+                    selected,
+
+                "total":
+                    total
+
+            }
+        )
+
+
+
+
+
+    # ----------------------------------
+    # リーダー選択
+    # ----------------------------------
+
+    elif msg_type=="start_leader_phase":
+
+
+        await broadcast(
+            room,
+            {
+
+                "type":
+                    "leader_phase_start",
+
+                "teams":
+                    room["teams"]
+
+            }
+        )
+
+
+
+
+    elif msg_type=="set_team_leader":
+
+
+        team=data.get("team")
+
+        leader=data.get("leader")
+
+
+
+        if team:
+
+            room["team_leaders"][team]=leader
+
+
+
+        await broadcast(
+            room,
+            {
+
+                "type":
+                    "team_leader_set",
+
+                "team":
+                    team,
+
+                "leader":
+                    leader
+
+            }
+        )
+
+
+
+
+
+    # ----------------------------------
+    # 個人回答
+    # ----------------------------------
+
+    elif msg_type=="nasa_personal":
+
+
+        name=data.get("name")
+
+        ranks=data.get("ranks")
+
+
+
+        if (
+            not ranks
+            or any(
+                r is None
+                for r in ranks
+            )
+        ):
+
+            print(
+                "不正NASA個人回答:",
+                ranks
+            )
+
+            return
+
+
+
+        room["nasa_answers"][name]={
+
+            "personal":
+                ranks
+
+        }
+
+
+
+        done=len(
+            [
+                x
+                for x in room["nasa_answers"].values()
+                if "personal" in x
+            ]
+        )
+
+
+
+        await broadcast(
+            room,
+            {
+
+                "type":
+                    "nasa_personal_progress",
+
+                "done":
+                    done,
+
+                "total":
+                    len(room["members"])
+
+            }
+        )
+
+
+
+
+
+    # ----------------------------------
+    # チーム回答
+    # ----------------------------------
+
+    elif msg_type=="nasa_team":
+
+
+        team=data.get("team")
+
+        ranks=data.get("ranks")
+
+
+
+        if (
+            not ranks
+            or any(
+                r is None
+                for r in ranks
+            )
+        ):
+
+            print(
+                "不正NASAチーム回答:",
+                ranks
+            )
+
+            return
+
+
+
+        if team:
+
+
+            room["team_answers"][team]=ranks
+
+
+
+            # メンバーに所属情報付与
+
+            for member in room["teams"].get(
+                team,
+                []
+            ):
+
+                room["nasa_answers"].setdefault(
+                    member,
+                    {}
+                )
+
+
+                room["nasa_answers"][member][
+                    "team_name"
+                ]=team
+
+
+
+                if "personal" not in room["nasa_answers"][member]:
+
+                    room["nasa_answers"][member][
+                        "personal"
+                    ]=None
+
+
+
+
+        await broadcast(
+            room,
+            {
+
+                "type":
+                    "nasa_team_progress",
+
+                "done":
+                    len(room["team_answers"]),
+
+                "total":
+                    len(room["teams"])
+
+            }
+        )
+
+
+
+        await broadcast(
+            room,
+            {
+
+                "type":
+                    "team_answer_done",
+
+                "team":
+                    team
+
+            }
+        )
+
+
+
+
+
+    # ----------------------------------
+    # 結果表示
+    # ----------------------------------
+
+    elif msg_type=="nasa_show_result":
+
+
+        await broadcast(
+            room,
+            {
+
+                "type":
+                    "nasa_result",
+
+                "correct":
+                    room["nasa"].get(
+                        "correct",
+                        []
+                    ),
+
+                "personal_answers":
+                    room["nasa_answers"],
+
+                "team_answers":
+                    room["team_answers"]
+
+            }
+        )
+
+
+
+
+
+    # ----------------------------------
+    # ランキング取得
+    # ----------------------------------
+
+    elif msg_type=="nasa_get_ranking":
+
+
+        correct=room["nasa"].get(
+            "correct",
+            []
+        )
+
+
+        my_name=data.get(
+            "name"
+        )
+
+
+
+        personal_scores=[]
+
+        my_personal=None
+
+        my_team=None
+
+
+
+
+        # 個人
+
+        for name,answer in room["nasa_answers"].items():
+
+
+            if "personal" in answer:
+
+
+                score=calc_nasa_score(
+                    answer["personal"],
+                    correct
+                )
+
+
+                personal_scores.append(
+                    (
+                        name,
+                        score
+                    )
+                )
+
+
+                if name==my_name:
+
+                    my_personal=score
+
+
+
+            if name==my_name:
+
+                my_team=answer.get(
+                    "team_name"
+                )
+
+
+
+
+
+        # チーム
+
+        team_scores=[]
+
+
+        for team,ranks in room["team_answers"].items():
+
+
+            score=calc_nasa_score(
+                ranks,
+                correct
+            )
+
+
+            team_scores.append(
+                (
+                    team,
+                    score
+                )
+            )
+
+
+
+
+
+        personal_top=make_nasa_rank(
+            personal_scores
+        )
+
+
+        team_top=make_nasa_rank(
+            team_scores
+        )
+
+
+
+        my_team_score=next(
+            (
+                s
+                for t,s in team_scores
+                if t==my_team
+            ),
+            None
+        )
+
+
+
+        diff=None
+
+        if (
+            my_personal is not None
+            and my_team_score is not None
+        ):
+
+            diff=my_personal-my_team_score
+
+
+
+
+        await room_socket_send(
+            room,
+            my_name,
+            {
+
+                "type":
+                    "nasa_ranking",
+
+                "personal_top":
+                    personal_top,
+
+                "team_top":
+                    team_top,
+
+                "my_personal":
+                    my_personal,
+
+                "my_team_score":
+                    my_team_score,
+
+                "my_diff":
+                    diff,
+
+                "my_team_name":
+                    my_team
+
+            }
+        )
+
+def calc_nasa_score(arr, correct):
+
+    score=0
+
+
+    for i in range(
+        min(
+            len(arr),
+            len(correct)
+        )
+    ):
+
+        if arr[i] is None:
+            continue
+
+
+        score += abs(
+            int(arr[i])
+            -
+            correct[i]
+        )
+
+
+    return score
+
+
+
+
+def make_nasa_rank(scores):
+
+    result=[]
+
+
+    for rank,(name,score) in enumerate(
+        sorted(
+            scores,
+            key=lambda x:x[1]
+        ),
+        start=1
+    ):
+
+        if rank>3:
+            break
+
+
+        result.append(
+            {
+                "name":name,
+                "score":score,
+                "rank":rank
+            }
+        )
+
+
+    return result
+
+# ==================================================
+# Compatibility
+# ==================================================
+
+async def handle_compatibility(room,data):
+
+    msg_type=data.get("type")
+
+
+    # ----------------------------------
+    # 開始
+    # ----------------------------------
+
+    if msg_type=="start_compatibility":
+
+        question_count=data.get(
+            "question_count",
+            10
+        )
+
+
+        if not COMPATIBILITY_POOL:
+
+            await broadcast(
+                room,
+                {
+                    "type":"error",
+                    "message":"問題データなし"
+                }
+            )
+
+            return
+
+
+
+        questions=random.sample(
+            COMPATIBILITY_POOL,
+            min(
+                question_count,
+                len(COMPATIBILITY_POOL)
+            )
+        )
+
+
+        room["compatibility"]={
+
+            "question_count":
+                len(questions),
+
+            "questions":
+                questions,
+
+            "answers":{},
+
+            "groups":{},
+
+            "results":{},
+
+            "similarities":{},
+
+            "teams":{},
+
+            "ranking_game":
+                room["compatibility"].get(
+                    "ranking_game",
+                    {}
+                )
+
+        }
+
+
+
+        await broadcast(
+            room,
+            {
+                "type":
+                    "start_compatibility",
+
+                "questions":
+                    questions
+            }
+        )
+
+
+
+
+    # ----------------------------------
+    # 回答保存
+    # ----------------------------------
+
+    elif msg_type=="compatibility_answer":
+
+
+        name=data.get("name")
+
+        answers=data.get(
+            "answers",
+            []
+        )
+
+
+        if name in room["compatibility"]["answers"]:
+
+            return
+
+
+
+        room["compatibility"]["answers"][name]=answers
+
+
+
+        done=len(
+            room["compatibility"]["answers"]
+        )
+
+        total=len(
+            room["members"]
+        )-1
+
+
+
+        await broadcast(
+            room,
+            {
+
+                "type":
+                    "compatibility_progress",
+
+                "done":
+                    done,
+
+                "total":
+                    total
+
+            }
+        )
+
+
+
+        if done>=total:
+
+
+            players=list(
+                room["compatibility"]["answers"].keys()
+            )
+
+
+            similarities={}
+
+
+
+            for i in range(len(players)):
+
+                for j in range(
+                    i+1,
+                    len(players)
+                ):
+
+                    p1=players[i]
+
+                    p2=players[j]
+
+
+                    a1=room["compatibility"]["answers"][p1]
+
+                    a2=room["compatibility"]["answers"][p2]
+
+
+
+                    same=sum(
+                        x==y
+                        for x,y in zip(a1,a2)
+                    )
+
+
+                    rate=round(
+                        same/len(a1)*100,
+                        1
+                    )
+
+
+                    similarities[
+                        f"{p1}|{p2}"
+                    ]=rate
+
+
+
+            room["compatibility"]["similarities"]=similarities
+
+
+
+            await broadcast(
+                room,
+                {
+
+                    "type":
+                        "compatibility_all_done",
+
+                    "player_count":
+                        len(players)
+
+                }
+            )
+
+
+    # ----------------------------------
+    # チーム作成
+    # ----------------------------------
+
+    elif msg_type=="compatibility_make_team":
+
+
+        similarities = room["compatibility"]["similarities"]
+    
+        players = list(
+            room["compatibility"]["answers"].keys()
+        )
+    
+    
+        team_count = data.get(
+            "team_count",
+            4
+        )
+    
+        high_count = data.get(
+            "high_team_count",
+            2
+        )
+    
+        low_count = data.get(
+            "low_team_count",
+            2
+        )
+    
+    
+        # -------------------------
+        # 類似度取得
+        # -------------------------
+    
+        def sim(a,b):
+    
+            return similarities.get(
+                f"{a}|{b}",
+                similarities.get(
+                    f"{b}|{a}",
+                    0
+                )
+            )
+    
+    
+        # -------------------------
+        # チーム作成
+        # -------------------------
+    
+        teams={}
+    
+    
+        unused=set(players)
+    
+    
+        # =========================
+        # 高類似チーム
+        # =========================
+    
+        for i in range(high_count):
+    
+            team=[]
+    
+    
+            # 一番似ているペアを探す
+    
+            best_pair=None
+            best_score=-1
+    
+    
+            for a,b in itertools.combinations(
+                unused,
+                2
+            ):
+    
+                score=sim(a,b)
+    
+                if score>best_score:
+    
+                    best_score=score
+                    best_pair=(a,b)
+    
+    
+    
+            if best_pair:
+    
+                team=list(best_pair)
+    
+                unused.remove(team[0])
+                unused.remove(team[1])
+    
+    
+            # 人数調整
+    
+            while len(team)<len(players)//team_count:
+    
+                if not unused:
+                    break
+    
+    
+                candidate=max(
+                    unused,
+                    key=lambda x:
+                        sum(
+                            sim(x,t)
+                            for t in team
+                        )
+                )
+    
+    
+                team.append(candidate)
+                unused.remove(candidate)
+    
+    
+    
+            teams[
+                f"チーム{i+1}"
+            ]={
+    
+                "members":team,
+    
+                "type":"high",
+    
+                "score":round(
+                    sum(
+                        sim(a,b)
+                        for a,b in itertools.combinations(team,2)
+                    )
+                    /
+                    max(
+                        1,
+                        len(list(itertools.combinations(team,2)))
+                    ),
+                    1
+                )
+    
+            }
+    
+    
+    
+        # =========================
+        # 低類似チーム
+        # =========================
+    
+        for i in range(low_count):
+    
+            team=[]
+    
+    
+            best_pair=None
+            best_score=999
+    
+    
+            for a,b in itertools.combinations(
+                unused,
+                2
+            ):
+    
+                score=sim(a,b)
+    
+    
+                if score<best_score:
+    
+                    best_score=score
+                    best_pair=(a,b)
+    
+    
+    
+            if best_pair:
+    
+                team=list(best_pair)
+    
+                unused.remove(team[0])
+                unused.remove(team[1])
+    
+    
+    
+            while len(team)<len(players)//team_count:
+    
+                if not unused:
+                    break
+    
+    
+                candidate=min(
+                    unused,
+                    key=lambda x:
+                        sum(
+                            sim(x,t)
+                            for t in team
+                        )
+                )
+    
+    
+                team.append(candidate)
+    
+                unused.remove(candidate)
+    
+    
+    
+            index=high_count+i+1
+    
+    
+            teams[
+                f"チーム{index}"
+            ]={
+    
+                "members":team,
+    
+                "type":"low",
+    
+                "score":round(
+                    sum(
+                        sim(a,b)
+                        for a,b in itertools.combinations(team,2)
+                    )
+                    /
+                    max(
+                        1,
+                        len(list(itertools.combinations(team,2)))
+                    ),
+                    1
+                )
+    
+            }
+    
+    
+    
+    
+        # -------------------------
+        # 保存
+        # -------------------------
+    
+        room["compatibility"]["teams"]=teams
+    
+    
+    
+        await broadcast(
+            room,
+            {
+                "type":
+                    "compatibility_team_created",
+    
+                "teams":
+                    teams
+            }
+        )
+    # ----------------------------------
+    # 偽結果
+    # ----------------------------------
+
+    elif msg_type=="show_fake_compatibility":
+
+
+        await broadcast(
+            room,
+            {
+
+                "type":
+                    "fake_compatibility_result",
+
+                "teams":
+                    room["compatibility"].get(
+                        "teams",
+                        {}
+                    )
+
+            }
+        )
+
+
+
+
+
+# ==================================================
+# Compatibility Team
+# ==================================================
+
+async def make_compatibility_team(room,data):
+
+    similarities=room["compatibility"].get(
+        "similarities",
+        {}
+    )
+
+
+    players=list(
+        room["compatibility"]["answers"].keys()
+    )
+
+
+    size=data.get(
+        "team_size",
+        4
+    )
+
+
+    team_count=max(
+        1,
+        round(
+            len(players)/size
+        )
+    )
+
+
+    random.shuffle(players)
+
+
+    teams={}
+
+
+
+    for i,p in enumerate(players):
+
+        name=f"チーム{i%team_count+1}"
+
+
+        teams.setdefault(
+            name,
+            {
+                "members":[],
+                "score":0,
+                "shown_score":0
+            }
+        )
+
+
+        teams[name]["members"].append(p)
+
+
+
+    for name,team in teams.items():
+
+        scores=[]
+
+        members=team["members"]
+
+
+        for i in range(len(members)):
+
+            for j in range(
+                i+1,
+                len(members)
+            ):
+
+                key=f"{members[i]}|{members[j]}"
+
+                scores.append(
+                    similarities.get(
+                        key,
+                        0
+                    )
+                )
+
+
+        team["score"]=round(
+            sum(scores)/len(scores),
+            1
+        ) if scores else 100
+
+
+
+    room["compatibility"]["teams"]=teams
+
+
+
+    await broadcast(
+        room,
+        {
+
+            "type":
+                "compatibility_team_created",
+
+            "teams":
+                teams
+
+        }
+    )
+
+
+
+
+# ==================================================
+# Ranking Game
+# ==================================================
+
+async def handle_ranking(room,data):
+
+    msg_type=data.get("type")
+
+
+    game=room["compatibility"]["ranking_game"]
+
+
+
+    if msg_type=="start_ranking_game":
+
+
+        count=data.get(
+            "question_count",
+            5
+        )
+
+
+        questions=random.sample(
+            RANKING_POOL,
+            min(
+                count,
+                len(RANKING_POOL)
+            )
+        )
+
+
+        room["compatibility"]["ranking_game"]={
+
+            "mode":
+                data.get(
+                    "mode",
+                    "all"
+                ),
+
+            "questions":
+                questions,
+
+            "current_index":
+                0,
+
+            "true_answers":{},
+
+            "predictions":{},
+
+            "scores":{}
+
+        }
+
+
+
+        await start_next_ranking_question(
+            room
+        )
+
+
+
+
+    elif msg_type=="ranking_answer":
+
+        name=data.get("name")
+        ranking=data.get("ranking")
+        target=data.get("target")
+    
+    
+        # 本人回答
+        if data.get("answer_type")=="true":
+    
+            game["true_answers"][name]=ranking
+    
+    
+        # 順位予想
+        else:
+    
+            if name not in game["predictions"]:
+                game["predictions"][name]={}
+    
+            game["predictions"][name][target]=ranking
+    
+    
+    
+        await broadcast(
+            room,
+            {
+                "type":"ranking_answer_progress",
+                "name":name
+            }
+        )
+
+
+
+    elif msg_type=="ranking_check":
+
+
+        await broadcast(
+            room,
+            {
+
+                "type":
+                    "ranking_result",
+
+                "true_answers":
+                    game["true_answers"],
+
+                "predictions":
+                    game["predictions"],
+
+                "scores":
+                    game["scores"]
+
+            }
+        )
+
+
+
+
+    elif msg_type=="ranking_final":
+
+
+        result=sorted(
+            game["scores"].items(),
+            key=lambda x:-x[1]
+        )
+
+
+        await broadcast(
+            room,
+            {
+
+                "type":
+                    "ranking_final_result",
+
+                "ranking":
+                    result
+
+            }
+        )
+
+    elif msg_type=="ranking_score":
+
+
+        game=room["compatibility"]["ranking_game"]
+
+
+        scores={}
+
+
+        for player,targets in game["predictions"].items():
+
+            score=0
+
+
+            for target,predict in targets.items():
+
+                if target not in game["true_answers"]:
+                    continue
+
+
+                answer=game["true_answers"][target]
+
+
+                score += calc_sanrentan(
+                    answer,
+                    predict
+                )
+
+
+            scores[player]=score
+
+
+
+        game["scores"]=scores
+
+
+
+        await broadcast(
+            room,
+            {
+                "type":"ranking_score_result",
+                "scores":scores
+            }
+        )
+
+
+
+
+# ==================================================
+# Ranking next question
+# ==================================================
+
+async def start_next_ranking_question(room):
+
+    game=room["compatibility"]["ranking_game"]
+
+
+    index=game["current_index"]
+
+
+    if index>=len(game["questions"]):
+
+        await broadcast(
+            room,
+            {
+                "type":"ranking_game_end"
+            }
+        )
+    
+        return
+
+
+
+    question=game["questions"][index]
+
+
+    game["current_question"]=question
+
+    game["current_index"]+=1
+
+
+
+    await broadcast(
+        room,
+        {
+
+            "type":
+                "ranking_question",
+
+            "question":
+                question
+
+        }
+    )
+
+
+
+
+
+# ==================================================
+# Common
+# ==================================================
+
+async def room_socket_send(room,name,message):
+
     for socket in room["sockets"]:
+
         try:
-            await socket.send_json(message)
-        except Exception as e:
-            print("送信失敗:", e)
-            dead_sockets.append(socket)
-    for s in dead_sockets:
-        if s in room["sockets"]:
-            room["sockets"].remove(s)
+
+            await socket.send_json(
+                message
+            )
+
+        except:
+
+            pass
+
+
+
+
+async def broadcast(room,message):
+
+    dead=[]
+
+
+    for socket in room["sockets"]:
+
+        try:
+
+            await socket.send_json(
+                message
+            )
+
+        except:
+
+            dead.append(socket)
+
+
+
+    for socket in dead:
+
+        if socket in room["sockets"]:
+
+            room["sockets"].remove(socket)
+
+
+def calc_sanrentan(answer,predict):
+
+    exact=0
+    hit=0
+
+
+    for i in range(3):
+
+        if answer[i]==predict[i]:
+            exact+=1
+
+
+        if predict[i] in answer[:3]:
+            hit+=1
+
+
+
+    if exact==3:
+        return 6
+
+    elif hit==3:
+        return 4
+
+    elif exact==2:
+        return 3
+
+    elif hit==2:
+        return 2
+
+    elif exact==1:
+        return 1
+
+    else:
+        return 0
