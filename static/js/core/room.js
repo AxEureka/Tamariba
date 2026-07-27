@@ -5,8 +5,7 @@ import { startQuizPlayer } from "/static/js/quiz/quiz-player.js";
 import { startNASAHost } from "/static/js/nasa/nasa-host.js";
 import { startNASAPlayer } from "/static/js/nasa/nasa-player.js";
 import { startCompatibilityHost } from "/static/js/compatibility/compatibility-host.js";
-import { startCompatibilityPlayer } from "/static/js/compatibility/compatibility-player.js";
-
+import { startCompatibilityPlayer, showCompatibilityTeam } from "/static/js/compatibility/compatibility-player.js";
 const params = new URLSearchParams(location.search);
 const roomId = params.get("room");
 let myName = params.get("name") || "";
@@ -345,19 +344,23 @@ function connectSocket() {
     }
 
     if (msg.type === "start_compatibility") {
-
-      const container =
-          document.getElementById("game-container");
-    
+      const container = document.getElementById("game-container");
       container.classList.add("active");
-    
       if (myName !== hostName) {
-    
           startCompatibilityPlayer(
               container,
               msg.questions,
               socket
           );
+        
+    if(msg.type === "compatibility_team_created"){
+      const container = document.getElementById("game-container");
+      showCompatibilityTeam(
+          container,
+          msg.teams
+      );
+  
+  }
     
       }
     }
