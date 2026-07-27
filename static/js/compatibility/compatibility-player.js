@@ -1,3 +1,5 @@
+console.log("compatibility-player loaded");
+
 import {
     createCompatibilityUI
 }
