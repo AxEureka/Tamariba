@@ -428,32 +428,31 @@ async def websocket_endpoint(
             # Compatibility
             # ----------------------------
 
-           elif (
+            elif (
                 msg_type.startswith("compatibility")
-                or msg_type.startswith("start_compatibility")
-                or msg_type.startswith("end_compatibility")
+                or msg_type in [
+                    "start_compatibility",
+                    "end_compatibility"
+                ]
             ):
-            
+
                 await handle_compatibility(
                     room,
                     data
                 )
 
-
-
             # ----------------------------
             # Ranking
             # ----------------------------
 
-           elif (
+            elif (
                 "ranking" in msg_type
             ):
-            
+
                 await handle_ranking(
                     room,
                     data
                 )
-
 
             elif msg_type=="end_quiz":
 
