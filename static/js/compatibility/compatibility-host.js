@@ -1,270 +1,502 @@
 console.log("compatibility-host loaded");
 
+
 export function startCompatibilityHost(
-socket,
-container
+    socket,
+    container
 ){
-console.log("startCompatibilityHost");
 
-container.innerHTML="";
+    console.log("startCompatibilityHost");
 
-const wrapper =
-    document.createElement("div");
 
-wrapper.className =
-    "compatibility-ui";
+    container.innerHTML="";
 
-const title =
-    document.createElement("h2");
 
-title.textContent =
-    "相性診断";
+    const wrapper =
+        document.createElement("div");
 
-const count =
-    document.createElement("input");
+    wrapper.className =
+        "compatibility-ui";
 
-count.type = "number";
-count.min = 3;
-count.max = 20;
-count.value = 10;
 
-const start =
-    document.createElement("button");
+    const title =
+        document.createElement("h2");
 
-start.textContent =
-    "開始";
+    title.textContent =
+        "相性診断";
 
-const progress =
-    document.createElement("div");
 
-const config =
-    document.createElement("div");
+    const progress =
+        document.createElement("div");
 
-start.onclick = ()=>{
 
-    console.log("相性診断 開始クリック");
-    console.log("socket状態:", socket.readyState);
+    const config =
+        document.createElement("div");
 
-    socket.send(
-        JSON.stringify({
 
-            type:
-                "start_compatibility",
 
-            question_count:
-                parseInt(count.value)
-
-        })
+    wrapper.append(
+        title,
+        progress,
+        config
     );
 
-};
 
-wrapper.appendChild(title);
-wrapper.appendChild(count);
-wrapper.appendChild(start);
-wrapper.appendChild(progress);
-wrapper.appendChild(config);
-
-container.appendChild(wrapper);
-
-socket.addEventListener(
-    "message",
-    (event)=>{
-
-        const data =
-            JSON.parse(event.data);
-
-        // --------------------
-        // 回答進捗
-        // --------------------
-
-        if(
-            data.type ===
-            "compatibility_progress"
-        ){
-
-            progress.textContent =
-                `${data.done}/${data.total} 回答済み`;
-
-        }
-
-        // --------------------
-        // 全員回答完了
-        // --------------------
-
-        if(
-            data.type ===
-            "compatibility_all_done"
-        ){
-
-            progress.textContent =
-                "全員回答完了";
-
-            config.innerHTML="";
-
-            const teamCount =
-                document.createElement("input");
-
-            teamCount.type="number";
-            teamCount.min=2;
-            teamCount.value=4;
+    container.appendChild(
+        wrapper
+    );
 
 
-            const highCount =
-                document.createElement("input");
 
-            highCount.type="number";
-            highCount.min=0;
-            highCount.value=2;
+    // =================================
+    // 相性診断開始UI
+    // =================================
 
 
-            const lowCount =
-                document.createElement("input");
+    const questionCount =
+        document.createElement("input");
 
-            lowCount.type="number";
-            lowCount.min=0;
-            lowCount.value=2;
-
-
-            const makeBtn =
-                document.createElement("button");
-
-            makeBtn.textContent =
-                "チーム作成";
+    questionCount.type="number";
+    questionCount.min=3;
+    questionCount.max=20;
+    questionCount.value=10;
 
 
-            makeBtn.onclick = ()=>{
 
-                socket.send(
-                    JSON.stringify({
-
-                        type:
-                            "compatibility_make_team",
-
-                        team_count:
-                            parseInt(
-                                teamCount.value
-                            ),
-
-                        high_team_count:
-                            parseInt(
-                                highCount.value
-                            ),
-
-                        low_team_count:
-                            parseInt(
-                                lowCount.value
-                            )
-
-                    })
-                );
-
-            };
+    const startBtn =
+        document.createElement("button");
 
 
-            config.append(
-                document.createTextNode(
-                    "総チーム数 "
-                )
+    startBtn.textContent =
+        "開始";
+
+
+
+    startBtn.onclick = ()=>{
+
+
+        socket.send(
+            JSON.stringify({
+
+                type:
+                    "start_compatibility",
+
+                question_count:
+                    Number(
+                        questionCount.value
+                    )
+
+            })
+        );
+
+    };
+
+
+
+    wrapper.insertBefore(
+        questionCount,
+        progress
+    );
+
+
+    wrapper.insertBefore(
+        startBtn,
+        progress
+    );
+
+
+
+
+
+    // =================================
+    // チーム作成UI
+    // =================================
+
+
+    function showTeamCreate(){
+
+        config.innerHTML="";
+
+
+        const teamCount =
+            createNumberInput(
+                4
             );
 
-            config.appendChild(
-                teamCount
+
+        const highCount =
+            createNumberInput(
+                2
             );
 
-            config.appendChild(
-                document.createElement("br")
+
+        const lowCount =
+            createNumberInput(
+                2
             );
 
-            config.append(
-                document.createTextNode(
-                    "高類似チーム数 "
-                )
+
+
+        const btn =
+            document.createElement("button");
+
+
+        btn.textContent =
+            "チーム作成";
+
+
+
+        btn.onclick=()=>{
+
+
+            socket.send(
+                JSON.stringify({
+
+                    type:
+                        "compatibility_make_team",
+
+
+                    team_count:
+                        Number(
+                            teamCount.value
+                        ),
+
+
+                    high_team_count:
+                        Number(
+                            highCount.value
+                        ),
+
+
+                    low_team_count:
+                        Number(
+                            lowCount.value
+                        )
+
+                })
             );
 
-            config.appendChild(
-                highCount
-            );
 
-            config.appendChild(
-                document.createElement("br")
-            );
+        };
 
-            config.append(
-                document.createTextNode(
-                    "低類似チーム数 "
-                )
-            );
 
-            config.appendChild(
-                lowCount
-            );
 
-            config.appendChild(
-                document.createElement("br")
-            );
+        config.append(
 
-            config.appendChild(
-                makeBtn
-            );
+            text("総チーム数 "),
+            teamCount,
+            br(),
 
-        }
+            text("高類似チーム数 "),
+            highCount,
+            br(),
 
-        // --------------------
-        // チーム作成完了
-        // --------------------
+            text("低類似チーム数 "),
+            lowCount,
+            br(),
 
-        if(
-            data.type ===
-            "compatibility_team_created"
-        ){
+            btn
 
-            progress.textContent =
-                "チーム作成完了";
-
-            config.innerHTML="";
-
-            Object.entries(
-                data.teams
-            ).forEach(
-
-                ([teamName,team])=>{
-
-                    const box =
-                        document.createElement("div");
-
-                    box.className =
-                        "team-box";
-
-                    box.innerHTML = `
-                        <h3>${teamName}</h3>
-
-                        <div>
-                            メンバー:
-                            ${team.members.join(", ")}
-                        </div>
-
-                        <div>
-                            実際の平均一致率:
-                            ${team.score}%
-                        </div>
-
-                        <div>
-                            参加者への表示:
-                            ${team.shown_score}%
-                        </div>
-                    `;
-
-                    config.appendChild(
-                        box
-                    );
-
-                }
-            );
-
-        }
+        );
 
     }
-);
+
+
+
+
+
+    // =================================
+    // チーム表示
+    // =================================
+
+
+    function showTeams(teams){
+
+
+        config.innerHTML="";
+
+
+
+        Object.entries(
+            teams
+        )
+        .forEach(
+            ([name,team])=>{
+
+
+                const box =
+                    document.createElement("div");
+
+
+                box.className =
+                    "team-box";
+
+
+
+                box.innerHTML=`
+
+                    <h3>
+                        ${name}
+                    </h3>
+
+                    <div>
+                        メンバー:
+                        ${team.members.join(", ")}
+                    </div>
+
+                    <div>
+                        実際の平均一致率:
+                        ${team.score}%
+                    </div>
+
+                    <div>
+                        表示一致率:
+                        ${team.shown_score}%
+                    </div>
+
+                `;
+
+
+
+                config.appendChild(
+                    box
+                );
+
+
+            }
+        );
+
+
+
+        showRankingStart();
+
+    }
+
+
+
+
+
+    // =================================
+    // サンレンタン開始UI
+    // =================================
+
+
+    function showRankingStart(){
+
+
+        const title =
+            document.createElement("h3");
+
+
+        title.textContent =
+            "サンレンタン";
+
+
+
+        const count =
+            createNumberInput(5);
+
+
+
+        count.min=1;
+        count.max=20;
+
+
+
+        const btn =
+            document.createElement("button");
+
+
+        btn.textContent =
+            "出題開始";
+
+
+
+        btn.onclick=()=>{
+
+
+            socket.send(
+                JSON.stringify({
+
+                    type:
+                        "start_ranking_game",
+
+
+                    question_count:
+                        Number(
+                            count.value
+                        )
+
+                })
+            );
+
+
+        };
+
+
+
+        config.append(
+
+            title,
+
+            text("問題数 "),
+            count,
+
+            br(),
+
+            btn
+
+        );
+
+
+    }
+
+
+
+
+
+    // =================================
+    // WebSocket受信
+    // =================================
+
+
+    socket.addEventListener(
+        "message",
+        (event)=>{
+
+
+            const data =
+                JSON.parse(
+                    event.data
+                );
+
+
+
+            switch(
+                data.type
+            ){
+
+
+                case "compatibility_progress":
+
+
+                    progress.textContent =
+                        `${data.done}/${data.total} 回答済み`;
+
+                    break;
+
+
+
+                case "compatibility_all_done":
+
+
+                    progress.textContent =
+                        "全員回答完了";
+
+
+                    showTeamCreate();
+
+
+                    break;
+
+
+
+                case "compatibility_team_created":
+
+
+                    progress.textContent =
+                        "チーム作成完了";
+
+
+                    showTeams(
+                        data.teams
+                    );
+
+
+                    break;
+
+
+
+                // ======================
+                // ここからサンレンタン用
+                // ======================
+
+
+                case "ranking_progress":
+
+
+                    progress.textContent =
+                        data.message;
+
+
+                    break;
+
+
+
+                case "ranking_result":
+
+
+                    console.log(
+                        "ランキング結果",
+                        data
+                    );
+
+
+                    break;
+
+
+            }
+
+
+        }
+    );
+
+
+}
+
+
+
+
+
+// =================================
+// 共通関数
+// =================================
+
+
+function createNumberInput(value){
+
+
+    const input =
+        document.createElement("input");
+
+
+    input.type="number";
+
+    input.value=value;
+
+
+    return input;
+
+}
+
+
+
+function text(value){
+
+
+    return document.createTextNode(
+        value
+    );
+
+}
+
+
+
+function br(){
+
+
+    return document.createElement(
+        "br"
+    );
 
 }
