@@ -1608,7 +1608,30 @@ async def handle_compatibility(room,data):
     
     
         unused=set(players)
-    
+
+
+        # =========================
+        # 偽フィードバック準備
+        # =========================
+        
+        fake_pattern = [90,20]
+        
+        
+        high_fake_scores = [
+            fake_pattern[i % 2]
+            for i in range(high_count)
+        ]
+        
+        random.shuffle(high_fake_scores)
+        
+        
+        
+        low_fake_scores = [
+            fake_pattern[i % 2]
+            for i in range(low_count)
+        ]
+        
+        random.shuffle(low_fake_scores)    
     
         # =========================
         # 高類似チーム
@@ -1673,11 +1696,13 @@ async def handle_compatibility(room,data):
             teams[
                 f"チーム{i+1}"
             ]={
-    
+            
                 "members":team,
-    
+            
+                # 実際の類似度条件
                 "type":"high",
-    
+            
+                # 実際の一致率
                 "score":round(
                     sum(
                         sim(a,b)
@@ -1689,10 +1714,13 @@ async def handle_compatibility(room,data):
                         len(list(itertools.combinations(team,2)))
                     ),
                     1
-                )
-    
+                ),
+            
+                # 偽フィードバック
+                "shown_score":
+                     high_fake_scores[i]
+            
             }
-    
     
     
         # =========================
@@ -1760,11 +1788,13 @@ async def handle_compatibility(room,data):
             teams[
                 f"チーム{index}"
             ]={
-    
+            
                 "members":team,
-    
+            
+                # 実際の類似度条件
                 "type":"low",
-    
+            
+                # 実際の一致率
                 "score":round(
                     sum(
                         sim(a,b)
@@ -1776,8 +1806,12 @@ async def handle_compatibility(room,data):
                         len(list(itertools.combinations(team,2)))
                     ),
                     1
-                )
-    
+                ),
+            
+                # 偽フィードバック
+                "shown_score":
+                    low_fake_scores[i]
+            
             }
     
     
