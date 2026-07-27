@@ -8,9 +8,7 @@ import json
 import random
 import itertools
 
-
 app = FastAPI()
-
 
 # ==================================================
 # Static
