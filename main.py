@@ -2053,11 +2053,14 @@ async def handle_ranking(room,data):
                 current_member_index,
     
     
-            "current_answerer":
-                None,
+            "current_answerers":{},
     
     
-            "true_answers":{},
+            "true_answers":{
+                question_index:{
+                    player_name:ranking
+                }
+            }
     
             "predictions":{},
     
@@ -2074,22 +2077,27 @@ async def handle_ranking(room,data):
 
     elif msg_type=="ranking_answer":
 
+
         name=data.get("name")
         ranking=data.get("ranking")
         target=data.get("target")
+    
+        index=game["current_index"]-1
     
     
         # 本人回答
         if data.get("answer_type")=="true":
     
-            game["true_answers"][name]=ranking
+            game["true_answers"][index][name]=ranking
     
     
-        # 順位予想
+    
+        # 自チーム予想
         else:
     
             if name not in game["predictions"]:
                 game["predictions"][name]={}
+    
     
             game["predictions"][name][target]=ranking
     
@@ -2168,11 +2176,22 @@ async def handle_ranking(room,data):
 
             for target,predict in targets.items():
 
-                if target not in game["true_answers"]:
-                    continue
+                total=0
+        
+                for q,answers in game["true_answers"].items():
+        
+                    if target in answers:
+        
+                        total += calc_sanrentan(
+                            answers[target],
+                            predict
+                        )
+        
+        
+                score += total
 
 
-                answer=game["true_answers"][target]
+                answer=game["true_answers"][question_index][target]
 
 
                 score += calc_sanrentan(
@@ -2233,22 +2252,88 @@ async def start_next_ranking_question(room):
     # チームローテーションで出題者決定
     # -------------------------
     
-    team_index = game["current_team_index"]
-    
-    
-    team = game["team_order"][team_index]
-    
-    
-    members = game["team_members_order"][team]
+    async def start_next_ranking_question(room):
 
-    if len(members)==0:
-
-        return
-
-    member_index = game["current_member_index"][team]
+        game = room["compatibility"]["ranking_game"]
+    
+        index = game["current_index"]
     
     
-    answerer = members[member_index]
+        if index >= len(game["questions"]):
+    
+            await broadcast(
+                room,
+                {
+                    "type":"ranking_game_end"
+                }
+            )
+    
+            return
+    
+    
+    
+        question = game["questions"][index]
+    
+    
+        answerers={}
+    
+    
+        # 全チームから1人ずつ選ぶ
+        for team in game["team_order"]:
+    
+            members = game["team_members_order"][team]
+    
+    
+            member_index = game["current_member_index"][team]
+    
+    
+            answerer = members[member_index]
+    
+    
+            answerers[team]=answerer
+    
+    
+    
+            # 次の人へ
+            game["current_member_index"][team]+=1
+    
+    
+            if (
+                game["current_member_index"][team]
+                >=len(members)
+            ):
+                game["current_member_index"][team]=0
+    
+    
+    
+        game["current_answerers"]=answerers
+    
+    
+    
+        game["true_answers"][index]={}
+    
+    
+    
+        game["current_question"]=question
+    
+    
+        game["current_index"]+=1
+    
+    
+    
+        await broadcast(
+            room,
+            {
+    
+                "type":"ranking_question",
+    
+                "question":question,
+    
+                # 複数人
+                "answerers":answerers
+    
+            }
+        )
     
     
     # 次回用更新
