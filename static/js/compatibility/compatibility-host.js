@@ -248,8 +248,8 @@ socket.addEventListener(
                         </div>
 
                         <div>
-                            チーム種別:
-                            ${team.type}
+                            参加者への表示:
+                            ${team.shown_score}%
                         </div>
                     `;
 
