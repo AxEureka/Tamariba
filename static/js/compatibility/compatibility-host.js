@@ -43,6 +43,7 @@ const config =
 start.onclick = ()=>{
 
     console.log("相性診断 開始クリック");
+    console.log("socket状態:", socket.readyState);
 
     socket.send(
         JSON.stringify({
