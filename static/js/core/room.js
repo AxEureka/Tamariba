@@ -340,7 +340,14 @@ function connectSocket() {
       const container = document.getElementById("game-container");
       container.classList.add("active");
       document.getElementById("exitQuizBtn").style.display = "inline-block";
-      if (myName !== hostName) startNASAPlayer(socket, container);
+      if (myName !== hostName) {
+          startNASAPlayer(
+              socket,
+              container,
+              msg.items
+          );
+    
+      }
     }
 
     if (msg.type === "start_compatibility") {
