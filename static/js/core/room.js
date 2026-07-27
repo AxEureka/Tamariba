@@ -323,6 +323,11 @@ function connectSocket() {
   socket.onmessage = (e) => {
     let msg;
     try { msg = JSON.parse(e.data); } catch { return; }
+    console.log(
+        "受信:",
+        msg.type,
+        msg
+    );
 
     if (msg.type === "host_message") {
       if (msg.target && msg.target !== myName) return;
@@ -350,41 +355,53 @@ function connectSocket() {
       }
     }
 
-   if(msg.type==="start_compatibility"){
+   if (msg.type === "start_compatibility") {
 
-      const container =
-          document.getElementById("game-container");
-  
-      container.classList.add("active");
-  
-  
-      if(myName !== hostName){
-  
-          startCompatibilityPlayer(
-              socket,
-              container,
-              msg.questions
-          );
-  
-      }
-  
-  }
-  
-  
-  
-  if(msg.type==="compatibility_team_created"){
-  
-      const container =
-          document.getElementById("game-container");
-  
-  
-      showCompatibilityTeam(
-          container,
-          msg.teams
-      );
-  
-  }
+    const container =
+        document.getElementById("game-container");
 
+    container.classList.add("active");
+
+
+    console.log(
+        "相性診断開始受信",
+        msg.questions
+    );
+
+
+    if (myName !== hostName) {
+
+        startCompatibilityPlayer(
+            container,
+            msg.questions,
+            socket
+        );
+
+    }
+
+}
+
+
+
+if (msg.type === "compatibility_team_created") {
+
+
+    const container =
+        document.getElementById("game-container");
+
+
+    console.log(
+        "チーム作成結果受信",
+        msg.teams
+    );
+
+
+    showCompatibilityTeam(
+        container,
+        msg.teams
+    );
+
+}
     if (msg.type === "end_quiz" || msg.type === "end_nasa" || msg.type === "end_compatibility") {
       const container = document.getElementById("game-container");
       container.classList.remove("active");
