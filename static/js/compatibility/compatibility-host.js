@@ -6,7 +6,6 @@ container
 ){
 console.log("startCompatibilityHost");
 
-```
 container.innerHTML="";
 
 const wrapper =
@@ -264,6 +263,5 @@ socket.addEventListener(
 
     }
 );
-```
 
 }
