@@ -1,111 +1,140 @@
 console.log("compatibility-player loaded");
 
+
 import {
     createCompatibilityUI
 }
 from "./compatibility-ui.js";
 
+
+// =================================
+// 相性診断開始
+// =================================
+
 export function startCompatibilityPlayer(
-    socket,
-    container
+    container,
+    questions,
+    socket
 ){
 
-    console.log("startCompatibilityPlayer 実行");
+    console.log(
+        "startCompatibilityPlayer 実行"
+    );
 
-    socket.addEventListener(
-        "message",
-        (event)=>{
 
-            const data =
-                JSON.parse(event.data);
+    createCompatibilityUI(
+        container,
+        questions,
 
-            // =====================
-            // 相性診断開始
-            // =====================
-            if(
-                data.type ===
-                "start_compatibility"
-            ){
+        (answers)=>{
 
-                createCompatibilityUI(
-                    container,
-                    data.questions,
-                    (answers)=>{
 
-                        socket.send(
-                            JSON.stringify({
+            console.log(
+                "回答送信:",
+                answers
+            );
 
-                                type:
-                                "compatibility_answer",
 
-                                name:
-                                window.myName,
+            socket.send(
+                JSON.stringify({
 
-                                answers:
-                                answers
+                    type:
+                    "compatibility_answer",
 
-                            })
-                        );
+                    name:
+                    window.myName,
 
-                        container.innerHTML = `
-                            <h2>
-                            回答を送信しました
-                            </h2>
+                    answers:
+                    answers
 
-                            <p>
-                            他の参加者を
-                            待っています
-                            </p>
-                        `;
-                    }
-                );
-            }
+                })
+            );
 
-            // =====================
-            // チーム作成完了
-            // =====================
-            if(
-                data.type ===
-                "compatibility_team_created"
-            ){
 
-                const myName =
-                    window.myName ||
-                    sessionStorage.getItem("playerName");
-                
-                Object.entries(
-                    data.teams
-                ).forEach(
+            container.innerHTML = `
 
-                    ([teamName,team])=>{
+                <h2>
+                回答を送信しました
+                </h2>
 
-                        if(
-                            team.members.includes(
-                                myName
-                            )
-                        ){
+                <p>
+                他の参加者を待っています
+                </p>
 
-                            container.innerHTML = `
-                                <h2>
-                                あなたは
-                                ${teamName}
-                                です
-                                </h2>
+            `;
 
-                                <div>
-                                メンバー:
-                                ${team.members.join(", ")}
-                                </div>
 
-                                <div>
-                                相性:
-                                ${team.shown_score}%
-                                </div>
-                        `;
-                        }
-                    }
-                );
-            }
         }
     );
+
+}
+
+
+
+// =================================
+// チーム結果表示
+// =================================
+
+export function showCompatibilityTeam(
+    container,
+    teams
+){
+
+    console.log(
+        "チーム結果表示",
+        teams
+    );
+
+
+    const myName =
+        window.myName ||
+        sessionStorage.getItem(
+            "playerName"
+        );
+
+
+
+    Object.entries(
+        teams
+    )
+    .forEach(
+
+        ([teamName,team])=>{
+
+
+            if(
+                team.members.includes(
+                    myName
+                )
+            ){
+
+
+                container.innerHTML = `
+
+                    <h2>
+                    あなたは
+                    ${teamName}
+                    です
+                    </h2>
+
+
+                    <div>
+                    メンバー:
+                    ${team.members.join(", ")}
+                    </div>
+
+
+                    <div>
+                    相性:
+                    ${team.shown_score}%
+                    </div>
+
+                `;
+
+
+            }
+
+        }
+    );
+
 }
