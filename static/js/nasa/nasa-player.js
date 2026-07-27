@@ -12,12 +12,20 @@ let teams={};
 let leaders={};
 let heartbeatInterval;
 
-export function startNASAPlayer(ws,uiContainer){
+export function startNASAPlayer(
+  ws,
+  uiContainer,
+  nasaItems
+){
 
-  socket=ws;
-  container=uiContainer;
+  socket = ws;
+  container = uiContainer;
 
-  startHeartbeat(); // ★ heartbeat開始
+  items = nasaItems || [];
+
+  startHeartbeat();
+
+  startPersonal();
 
   if(!window.myName){
     const params=new URLSearchParams(location.search);
@@ -28,11 +36,6 @@ export function startNASAPlayer(ws,uiContainer){
 
     let data;
     try{data=JSON.parse(e.data);}catch{return;}
-
-    if(data.type==="start_nasa"){
-      items=data.items;
-      startPersonal();
-    }
 
     if(data.type==="team_phase_start"){
       teams=data.teams;
