@@ -1979,13 +1979,11 @@ async def handle_ranking(room,data):
 
     if msg_type=="start_ranking_game":
 
-
         count=data.get(
             "question_count",
             5
         )
-
-
+    
         questions=random.sample(
             RANKING_POOL,
             min(
@@ -1993,89 +1991,84 @@ async def handle_ranking(room,data):
                 len(RANKING_POOL)
             )
         )
-
-# ----------------------------
-# チーム内ローテーション準備
-# ----------------------------
-
-teams = room["compatibility"]["teams"]
-
-
-team_order = list(
-    teams.keys()
-)
-
-
-team_members_order = {}
-
-
-current_member_index = {}
-
-
-for team,info in teams.items():
-
-    members = info["members"].copy()
-
-    # チーム内だけランダム開始
-    random.shuffle(members)
-
-    team_members_order[team] = members
-
-    current_member_index[team] = 0
-
-
-
-room["compatibility"]["ranking_game"]["team_order"] = team_order
-
-room["compatibility"]["ranking_game"]["team_members_order"] = team_members_order
-
-room["compatibility"]["ranking_game"]["current_member_index"] = current_member_index
-
-room["compatibility"]["ranking_game"]["current_team_index"] = 0
-
-room["compatibility"]["ranking_game"]={
-
-    "mode":
-        data.get(
-            "mode",
-            "all"
-        ),
-
-    "questions":
-        questions,
-
-    "current_index":
-        0,
-
-
-    # チームローテーション
-    "team_order":
-        team_order,
-
-    "team_members_order":
-        team_members_order,
-
-    "current_team_index":
-        0,
-
-    "current_member_index":
-        current_member_index,
-
-
-    "current_answerer":
-        None,
-
-
-    "true_answers":{},
-    "predictions":{},
-    "scores":{}
-
-}
-
+    
+    
+        # ==========================
+        # チーム内ローテーション準備
+        # ==========================
+    
+        teams = room["compatibility"]["teams"]
+    
+    
+        team_order = list(
+            teams.keys()
+        )
+    
+    
+        team_members_order = {}
+    
+        current_member_index = {}
+    
+    
+        for team,info in teams.items():
+    
+            members = info["members"].copy()
+    
+            # チーム内順番をランダム化
+            random.shuffle(members)
+    
+            team_members_order[team] = members
+    
+            current_member_index[team] = 0
+    
+    
+    
+        room["compatibility"]["ranking_game"]={
+    
+            "mode":
+                data.get(
+                    "mode",
+                    "all"
+                ),
+    
+            "questions":
+                questions,
+    
+            "current_index":
+                0,
+    
+    
+            # ローテーション管理
+    
+            "team_order":
+                team_order,
+    
+            "team_members_order":
+                team_members_order,
+    
+            "current_team_index":
+                0,
+    
+            "current_member_index":
+                current_member_index,
+    
+    
+            "current_answerer":
+                None,
+    
+    
+            "true_answers":{},
+    
+            "predictions":{},
+    
+            "scores":{}
+    
+        }
+    
+    
         await start_next_ranking_question(
             room
         )
-
 
 
 
