@@ -10,6 +10,8 @@ export function startCompatibilityPlayer(
     container
 ){
 
+    console.log("startCompatibilityPlayer 実行");
+
     socket.addEventListener(
         "message",
         (event)=>{
