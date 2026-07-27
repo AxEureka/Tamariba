@@ -366,6 +366,7 @@ async def websocket_endpoint(
             data=await websocket.receive_json()
 
             msg_type=data.get("type")
+            print("受信:", data)
 
 
 
