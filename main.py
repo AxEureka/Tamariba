@@ -121,26 +121,30 @@ def create_room_data(
             "similarities":{},
             "teams":{},
 
-
-
             # ranking game
-
-            "ranking_game":{
-                "mode":"",
-                "question_count":0,
-                "current_index":0,
-                "questions":[],
-                "current_question":{},
-                "answerers":[],
-                "current_answerer": None,
-                "true_answers":{},
-                "predictions":{},
-                "scores":{}
-
-            }
+        "ranking_game":{
+        
+            "mode":"",
+            "question_count":0,
+        
+            "current_index":0,
+            "questions":[],
+            "current_question":{},
+        
+            # 追加
+            "team_order":[],
+            "team_members_order":{},
+            "current_team_index":0,
+            "current_member_index":{},
+        
+            "current_answerer":None,
+        
+            "true_answers":{},
+            "predictions":{},
+            "scores":{}
+        
         }
     }
-
 
 
 # ==================================================
@@ -1086,10 +1090,6 @@ async def handle_nasa(room, data):
             }
         )
 
-
-
-
-
     # ----------------------------------
     # 結果表示
     # ----------------------------------
@@ -1118,9 +1118,6 @@ async def handle_nasa(room, data):
 
             }
         )
-
-
-
 
 
     # ----------------------------------
@@ -1860,9 +1857,6 @@ async def handle_compatibility(room,data):
         )
 
 
-
-
-
 # ==================================================
 # Compatibility Team
 # ==================================================
@@ -1969,8 +1963,6 @@ async def make_compatibility_team(room,data):
     )
 
 
-
-
 # ==================================================
 # Ranking Game
 # ==================================================
@@ -2002,30 +1994,83 @@ async def handle_ranking(room,data):
             )
         )
 
+# ----------------------------
+# チーム内ローテーション準備
+# ----------------------------
 
-        room["compatibility"]["ranking_game"]={
-
-            "mode":
-                data.get(
-                    "mode",
-                    "all"
-                ),
-
-            "questions":
-                questions,
-
-            "current_index":
-                0,
-
-            "true_answers":{},
-
-            "predictions":{},
-
-            "scores":{}
-
-        }
+teams = room["compatibility"]["teams"]
 
 
+team_order = list(
+    teams.keys()
+)
+
+
+team_members_order = {}
+
+
+current_member_index = {}
+
+
+for team,info in teams.items():
+
+    members = info["members"].copy()
+
+    # チーム内だけランダム開始
+    random.shuffle(members)
+
+    team_members_order[team] = members
+
+    current_member_index[team] = 0
+
+
+
+room["compatibility"]["ranking_game"]["team_order"] = team_order
+
+room["compatibility"]["ranking_game"]["team_members_order"] = team_members_order
+
+room["compatibility"]["ranking_game"]["current_member_index"] = current_member_index
+
+room["compatibility"]["ranking_game"]["current_team_index"] = 0
+
+room["compatibility"]["ranking_game"]={
+
+    "mode":
+        data.get(
+            "mode",
+            "all"
+        ),
+
+    "questions":
+        questions,
+
+    "current_index":
+        0,
+
+
+    # チームローテーション
+    "team_order":
+        team_order,
+
+    "team_members_order":
+        team_members_order,
+
+    "current_team_index":
+        0,
+
+    "current_member_index":
+        current_member_index,
+
+
+    "current_answerer":
+        None,
+
+
+    "true_answers":{},
+    "predictions":{},
+    "scores":{}
+
+}
 
         await start_next_ranking_question(
             room
@@ -2188,30 +2233,80 @@ async def start_next_ranking_question(room):
 
 
     question=game["questions"][index]
+    
+    
+   
+    # -------------------------
+    # チームローテーションで出題者決定
+    # -------------------------
+    
+    team_index = game["current_team_index"]
+    
+    
+    team = game["team_order"][team_index]
+    
+    
+    members = game["team_members_order"][team]
 
+    if len(members)==0:
 
+        return
+
+    member_index = game["current_member_index"][team]
+    
+    
+    answerer = members[member_index]
+    
+    
+    # 次回用更新
+    
+    game["current_member_index"][team] += 1
+    
+    
+    # チーム内を一周したら次のチームへ
+    
+    if (
+        game["current_member_index"][team]
+        >= len(members)
+    ):
+    
+        game["current_member_index"][team] = 0
+    
+        game["current_team_index"] = (
+            game["current_team_index"] + 1
+        ) % len(
+            game["team_order"]
+        )
+    
+    
+    game["current_answerer"] = answerer
+    
+    
+    game["true_answers"][answerer] = None
+    
+    
     game["current_question"]=question
-
+    
+    
     game["current_index"]+=1
-
 
 
     await broadcast(
         room,
         {
-
+    
             "type":
                 "ranking_question",
-
+    
             "question":
-                question
-
+                question,
+    
+            "answerer":
+                answerer
+    
         }
     )
-
-
-
-
+    
 
 # ==================================================
 # Common
