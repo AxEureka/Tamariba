@@ -348,16 +348,19 @@ function connectSocket() {
 
       const container =
           document.getElementById("game-container");
+    
       container.classList.add("active");
-      document.getElementById("exitQuizBtn").style.display =
-          "inline-block";
+    
       if (myName !== hostName) {
+    
           startCompatibilityPlayer(
-              socket,
-              container
+              container,
+              msg.questions,
+              socket
           );
+    
       }
-  }
+    }
 
     if (msg.type === "end_quiz" || msg.type === "end_nasa" || msg.type === "end_compatibility") {
       const container = document.getElementById("game-container");
