@@ -350,39 +350,40 @@ function connectSocket() {
       }
     }
 
-   if (msg.type === "start_compatibility") {
+   if(msg.type==="start_compatibility"){
 
       const container =
           document.getElementById("game-container");
-    
+  
       container.classList.add("active");
-    
-    
-      if (myName !== hostName) {
-    
+  
+  
+      if(myName !== hostName){
+  
           startCompatibilityPlayer(
+              socket,
               container,
-              msg.questions,
-              socket
+              msg.questions
           );
-    
+  
       }
-    
-    }
-    
-    
-    
-    if (msg.type === "compatibility_team_created") {
-    
+  
+  }
+  
+  
+  
+  if(msg.type==="compatibility_team_created"){
+  
       const container =
           document.getElementById("game-container");
-    
+  
+  
       showCompatibilityTeam(
           container,
           msg.teams
       );
-    
-    }
+  
+  }
 
     if (msg.type === "end_quiz" || msg.type === "end_nasa" || msg.type === "end_compatibility") {
       const container = document.getElementById("game-container");
