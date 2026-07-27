@@ -1373,6 +1373,12 @@ async def handle_compatibility(room,data):
 
     if msg_type=="start_compatibility":
 
+        print("start_compatibility受信")
+        print(
+            "COMPATIBILITY_POOL数:",
+            len(COMPATIBILITY_POOL)
+        )
+
         question_count=data.get(
             "question_count",
             10
@@ -1380,6 +1386,19 @@ async def handle_compatibility(room,data):
 
 
         if not COMPATIBILITY_POOL:
+
+            print("COMPATIBILITY_POOLが空です")
+        
+            await broadcast(
+                room,
+                {
+                    "type":"error",
+                    "message":"問題データなし"
+                }
+            )
+        
+            return
+            
 
             await broadcast(
                 room,
@@ -1428,6 +1447,11 @@ async def handle_compatibility(room,data):
 
         }
 
+        print(
+            "問題送信:",
+            len(questions)
+        )
+
 
 
         await broadcast(
@@ -1440,9 +1464,6 @@ async def handle_compatibility(room,data):
                     questions
             }
         )
-
-
-
 
     # ----------------------------------
     # 回答保存
