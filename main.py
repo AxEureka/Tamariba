@@ -60,7 +60,6 @@ RANKING_POOL = load_json(
 )
 
 
-
 # ==================================================
 # Room
 # ==================================================
@@ -101,20 +100,12 @@ def create_room_data(
         # ----------------
 
         "nasa": {},
-
         "nasa_answers": {},
-
         "team_answers": {},
-
         "teams": {},
-
         "team_count": 0,
-
         "team_names": [],
-
         "team_leaders": {},
-
-
 
         # ----------------
         # Compatibility
@@ -123,17 +114,11 @@ def create_room_data(
         "compatibility": {
 
             "question_count":0,
-
             "questions":[],
-
             "answers":{},
-
             "groups":{},
-
             "results":{},
-
             "similarities":{},
-
             "teams":{},
 
 
@@ -141,25 +126,15 @@ def create_room_data(
             # ranking game
 
             "ranking_game":{
-
                 "mode":"",
-
                 "question_count":0,
-
                 "current_index":0,
-
                 "questions":[],
-
                 "current_question":{},
-
                 "answerers":[],
-
-                "current_answerer":None,
-
+                "current_answerer": None,
                 "true_answers":{},
-
                 "predictions":{},
-
                 "scores":{}
 
             }
@@ -1843,9 +1818,6 @@ async def handle_compatibility(room,data):
             
             }
     
-    
-    
-    
         # -------------------------
         # 保存
         # -------------------------
@@ -2006,6 +1978,7 @@ async def make_compatibility_team(room,data):
 async def handle_ranking(room,data):
 
     msg_type=data.get("type")
+    print("判定:", msg_type)
 
 
     game=room["compatibility"]["ranking_game"]
