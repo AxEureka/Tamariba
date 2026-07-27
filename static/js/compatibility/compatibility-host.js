@@ -42,6 +42,8 @@ const config =
 
 start.onclick = ()=>{
 
+    console.log("相性診断 開始クリック");
+
     socket.send(
         JSON.stringify({
 
