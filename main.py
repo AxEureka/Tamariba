@@ -433,8 +433,17 @@ async def websocket_endpoint(
             # NASA
             # ----------------------------
 
-            elif msg_type.startswith("nasa"):
-
+            elif (
+                msg_type.startswith("nasa")
+                or msg_type in [
+                    "start_team_phase",
+                    "set_team_count",
+                    "select_team",
+                    "start_leader_phase",
+                    "set_team_leader"
+                ]
+            ):
+            
                 await handle_nasa(
                     room,
                     data
