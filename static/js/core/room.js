@@ -313,6 +313,8 @@ function selectGame(type) {
 
 let socket;
 let currentGame = null;
+let rankingMode = "";
+let rankingAnswerers = {};
 
 // =====================
 // WebSocket 接続（再接続対応）
@@ -434,8 +436,10 @@ if (msg.type === "compatibility_team_created") {
     
 if (msg.type === "ranking_question") {
 
+
     const container =
         document.getElementById("game-container");
+
 
     console.log(
         "ランキング問題受信",
@@ -443,35 +447,95 @@ if (msg.type === "ranking_question") {
     );
 
 
-    createRankingUI(
-        container,
-        msg.question,
-        msg.players,
+    rankingMode = "answering";
 
-        (ranking)=>{
+    rankingAnswerers = msg.answerers;
 
-            socket.send(
-                JSON.stringify({
 
-                    type:
-                    "ranking_answer",
-                    
-                    ranking:
-                    ranking,
-                    
-                    name:
-                    myName,
-                    
-                    target:
-                    myName
-                })
-            );
+    // 自分が今回の出題者か判定
 
+    let isAnswerer = false;
+
+
+    Object.values(
+        msg.answerers
+    ).forEach(name=>{
+
+        if(name === myName){
+            isAnswerer = true;
         }
-    );
+
+    });
+
+
+
+    if(isAnswerer){
+
+
+        console.log(
+            "出題者です"
+        );
+
+
+        createRankingUI(
+            container,
+            msg.question,
+            msg.players,
+
+            (ranking)=>{
+
+
+                socket.send(
+                    JSON.stringify({
+
+                        type:
+                        "ranking_answer",
+
+
+                        name:
+                        myName,
+
+
+                        answer_type:
+                        "true",
+
+
+                        ranking:
+                        ranking
+
+                    })
+                );
+
+
+            }
+        );
+
+
+    }else{
+
+
+        console.log(
+            "回答者待機"
+        );
+
+
+        container.innerHTML = `
+
+            <h2>
+            ${msg.question}
+            </h2>
+
+            <p>
+            出題者の回答を待っています...
+            </p>
+
+        `;
+
+
+    }
 
 }
-
+    
     if (
         msg.type === "ranking_answerers_done"
     ){
