@@ -2056,7 +2056,7 @@ async def handle_ranking(room,data):
         
             "true_answers":{},
             "predictions":{},
-            "scores":{}
+            "scores":{},
             "prediction_done":{},
             "answer_done":{}
         
@@ -2147,12 +2147,12 @@ async def handle_ranking(room,data):
             # =====================
         
             team = None
-        
+
             for t,m in game["current_answerers"].items():
-        
-                if name != m:
-                    team=t
-        
+            
+                if m == name:
+                    team = t
+                    break        
         
         
             if team:
