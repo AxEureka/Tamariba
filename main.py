@@ -145,7 +145,7 @@ def create_room_data(
         
         }
     }
-
+}
 
 # ==================================================
 # Root
@@ -2179,8 +2179,7 @@ async def handle_ranking(room,data):
         for player,questions in game["predictions"].items():
 
             score=0
-        
-        
+                
             for q_index,targets in questions.items():
         
                 for target,predict in targets.items():
@@ -2194,37 +2193,7 @@ async def handle_ranking(room,data):
                             predict
                         )
 
-    scores[player]=score
-
-
-            for target,predict in targets.items():
-
-                total=0
-        
-                for q,answers in game["true_answers"].items():
-        
-                    if target in answers:
-        
-                        total += calc_sanrentan(
-                            answers[target],
-                            predict
-                        )
-        
-        
-                score += total
-
-
-                answer=game["true_answers"][question_index][target]
-
-
-                score += calc_sanrentan(
-                    answer,
-                    predict
-                )
-
-
             scores[player]=score
-
 
 
         game["scores"]=scores
