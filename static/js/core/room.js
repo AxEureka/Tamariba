@@ -15,6 +15,7 @@ let hostName = "";
 let lastMembers = [];
 let joined = false;
 let missingCount = 0;
+let compatibilityHostUI = null;
 
 const baseURL = location.origin;
 
@@ -300,7 +301,8 @@ function selectGame(type) {
   if (myName === hostName) {
       currentGame = "compatibility";
       container.classList.add("active");
-      startCompatibilityHost(socket, container);
+      compatibilityHostUI =
+        startCompatibilityHost(socket, container);
       document.getElementById("exitQuizBtn").style.display = "inline-block";
       }
     }
@@ -358,52 +360,75 @@ function connectSocket() {
 
    if (msg.type === "start_compatibility") {
 
+      const container =
+          document.getElementById("game-container");
+  
+      container.classList.add("active");
+  
+      console.log(
+          "相性診断開始受信",
+          msg.questions
+      );
+  
+  
+      if (myName !== hostName) {
+  
+          startCompatibilityPlayer(
+              container,
+              msg.questions,
+              socket
+          );
+  
+      }
+  
+  }
+  
+  
+  // ★ここに追加
+  if (msg.type === "compatibility_all_done") {
+  
+  
+      console.log(
+          "全員回答完了",
+          msg
+      );
+  
+  
+      if(
+          myName === hostName &&
+          compatibilityHostUI
+      ){
+  
+          compatibilityHostUI.showTeamCreate();
+  
+      }
+  
+  }
+
+
+if (msg.type === "compatibility_team_created") {
+
     const container =
         document.getElementById("game-container");
 
-    container.classList.add("active");
 
+    if(myName === hostName && compatibilityHostUI){
 
-    console.log(
-        "相性診断開始受信",
-        msg.questions
-    );
+        compatibilityHostUI.showTeams(
+            msg.teams
+        );
 
+    }else{
 
-    if (myName !== hostName) {
-
-        startCompatibilityPlayer(
+        showCompatibilityTeam(
             container,
-            msg.questions,
-            socket
+            msg.teams
         );
 
     }
 
 }
-
-
-
-if (msg.type === "compatibility_team_created") {
-
-
-    const container =
-        document.getElementById("game-container");
-
-
-    console.log(
-        "チーム作成結果受信",
-        msg.teams
-    );
-
-
-    showCompatibilityTeam(
-        container,
-        msg.teams
-    );
-
-}
-
+    
 if (msg.type === "ranking_question") {
 
     const container =
