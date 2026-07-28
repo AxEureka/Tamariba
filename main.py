@@ -1562,6 +1562,8 @@ async def handle_compatibility(room,data):
 
     elif msg_type=="compatibility_make_team":
 
+        print("compatibility_make_team受信")
+        print(data)
 
         similarities = room["compatibility"]["similarities"]
     
@@ -1575,30 +1577,38 @@ async def handle_compatibility(room,data):
             4
         )
 
-        # チーム人数配分
-        team_sizes = []
-
-        base = len(players) // actual_team_count
-        rest = len(players) % actual_team_count
-        
-        for i in range(actual_team_count):
-            team_sizes.append(
-                base + (1 if i < rest else 0)
-            )
-    
         high_count = data.get(
             "high_team_count",
             2
         )
-    
+        
         low_count = data.get(
             "low_team_count",
             2
         )
-
-        actual_team_count = high_count + low_count
-    
-    
+        
+        actual_team_count = (
+            high_count +
+            low_count
+        )
+        
+        # ------------------
+        # チーム人数配分
+        # ------------------
+        
+        team_sizes = []
+        
+        base = len(players) // actual_team_count
+        rest = len(players) % actual_team_count
+        
+        for i in range(actual_team_count):
+        
+            team_sizes.append(
+                base + (
+                    1 if i < rest
+                    else 0
+                )
+            )  
         # -------------------------
         # 類似度取得
         # -------------------------
