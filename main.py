@@ -2230,9 +2230,7 @@ async def start_next_ranking_question(room):
 
     index=game["current_index"]
 
-
     if index>=len(game["questions"]):
-
         await broadcast(
             room,
             {
@@ -2241,11 +2239,9 @@ async def start_next_ranking_question(room):
         )
         return
 
-
     question=game["questions"][index]
 
     answerers={}
-
 
     # 全チームから1人ずつ選ぶ
     for team in game["team_order"]:
@@ -2258,17 +2254,10 @@ async def start_next_ranking_question(room):
 
         answerers[team]=answerer
 
-
-        # 次の人へ
         game["current_member_index"][team]+=1
 
-
-        if (
-            game["current_member_index"][team]
-            >=len(members)
-        ):
+        if game["current_member_index"][team]>=len(members):
             game["current_member_index"][team]=0
-
 
 
     game["current_answerers"]=answerers
