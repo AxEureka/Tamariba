@@ -2278,9 +2278,12 @@ async def start_next_ranking_question(room):
         {
             "type":"ranking_question",
             "question":question,
+            "players":list(
+                room["compatibility"]["answers"].keys()
+            ),
             "answerers":answerers
         }
-    )    
+    )
     
     
 # ==================================================
