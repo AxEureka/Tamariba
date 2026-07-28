@@ -2,7 +2,8 @@ console.log("compatibility-player loaded");
 
 
 import {
-    createCompatibilityUI
+    createCompatibilityUI,
+    createRankingUI
 }
 from "./compatibility-ui.js";
 
@@ -136,5 +137,73 @@ export function showCompatibilityTeam(
 
         }
     );
+
+}
+
+export function showRankingQuestion(
+    container,
+    data,
+    socket
+){
+
+    const myName =
+        window.myName;
+
+
+    const answerers =
+        data.answerers;
+
+
+    let myTarget=null;
+
+
+    Object.entries(answerers)
+    .forEach(
+        ([team,name])=>{
+
+            if(name===myName){
+
+                myTarget=name;
+
+            }
+
+        }
+    );
+
+
+    // 自分が出題者
+
+    if(myTarget){
+
+        createRankingUI(
+            container,
+            data.question,
+            Object.keys(answerers),
+            (ranking)=>{
+
+
+                socket.send(
+                    JSON.stringify({
+
+                        type:"ranking_answer",
+
+                        answer_type:"true",
+
+                        name:myName,
+
+                        ranking:ranking
+
+                    })
+                );
+
+
+                container.innerHTML=
+                "<h2>回答しました</h2>";
+
+            }
+        );
+
+
+    }
 
 }
