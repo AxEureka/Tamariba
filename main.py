@@ -2075,7 +2075,7 @@ async def handle_ranking(room,data):
             "current_member_index":
                 current_member_index,
     
-    
+            "mode":"answering",
             "current_answerers":{},
     
     
@@ -2102,43 +2102,73 @@ async def handle_ranking(room,data):
 
 
 
-    elif msg_type=="ranking_answer":
+elif msg_type=="ranking_answer":
 
 
-        name=data.get("name")
-        ranking=data.get("ranking")
-        target=data.get("target")
-    
-        index=game["current_index"]-1
-    
-    
-        # 本人回答
-        if data.get("answer_type")=="true":
+    name=data.get("name")
+    ranking=data.get("ranking")
+    target=data.get("target")
 
-            game["true_answers"].setdefault(
-                index,
-                {}
+    index=game["current_index"]-1
+
+
+    # 本人回答
+    if data.get("answer_type")=="true":
+
+        game["true_answers"].setdefault(
+            index,
+            {}
+        )
+
+        game["true_answers"][index][name]=ranking
+
+
+        # ------------------
+        # 全出題者回答完了？
+        # ------------------
+
+        done_count = len(
+            game["true_answers"][index]
+        )
+
+        need_count = len(
+            game["current_answerers"]
+        )
+
+        print(
+            "出題者回答",
+            done_count,
+            "/",
+            need_count
+        )
+
+
+        if done_count >= need_count:
+
+            await broadcast(
+                room,
+                {
+                    "type":
+                        "ranking_answerers_done"
+                }
             )
-    
-            game["true_answers"][index][name]=ranking
-    
-    
-    
-        # 自チーム予想
-        else:
 
-            game["predictions"].setdefault(
-                name,
-                {}
-            )
-        
-            game["predictions"][name].setdefault(
-                index,
-                {}
-            )
-        
-     
-            game["predictions"][name][index][target]=ranking
+
+    # 自チーム予想
+    else:
+
+        game["predictions"].setdefault(
+            name,
+            {}
+        )
+
+        game["predictions"][name].setdefault(
+            index,
+            {}
+        )
+
+
+        game["predictions"][name][index][target]=ranking
     
     
     
@@ -2151,6 +2181,21 @@ async def handle_ranking(room,data):
         )
 
 
+
+    elif msg_type=="ranking_start_prediction":
+
+        game["mode"]="prediction"
+    
+        await broadcast(
+            room,
+            {
+                "type":
+                    "ranking_prediction_start",
+    
+                "answerers":
+                    game["current_answerers"]
+            }
+        )
 
     elif msg_type=="ranking_check":
 
@@ -2300,11 +2345,20 @@ async def start_next_ranking_question(room):
         room,
         {
             "type":"ranking_question",
-            "question":question,
-            "players":list(
-                room["compatibility"]["answers"].keys()
-            ),
-            "answerers":answerers
+    
+            "question":
+                question,
+    
+            "players":
+                list(
+                    room["compatibility"]["answers"].keys()
+                ),
+    
+            "answerers":
+                answerers,
+    
+            "mode":
+                "answering"
         }
     )
     
