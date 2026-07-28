@@ -427,13 +427,15 @@ if (msg.type === "ranking_question") {
 
                     type:
                     "ranking_answer",
-
+                    
                     ranking:
                     ranking,
-
+                    
                     name:
+                    myName,
+                    
+                    target:
                     myName
-
                 })
             );
 
