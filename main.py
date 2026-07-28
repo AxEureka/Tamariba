@@ -2062,8 +2062,17 @@ async def handle_ranking(room,data):
             "scores":{}
     
         }
-    
-    
+
+        print(
+            "ranking questions:",
+            len(questions)
+        )
+        
+        print(
+            "teams:",
+            teams
+        )
+        
         await start_next_ranking_question(
             room
         )
@@ -2236,7 +2245,7 @@ async def start_next_ranking_question(room):
 
     question=game["questions"][index]
         
-        answerers={}
+    answerers={}
     
     
         # 全チームから1人ずつ選ぶ
@@ -2345,36 +2354,57 @@ async def broadcast(room,message):
             room["sockets"].remove(socket)
 
 
-def calc_sanrentan(answer,predict):
+def calc_sanrentan(answer, predict):
 
-    exact=0
-    hit=0
+    # =========================
+    # 7択完全一致ボーナス
+    # =========================
+
+    if answer == predict:
+        return 15
+
+
+    # =========================
+    # 上位3位判定
+    # =========================
+
+    answer_top3 = answer[:3]
+    predict_top3 = predict[:3]
+
+
+    exact = 0
+    hit = 0
 
 
     for i in range(3):
 
-        if answer[i]==predict[i]:
-            exact+=1
+        if answer_top3[i] == predict_top3[i]:
+            exact += 1
 
 
-        if predict[i] in answer[:3]:
-            hit+=1
+        if predict_top3[i] in answer_top3:
+            hit += 1
 
 
 
-    if exact==3:
+    # サンレンタン
+    if exact == 3:
         return 6
 
-    elif hit==3:
+    # サンレンプク
+    elif hit == 3:
         return 4
 
-    elif exact==2:
+    # ニレンタン
+    elif exact == 2:
         return 3
 
-    elif hit==2:
+    # プクプク
+    elif hit == 2:
         return 2
 
-    elif exact==1:
+    # タン
+    elif hit == 1:
         return 1
 
     else:
