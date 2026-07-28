@@ -172,34 +172,7 @@ export function startCompatibilityHost(
         
         };
 
-                    type:
-                    "compatibility_make_team",
-
-
-                    team_count:
-                    Number(
-                        teamCount.value
-                    ),
-
-
-                    high_team_count:
-                    Number(
-                        highCount.value
-                    ),
-
-
-                    low_team_count:
-                    Number(
-                        lowCount.value
-                    )
-
-                })
-            );
-
-        };
-
-
-
+                   
         config.append(
 
             text("総チーム数 "),
@@ -219,9 +192,6 @@ export function startCompatibilityHost(
         );
 
     }
-
-
-
 
 
     // ===============================
