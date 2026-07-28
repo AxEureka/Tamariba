@@ -1372,17 +1372,6 @@ async def handle_compatibility(room,data):
             return
             
 
-            await broadcast(
-                room,
-                {
-                    "type":"error",
-                    "message":"問題データなし"
-                }
-            )
-
-            return
-
-
 
         questions=random.sample(
             COMPATIBILITY_POOL,
@@ -2142,41 +2131,39 @@ async def handle_ranking(room,data):
 
 
 
-elif msg_type=="ranking_start_prediction":
+    elif msg_type=="ranking_start_prediction":
 
-    game["mode"]="prediction"
+        game["mode"]="prediction"
 
-    await broadcast(
-        room,
-        {
-            "type":
-                "ranking_prediction_start",
+        await broadcast(
+            room,
+            {
+                "type":
+                    "ranking_prediction_start",
 
-            "answerers":
-                game["current_answerers"]
-        }
-    )
-elif msg_type=="ranking_check":
+                "answerers":
+                    game["current_answerers"]
+            }
+        )
 
 
-    await broadcast(
-        room,
-        {
+    elif msg_type=="ranking_check":
 
-            "type":
-                "ranking_result",
+        await broadcast(
+            room,
+            {
+                "type":"ranking_result",
 
-            "true_answers":
-                game["true_answers"],
+                "true_answers":
+                    game["true_answers"],
 
-            "predictions":
-                game["predictions"],
+                "predictions":
+                    game["predictions"],
 
-            "scores":
-                game["scores"]
-
-        }
-    )
+                "scores":
+                    game["scores"]
+            }
+        )
 
 
 
