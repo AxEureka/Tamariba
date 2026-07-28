@@ -15,12 +15,14 @@ export function startCompatibilityHost(
     const wrapper =
         document.createElement("div");
 
+
     wrapper.className =
         "compatibility-ui";
 
 
     const title =
         document.createElement("h2");
+
 
     title.textContent =
         "相性診断";
@@ -34,7 +36,6 @@ export function startCompatibilityHost(
         document.createElement("div");
 
 
-
     wrapper.append(
         title,
         progress,
@@ -42,19 +43,18 @@ export function startCompatibilityHost(
     );
 
 
-    container.appendChild(
-        wrapper
-    );
+    container.appendChild(wrapper);
 
 
 
-    // =================================
-    // 相性診断開始UI
-    // =================================
+    // ===============================
+    // 開始UI
+    // ===============================
 
 
     const questionCount =
         document.createElement("input");
+
 
     questionCount.type="number";
     questionCount.min=3;
@@ -67,19 +67,17 @@ export function startCompatibilityHost(
         document.createElement("button");
 
 
-    startBtn.textContent =
-        "開始";
+    startBtn.textContent="開始";
 
 
 
-    startBtn.onclick = ()=>{
+    startBtn.onclick=()=>{
 
 
         socket.send(
             JSON.stringify({
 
-                type:
-                    "start_compatibility",
+                type:"start_compatibility",
 
                 question_count:
                     Number(
@@ -88,6 +86,7 @@ export function startCompatibilityHost(
 
             })
         );
+
 
     };
 
@@ -106,32 +105,29 @@ export function startCompatibilityHost(
 
 
 
-    // =================================
+
+
+    // ===============================
     // チーム作成UI
-    // =================================
+    // ===============================
 
 
     function showTeamCreate(){
+
 
         config.innerHTML="";
 
 
         const teamCount =
-            createNumberInput(
-                4
-            );
+            createNumberInput(4);
 
 
         const highCount =
-            createNumberInput(
-                2
-            );
+            createNumberInput(2);
 
 
         const lowCount =
-            createNumberInput(
-                2
-            );
+            createNumberInput(2);
 
 
 
@@ -151,29 +147,28 @@ export function startCompatibilityHost(
                 JSON.stringify({
 
                     type:
-                        "compatibility_make_team",
+                    "compatibility_make_team",
 
 
                     team_count:
-                        Number(
-                            teamCount.value
-                        ),
+                    Number(
+                        teamCount.value
+                    ),
 
 
                     high_team_count:
-                        Number(
-                            highCount.value
-                        ),
+                    Number(
+                        highCount.value
+                    ),
 
 
                     low_team_count:
-                        Number(
-                            lowCount.value
-                        )
+                    Number(
+                        lowCount.value
+                    )
 
                 })
             );
-
 
         };
 
@@ -200,9 +195,12 @@ export function startCompatibilityHost(
     }
 
 
-    // =================================
+
+
+
+    // ===============================
     // チーム表示
-    // =================================
+    // ===============================
 
 
     function showTeams(teams){
@@ -211,10 +209,7 @@ export function startCompatibilityHost(
         config.innerHTML="";
 
 
-
-        Object.entries(
-            teams
-        )
+        Object.entries(teams)
         .forEach(
             ([name,team])=>{
 
@@ -225,7 +220,6 @@ export function startCompatibilityHost(
 
                 box.className =
                     "team-box";
-
 
 
                 box.innerHTML=`
@@ -252,15 +246,11 @@ export function startCompatibilityHost(
                 `;
 
 
-
-                config.appendChild(
-                    box
-                );
+                config.appendChild(box);
 
 
             }
         );
-
 
 
         showRankingStart();
@@ -271,9 +261,9 @@ export function startCompatibilityHost(
 
 
 
-    // =================================
-    // サンレンタン開始UI
-    // =================================
+    // ===============================
+    // サンレンタン開始
+    // ===============================
 
 
     function showRankingStart(){
@@ -287,10 +277,8 @@ export function startCompatibilityHost(
             "サンレンタン";
 
 
-
         const count =
             createNumberInput(5);
-
 
 
         count.min=1;
@@ -314,13 +302,13 @@ export function startCompatibilityHost(
                 JSON.stringify({
 
                     type:
-                        "start_ranking_game",
+                    "start_ranking_game",
 
 
                     question_count:
-                        Number(
-                            count.value
-                        )
+                    Number(
+                        count.value
+                    )
 
                 })
             );
@@ -343,13 +331,29 @@ export function startCompatibilityHost(
 
         );
 
-
     }
 
+
+
+    // 外部(room.js)から呼ぶため返す
+
+    return {
+
+        showTeamCreate,
+
+        showTeams
+
+    };
+
 }
-// =================================
+
+
+
+
+
+// ===============================
 // 共通関数
-// =================================
+// ===============================
 
 
 function createNumberInput(value){
@@ -373,9 +377,7 @@ function createNumberInput(value){
 function text(value){
 
 
-    return document.createTextNode(
-        value
-    );
+    return document.createTextNode(value);
 
 }
 
@@ -384,8 +386,6 @@ function text(value){
 function br(){
 
 
-    return document.createElement(
-        "br"
-    );
+    return document.createElement("br");
 
 }
