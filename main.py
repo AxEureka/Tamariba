@@ -2234,36 +2234,8 @@ async def start_next_ranking_question(room):
     
         return
 
-
-
     question=game["questions"][index]
-    
-    
-   
-    # -------------------------
-    # チームローテーションで出題者決定
-    # -------------------------
-    
-    async def start_next_ranking_question(room):
-
-        game = room["compatibility"]["ranking_game"]
-        index = game["current_index"]
-        if index >= len(game["questions"]):
-    
-            await broadcast(
-                room,
-                {
-                    "type":"ranking_game_end"
-                }
-            )
-    
-            return
-    
-    
-    
-        question = game["questions"][index]
-    
-    
+        
         answerers={}
     
     
