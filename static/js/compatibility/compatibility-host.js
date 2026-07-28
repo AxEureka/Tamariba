@@ -237,13 +237,53 @@ export function startCompatibilityHost(
     return {
 
         showTeamCreate,
+    
         showTeams,
-
+    
+    
+        showPredictionButton(){
+    
+            const btn =
+                document.createElement("button");
+    
+    
+            btn.textContent =
+                "予想開始";
+    
+    
+            btn.onclick = ()=>{
+    
+                const socket =
+                    getSocket();
+    
+    
+                socket.send(
+                    JSON.stringify({
+    
+                        type:
+                        "ranking_start_prediction"
+    
+                    })
+                );
+    
+    
+                btn.remove();
+    
+            };
+    
+    
+            config.appendChild(btn);
+    
+        },
+    
+    
         setProgress(textValue){
+    
             progress.textContent =
                 textValue;
+    
         }
-
+    
     };
 }
 
