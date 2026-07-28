@@ -106,8 +106,6 @@ export function startCompatibilityHost(
 
 
 
-
-
     // =================================
     // チーム作成UI
     // =================================
@@ -347,108 +345,6 @@ export function startCompatibilityHost(
 
 
     }
-
-    // =================================
-    // WebSocket受信
-    // =================================
-
-
-    socket.addEventListener(
-        "message",
-        (event)=>{
-
-
-            const data =
-                JSON.parse(
-                    event.data
-                );
-
-
-
-            switch(
-                data.type
-            ){
-
-
-                case "compatibility_progress":
-
-
-                    progress.textContent =
-                        `${data.done}/${data.total} 回答済み`;
-
-                    break;
-
-
-
-                case "compatibility_all_done":
-
-
-                    progress.textContent =
-                        "全員回答完了";
-
-
-                    showTeamCreate();
-
-
-                    break;
-
-
-
-                case "compatibility_team_created":
-
-
-                    progress.textContent =
-                        "チーム作成完了";
-
-
-                    showTeams(
-                        data.teams
-                    );
-
-
-                    break;
-
-
-
-                // ======================
-                // ここからサンレンタン用
-                // ======================
-
-
-                case "ranking_progress":
-
-
-                    progress.textContent =
-                        data.message;
-
-
-                    break;
-
-
-
-                case "ranking_result":
-
-
-                    console.log(
-                        "ランキング結果",
-                        data
-                    );
-
-
-                    break;
-
-
-            }
-
-
-        }
-    );
-
-
-}
-
-
-
 
 
 // =================================
