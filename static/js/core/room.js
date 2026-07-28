@@ -471,6 +471,32 @@ if (msg.type === "ranking_question") {
     );
 
 }
+
+    if (
+        msg.type === "ranking_answerers_done"
+    ){
+    
+        console.log(
+            "全出題者回答完了"
+        );
+    
+    
+        if(myName === hostName){
+    
+            if(
+                compatibilityHostUI
+                &&
+                compatibilityHostUI.showPredictionButton
+            ){
+    
+                compatibilityHostUI
+                    .showPredictionButton();
+    
+            }
+    
+        }
+    
+    }
     if (msg.type === "end_quiz" || msg.type === "end_nasa" || msg.type === "end_compatibility") {
       const container = document.getElementById("game-container");
       container.classList.remove("active");
