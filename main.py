@@ -2056,12 +2056,7 @@ async def handle_ranking(room,data):
             "current_answerers":{},
     
     
-            "true_answers":{
-                question_index:{
-                    player_name:ranking
-                }
-            }
-    
+            "true_answers":{},
             "predictions":{},
     
             "scores":{}
@@ -2087,6 +2082,11 @@ async def handle_ranking(room,data):
     
         # 本人回答
         if data.get("answer_type")=="true":
+
+            game["true_answers"].setdefault(
+                index,
+                {}
+            )
     
             game["true_answers"][index][name]=ranking
     
@@ -2094,12 +2094,19 @@ async def handle_ranking(room,data):
     
         # 自チーム予想
         else:
-    
-            if name not in game["predictions"]:
-                game["predictions"][name]={}
-    
-    
-            game["predictions"][name][target]=ranking
+
+            game["predictions"].setdefault(
+                name,
+                {}
+            )
+        
+            game["predictions"][name].setdefault(
+                index,
+                {}
+            )
+        
+     
+            game["predictions"][name][index][target]=ranking
     
     
     
@@ -2169,9 +2176,25 @@ async def handle_ranking(room,data):
         scores={}
 
 
-        for player,targets in game["predictions"].items():
+        for player,questions in game["predictions"].items():
 
             score=0
+        
+        
+            for q_index,targets in questions.items():
+        
+                for target,predict in targets.items():
+        
+                    answer = game["true_answers"][q_index].get(target)
+        
+                    if answer:
+        
+                        score += calc_sanrentan(
+                            answer,
+                            predict
+                        )
+
+    scores[player]=score
 
 
             for target,predict in targets.items():
@@ -2255,10 +2278,7 @@ async def start_next_ranking_question(room):
     async def start_next_ranking_question(room):
 
         game = room["compatibility"]["ranking_game"]
-    
         index = game["current_index"]
-    
-    
         if index >= len(game["questions"]):
     
             await broadcast(
@@ -2336,56 +2356,7 @@ async def start_next_ranking_question(room):
         )
     
     
-    # 次回用更新
     
-    game["current_member_index"][team] += 1
-    
-    
-    # チーム内を一周したら次のチームへ
-    
-    if (
-        game["current_member_index"][team]
-        >= len(members)
-    ):
-    
-        game["current_member_index"][team] = 0
-    
-        game["current_team_index"] = (
-            game["current_team_index"] + 1
-        ) % len(
-            game["team_order"]
-        )
-    
-    
-    game["current_answerer"] = answerer
-    
-    
-    game["true_answers"][answerer] = None
-    
-    
-    game["current_question"]=question
-    
-    
-    game["current_index"]+=1
-
-
-    await broadcast(
-        room,
-        {
-    
-            "type":
-                "ranking_question",
-    
-            "question":
-                question,
-    
-            "answerer":
-                answerer
-    
-        }
-    )
-    
-
 # ==================================================
 # Common
 # ==================================================
