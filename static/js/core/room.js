@@ -302,7 +302,10 @@ function selectGame(type) {
       currentGame = "compatibility";
       container.classList.add("active");
       compatibilityHostUI =
-        startCompatibilityHost(socket, container);
+          startCompatibilityHost(
+              ()=>socket,
+              container
+          );
       document.getElementById("exitQuizBtn").style.display = "inline-block";
       }
     }
