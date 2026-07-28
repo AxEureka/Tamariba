@@ -202,9 +202,6 @@ export function startCompatibilityHost(
     }
 
 
-
-
-
     // =================================
     // チーム表示
     // =================================
@@ -350,10 +347,6 @@ export function startCompatibilityHost(
 
 
     }
-
-
-
-
 
     // =================================
     // WebSocket受信
