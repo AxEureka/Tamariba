@@ -83,7 +83,8 @@ export function createRankingUI(
     container,
     question,
     players,
-    onSubmit
+    onSubmit,
+    mode="answer"
 ){
 
     container.innerHTML="";
@@ -94,7 +95,12 @@ export function createRankingUI(
 
 
     const title=document.createElement("h2");
-    title.textContent="ランキング予想";
+
+    if(mode==="answer"){
+        title.textContent="ランキングを付けてください";
+    }else{
+        title.textContent="ランキングを予想してください";
+    }
 
     box.appendChild(title);
 
@@ -113,7 +119,8 @@ export function createRankingUI(
 
 
 
-    for(let i=0;i<3;i++){
+    // ★7択ランキング
+    for(let i=0;i<7;i++){
 
         const label=document.createElement("label");
 
@@ -124,12 +131,12 @@ export function createRankingUI(
         const select=document.createElement("select");
 
 
-        players.forEach(player=>{
+        question.choices.forEach(choice=>{
 
             const option=document.createElement("option");
 
-            option.value=player;
-            option.textContent=player;
+            option.value=choice.id;
+            option.textContent=choice.text;
 
             select.appendChild(option);
 
@@ -153,7 +160,13 @@ export function createRankingUI(
 
     const btn=document.createElement("button");
 
-    btn.textContent="予想する";
+
+    if(mode==="answer"){
+        btn.textContent="確定";
+    }else{
+        btn.textContent="予想する";
+    }
+
 
 
     btn.onclick=()=>{
@@ -161,16 +174,16 @@ export function createRankingUI(
 
         const ranking =
             selects.map(
-                s=>s.value
+                s=>parseInt(s.value)
             );
 
 
         if(
-            new Set(ranking).size!==3
+            new Set(ranking).size!==7
         ){
 
             alert(
-                "同じ人を複数順位にできません"
+                "同じ選択肢を複数順位にできません"
             );
 
             return;
