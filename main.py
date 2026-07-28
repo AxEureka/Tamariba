@@ -2228,7 +2228,6 @@ async def start_next_ranking_question(room):
 
     game=room["compatibility"]["ranking_game"]
 
-
     index=game["current_index"]
 
 
@@ -2240,71 +2239,59 @@ async def start_next_ranking_question(room):
                 "type":"ranking_game_end"
             }
         )
-    
         return
 
+
     question=game["questions"][index]
-        
+
     answerers={}
-    
-    
-        # 全チームから1人ずつ選ぶ
-        for team in game["team_order"]:
-    
-            members = game["team_members_order"][team]
-    
-    
-            member_index = game["current_member_index"][team]
-    
-    
-            answerer = members[member_index]
-    
-    
-            answerers[team]=answerer
-    
-    
-    
-            # 次の人へ
-            game["current_member_index"][team]+=1
-    
-    
-            if (
-                game["current_member_index"][team]
-                >=len(members)
-            ):
-                game["current_member_index"][team]=0
-    
-    
-    
-        game["current_answerers"]=answerers
-    
-    
-    
-        game["true_answers"][index]={}
-    
-    
-    
-        game["current_question"]=question
-    
-    
-        game["current_index"]+=1
-    
-    
-    
-        await broadcast(
-            room,
-            {
-    
-                "type":"ranking_question",
-    
-                "question":question,
-    
-                # 複数人
-                "answerers":answerers
-    
-            }
-        )
-    
+
+
+    # 全チームから1人ずつ選ぶ
+    for team in game["team_order"]:
+
+        members = game["team_members_order"][team]
+
+        member_index = game["current_member_index"][team]
+
+        answerer = members[member_index]
+
+        answerers[team]=answerer
+
+
+        # 次の人へ
+        game["current_member_index"][team]+=1
+
+
+        if (
+            game["current_member_index"][team]
+            >=len(members)
+        ):
+            game["current_member_index"][team]=0
+
+
+
+    game["current_answerers"]=answerers
+
+
+    game["true_answers"][index]={}
+
+
+    game["current_question"]=question
+
+
+    game["current_index"]+=1
+
+
+
+    await broadcast(
+        room,
+        {
+            "type":"ranking_question",
+            "question":question,
+            "answerers":answerers
+        }
+    )    
     
     
 # ==================================================
