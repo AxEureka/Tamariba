@@ -142,9 +142,35 @@ export function startCompatibilityHost(
 
         btn.onclick=()=>{
 
-
+            console.log(
+                "チーム作成クリック"
+            );
+        
+        
+            const data = {
+        
+                type:"compatibility_make_team",
+        
+                team_count:Number(teamCount.value),
+        
+                high_team_count:Number(highCount.value),
+        
+                low_team_count:Number(lowCount.value)
+        
+            };
+        
+        
+            console.log(
+                "送信データ",
+                data
+            );
+        
+        
             socket.send(
-                JSON.stringify({
+                JSON.stringify(data)
+            );
+        
+        };
 
                     type:
                     "compatibility_make_team",
