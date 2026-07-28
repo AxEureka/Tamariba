@@ -480,7 +480,7 @@ if (msg.type === "ranking_question") {
         createRankingUI(
             container,
             msg.question,
-            msg.players,
+            msg.question.choices,
 
             (ranking)=>{
 
