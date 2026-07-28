@@ -2047,43 +2047,28 @@ async def handle_ranking(room,data):
     
     
         room["compatibility"]["ranking_game"]={
-    
-            "mode":
-                data.get(
-                    "mode",
-                    "all"
-                ),
-    
-            "questions":
-                questions,
-    
-            "current_index":
-                0,
-    
-    
-            # ローテーション管理
-    
-            "team_order":
-                team_order,
-    
-            "team_members_order":
-                team_members_order,
-    
-            "current_team_index":
-                0,
-    
-            "current_member_index":
-                current_member_index,
-    
+
             "mode":"answering",
+        
+            "questions":questions,
+        
+            "current_index":0,
+        
+            "team_order":team_order,
+        
+            "team_members_order":team_members_order,
+        
+            "current_team_index":0,
+        
+            "current_member_index":current_member_index,
+        
             "current_answerers":{},
-    
-    
+        
+        
             "true_answers":{},
             "predictions":{},
-    
             "scores":{}
-    
+        
         }
 
         print(
@@ -2104,7 +2089,6 @@ async def handle_ranking(room,data):
 
 elif msg_type=="ranking_answer":
 
-
     name=data.get("name")
     ranking=data.get("ranking")
     target=data.get("target")
@@ -2112,7 +2096,6 @@ elif msg_type=="ranking_answer":
     index=game["current_index"]-1
 
 
-    # 本人回答
     if data.get("answer_type")=="true":
 
         game["true_answers"].setdefault(
@@ -2123,23 +2106,12 @@ elif msg_type=="ranking_answer":
         game["true_answers"][index][name]=ranking
 
 
-        # ------------------
-        # 全出題者回答完了？
-        # ------------------
-
-        done_count = len(
+        done_count=len(
             game["true_answers"][index]
         )
 
-        need_count = len(
+        need_count=len(
             game["current_answerers"]
-        )
-
-        print(
-            "出題者回答",
-            done_count,
-            "/",
-            need_count
         )
 
 
@@ -2154,7 +2126,6 @@ elif msg_type=="ranking_answer":
             )
 
 
-    # 自チーム予想
     else:
 
         game["predictions"].setdefault(
@@ -2167,36 +2138,24 @@ elif msg_type=="ranking_answer":
             {}
         )
 
-
         game["predictions"][name][index][target]=ranking
-    
-    
-    
-        await broadcast(
-            room,
-            {
-                "type":"ranking_answer_progress",
-                "name":name
-            }
-        )
 
 
 
-    elif msg_type=="ranking_start_prediction":
+elif msg_type=="ranking_start_prediction":
 
-        game["mode"]="prediction"
-    
-        await broadcast(
-            room,
-            {
-                "type":
-                    "ranking_prediction_start",
-    
-                "answerers":
-                    game["current_answerers"]
-            }
-        )
+    game["mode"]="prediction"
 
+    await broadcast(
+        room,
+        {
+            "type":
+                "ranking_prediction_start",
+
+            "answerers":
+                game["current_answerers"]
+        }
+    )
     elif msg_type=="ranking_check":
 
 
