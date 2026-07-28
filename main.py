@@ -137,7 +137,7 @@ def create_room_data(
             "current_team_index":0,
             "current_member_index":{},
         
-            "current_answerer":None,
+            "current_answerers":None,
         
             "true_answers":{},
             "predictions":{},
