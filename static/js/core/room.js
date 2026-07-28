@@ -6,6 +6,7 @@ import { startNASAHost } from "/static/js/nasa/nasa-host.js";
 import { startNASAPlayer } from "/static/js/nasa/nasa-player.js";
 import { startCompatibilityHost } from "/static/js/compatibility/compatibility-host.js";
 import { startCompatibilityPlayer, showCompatibilityTeam } from "/static/js/compatibility/compatibility-player.js";
+import { createRankingUI } from "/static/js/compatibility/compatibility-ui.js";
 const params = new URLSearchParams(location.search);
 const roomId = params.get("room");
 let myName = params.get("name") || "";
@@ -399,6 +400,44 @@ if (msg.type === "compatibility_team_created") {
     showCompatibilityTeam(
         container,
         msg.teams
+    );
+
+}
+
+if (msg.type === "ranking_question") {
+
+    const container =
+        document.getElementById("game-container");
+
+    console.log(
+        "ランキング問題受信",
+        msg
+    );
+
+
+    createRankingUI(
+        container,
+        msg.question,
+        msg.players,
+
+        (ranking)=>{
+
+            socket.send(
+                JSON.stringify({
+
+                    type:
+                    "ranking_answer",
+
+                    ranking:
+                    ranking,
+
+                    name:
+                    myName
+
+                })
+            );
+
+        }
     );
 
 }
