@@ -1574,6 +1574,17 @@ async def handle_compatibility(room,data):
             "team_count",
             4
         )
+
+        # チーム人数配分
+        team_sizes = []
+
+        base = len(players) // actual_team_count
+        rest = len(players) % actual_team_count
+        
+        for i in range(actual_team_count):
+            team_sizes.append(
+                base + (1 if i < rest else 0)
+            )
     
         high_count = data.get(
             "high_team_count",
@@ -1584,6 +1595,8 @@ async def handle_compatibility(room,data):
             "low_team_count",
             2
         )
+
+        actual_team_count = high_count + low_count
     
     
         # -------------------------
@@ -1673,7 +1686,7 @@ async def handle_compatibility(room,data):
     
             # 人数調整
     
-            while len(team)<len(players)//team_count:
+            while len(team) < team_sizes[i]:
     
                 if not unused:
                     break
@@ -1761,7 +1774,7 @@ async def handle_compatibility(room,data):
     
     
     
-            while len(team)<len(players)//team_count:
+            while len(team) < team_sizes[high_count+i]:
     
                 if not unused:
                     break
