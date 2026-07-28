@@ -2057,6 +2057,8 @@ async def handle_ranking(room,data):
             "true_answers":{},
             "predictions":{},
             "scores":{}
+            "prediction_done":{},
+            "answer_done":{}
         
         }
 
@@ -2105,29 +2107,99 @@ async def handle_ranking(room,data):
     
     
             if done_count >= need_count:
-    
+
+                game["mode"]="prediction"
+            
+            
                 await broadcast(
                     room,
                     {
                         "type":
-                            "ranking_answerers_done"
+                            "ranking_prediction_start",
+            
+                        "answerers":
+                            game["current_answerers"],
+            
+                        "question":
+                            game["current_question"]
                     }
                 )
     
     
         else:
-    
+
             game["predictions"].setdefault(
                 name,
                 {}
             )
-    
+        
             game["predictions"][name].setdefault(
                 index,
                 {}
             )
-    
+        
             game["predictions"][name][index][target]=ranking
+        
+        
+        
+            # =====================
+            # 回答者完了チェック
+            # =====================
+        
+            team = None
+        
+            for t,m in game["current_answerers"].items():
+        
+                if name != m:
+                    team=t
+        
+        
+        
+            if team:
+        
+        
+                answerer = game["current_answerers"][team]
+        
+        
+                # 自分のチーム代表以外の人数
+                members = room["compatibility"]["teams"][team]["members"]
+        
+                need = len(members)-1
+        
+        
+                done = len(
+                    game["predictions"][name][index]
+                )
+        
+        
+                if done >= need:
+        
+                    game["prediction_done"][name]=True
+        
+        
+        
+            # 全員完了確認
+        
+            total_done=len(
+                game["prediction_done"]
+            )
+        
+        
+            total_need=len(
+                room["members"]
+            ) - len(game["current_answerers"])
+        
+        
+        
+            if total_done >= total_need:
+        
+                await broadcast(
+                    room,
+                    {
+                        "type":
+                            "ranking_prediction_done"
+                    }
+                )
 
 
 
