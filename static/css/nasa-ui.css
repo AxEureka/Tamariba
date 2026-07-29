@@ -106,7 +106,7 @@
    投票背景暗転
 ========================= */
 
-#game-container.active::before{
+#game-container.nasa-active::before{
   content: "";
   position: absolute;
   top: 0;
