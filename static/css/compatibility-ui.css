@@ -174,3 +174,21 @@
         transform:scale(1);
     }
 }
+
+.ranking-ui{
+    pointer-events:auto;
+
+    position:relative;
+    z-index:1000;
+
+    background:#1e1e2f;
+    color:white;
+
+    padding:20px;
+
+    border-radius:12px;
+
+    width:min(700px,90vw);
+
+    box-shadow:0 15px 50px rgba(0,0,0,.7);
+}
