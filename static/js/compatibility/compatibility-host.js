@@ -143,6 +143,7 @@ export function startCompatibilityHost(
 
     function showTeams(teams){
 
+        console.log("showTeams実行");
         config.innerHTML = "";
 
         Object.entries(teams)
@@ -187,6 +188,7 @@ export function startCompatibilityHost(
 
     function showRankingStart(){
 
+        console.log("showRankingStart実行");
         const title =
             document.createElement("h3");
 
