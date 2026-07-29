@@ -10,10 +10,10 @@ export function createRankingUI(
 
     const box=document.createElement("div");
     box.className="ranking-ui";
-
-    // 黒幕より前面に出す
+    
     box.style.position="relative";
     box.style.zIndex="1000";
+    box.style.pointerEvents="auto";
 
     const title=document.createElement("h2");
 
