@@ -81,27 +81,39 @@ export function createRankingUI(
         ? "確定"
         : "予想する";
 
-    btn.onclick=()=>{
+   btn.onclick=()=>{
 
-        const ranking =
-            selects.map(
-                s=>Number(s.value)
-            );
+    const ranking =
+        selects.map(
+            s=>Number(s.value)
+        );
 
-        if(
-            new Set(ranking).size
-            !==
-            rankCount
-        ){
-            alert(
-                "同じ選択肢を複数順位にできません"
-            );
-            return;
-        }
 
-        onSubmit(ranking);
-    };
+    if(
+        new Set(ranking).size
+        !==
+        rankCount
+    ){
+        alert(
+            "同じ選択肢を複数順位にできません"
+        );
+        return;
+    }
 
+
+    if(!confirm("確定しますか？")){
+        return;
+    }
+
+
+    console.log(
+        "ランキング送信",
+        ranking
+    );
+
+
+    onSubmit(ranking);
+};
     box.appendChild(btn);
 
     container.appendChild(box);
