@@ -443,7 +443,7 @@ if (msg.type === "ranking_question") {
 
     console.log(
         "ランキング問題受信",
-        msg
+        JSON.stringify(msg,null,2)
     );
 
 
