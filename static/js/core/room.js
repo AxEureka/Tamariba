@@ -291,7 +291,10 @@ function selectGame(type) {
  if (type === "nasa") {
   if (myName === hostName) {
       currentGame = "nasa";
+
       container.classList.add("active");
+      container.classList.add("nasa-active");
+
       startNASAHost(socket, container);
   }
 }
@@ -517,21 +520,21 @@ if (msg.type === "ranking_question") {
         console.log(
             "回答者待機"
         );
-
-
+    
+    
         container.innerHTML = `
-
+    
             <h2>
-            ${msg.question}
+            ${msg.question.question}
             </h2>
-
+    
             <p>
             出題者の回答を待っています...
             </p>
-
+    
         `;
-
-
+    
+    
     }
 
 }
