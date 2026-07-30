@@ -541,9 +541,7 @@ if (msg.type === "ranking_question") {
 
 }
     
-    if (
-        msg.type === "ranking_answerers_done"
-    ){
+    if ( msg.type === "ranking_answerers_done"){
     
         const container =
             document.getElementById("game-container");
@@ -774,8 +772,6 @@ container.appendChild(btn);
 
 }
 
-
-}
     if (msg.type === "end_quiz" || msg.type === "end_nasa" || msg.type === "end_compatibility") {
       const container = document.getElementById("game-container");
       container.classList.remove("active");
