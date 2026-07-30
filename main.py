@@ -2009,11 +2009,17 @@ async def handle_ranking(room,data):
         # ==========================
     
         teams = room["compatibility"]["teams"]
-    
-    
-        team_order = list(
-            teams.keys()
-        )
+
+        print("ランキング開始時teams:")
+        for t,v in teams.items():
+            print(t, v["members"])
+        
+        team_order = [
+            t for t,v in teams.items()
+            if len(v.get("members",[])) > 0
+        ]
+        
+        print("team_order:", team_order)
     
     
         team_members_order = {}
@@ -2384,12 +2390,14 @@ async def start_next_ranking_question(room):
     # 全チームから1人ずつ選ぶ
     for team in game["team_order"]:
 
-        members = game["team_members_order"][team]
-
+        members = game["team_members_order"].get(team, [])
+    
+        if not members:
+            continue
+    
         member_index = game["current_member_index"][team]
-
+    
         answerer = members[member_index]
-
         answerers[team]=answerer
 
         game["current_member_index"][team]+=1
