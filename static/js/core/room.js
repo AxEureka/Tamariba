@@ -318,6 +318,8 @@ let socket;
 let currentGame = null;
 let rankingMode = "";
 let rankingAnswerers = {};
+let rankingPredictionCount = 0;
+let rankingTotalPredictors = 0;
 
 // =====================
 // WebSocket 接続（再接続対応）
@@ -543,28 +545,35 @@ if (msg.type === "ranking_question") {
         msg.type === "ranking_answerers_done"
     ){
     
-        console.log(
-            "全出題者回答完了"
-        );
+        const container =
+            document.getElementById("game-container");
     
     
         if(myName === hostName){
     
+            container.innerHTML = `
+            <h2>
+            出題者の回答が完了しました
+            </h2>
+    
+            <p>
+            全員の予想準備ができました
+            </p>
+            `;
+    
+    
             if(
-                compatibilityHostUI
-                &&
+                compatibilityHostUI &&
                 compatibilityHostUI.showPredictionButton
             ){
     
-                compatibilityHostUI
-                    .showPredictionButton();
+                compatibilityHostUI.showPredictionButton();
     
             }
     
         }
-    
     }
-
+    
 if(msg.type==="ranking_prediction_start"){
 
 
@@ -618,7 +627,7 @@ container,
 
 msg.question,
 
-[],
+null,
 
 (ranking)=>{
 
@@ -642,6 +651,126 @@ ranking:ranking
 
 );
 
+
+}
+
+
+}
+
+if(msg.type==="ranking_prediction_progress"){
+
+    if(myName === hostName){
+
+        const container =
+        document.getElementById("game-container");
+
+
+        container.innerHTML = `
+
+        <h2>
+        予測状況
+        </h2>
+
+        <p>
+        ${msg.done}/${msg.total}人 回答済み
+        </p>
+
+        `;
+
+
+        if(msg.done === msg.total){
+
+            const btn =
+            document.createElement("button");
+
+
+            btn.textContent =
+            "結果発表";
+
+
+            btn.onclick=()=>{
+
+                socket.send(JSON.stringify({
+
+                    type:
+                    "ranking_show_result"
+
+                }));
+
+            };
+
+
+            container.appendChild(btn);
+
+        }
+
+    }
+
+}
+
+if(msg.type==="ranking_result"){
+
+
+const container =
+document.getElementById("game-container");
+
+
+container.innerHTML = `
+
+<h2>
+結果発表
+</h2>
+
+<h3>
+出題者のランキング
+</h3>
+
+<p>
+${msg.answer.join(",")}
+</p>
+
+
+<h3>
+あなたの予想
+</h3>
+
+<p>
+${msg.prediction ? msg.prediction.join(",") : "親画面"}
+</p>
+
+
+<h3>
+得点
+</h3>
+
+<p>
+${msg.score ?? "-"}点
+</p>
+
+if(myName===hostName){
+
+const btn =
+document.createElement("button");
+
+
+btn.textContent=
+"次の問題";
+
+
+btn.onclick=()=>{
+
+
+socket.send(JSON.stringify({
+
+type:
+"ranking_next_question"
+
+}));
+
+};
+
+
+container.appendChild(btn);
 
 }
 
