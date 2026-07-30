@@ -546,7 +546,7 @@ else{
 
     );
 
-
+}
 }
     
     if ( msg.type === "ranking_answerers_done"){
@@ -682,7 +682,7 @@ ranking:ranking
 if(msg.type==="ranking_prediction_progress"){
 
     const container =
-    document.getElementById("game-container");
+        document.getElementById("game-container");
 
 
     if(myName === hostName){
@@ -699,28 +699,21 @@ if(msg.type==="ranking_prediction_progress"){
 
         `;
 
-    }
-
-}
-
 
         if(msg.done === msg.total){
 
             const btn =
-            document.createElement("button");
+                document.createElement("button");
 
 
             btn.textContent =
-            "結果発表";
+                "結果発表";
 
 
             btn.onclick=()=>{
 
                 socket.send(JSON.stringify({
-
-                    type:
-                    "ranking_check"
-
+                    type:"ranking_check"
                 }));
 
             };
@@ -733,7 +726,6 @@ if(msg.type==="ranking_prediction_progress"){
     }
 
 }
-
 if(msg.type==="ranking_result"){
 
 
