@@ -2221,7 +2221,7 @@ async def handle_ranking(room,data):
 
 
 
-    elif msg_type=="ranking_start_prediction":
+    elif msg_type=="start_ranking_prediction":
 
         game["mode"]="prediction"
     
