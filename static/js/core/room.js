@@ -602,9 +602,27 @@ Object.values(
 
 });
 
+// 親（監督）
+if(myName === hostName){
+
+
+container.innerHTML=`
+
+<h2>
+予測状況
+</h2>
+
+<p>
+参加者の回答を待っています
+</p>
+
+`;
+
+}
+
 
 // 出題者
-if(isAnswerer){
+else if(isAnswerer){
 
 
 container.innerHTML=`
@@ -614,16 +632,15 @@ container.innerHTML=`
 </h2>
 
 <p>
-しばらくお待ちください
+他の参加者の予想を待っています
 </p>
 
 `;
 
-
 }
 
 
-// 回答者
+// 予想者
 else{
 
 
@@ -640,26 +657,25 @@ msg.question.choices,
 
 socket.send(JSON.stringify({
 
-type:"ranking_prediction",
+type:"ranking_answer",
 
 name:myName,
+
+answer_type:"prediction",
 
 ranking:ranking
 
 
 }));
-
 },
 
 
 "prediction"
 
-
 );
 
 
 }
-
 
 }
 
