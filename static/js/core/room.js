@@ -625,7 +625,7 @@ container,
 
 msg.question,
 
-msg.question.choices,,
+msg.question.choices,
 
 (ranking)=>{
 
