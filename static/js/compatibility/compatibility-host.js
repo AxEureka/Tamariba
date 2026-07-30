@@ -244,38 +244,104 @@ export function startCompatibilityHost(
     
     
         showPredictionButton(){
-    
+
             const btn =
                 document.createElement("button");
-    
-    
+        
+        
             btn.textContent =
-                "予想開始";
-    
-    
+                "予測開始";
+        
+        
             btn.onclick = ()=>{
-    
+        
                 const socket =
                     getSocket();
-    
-    
+        
+        
                 socket.send(
                     JSON.stringify({
-    
+        
                         type:
-                        "ranking_start_prediction"
-    
+                        "start_ranking_prediction"
+        
                     })
                 );
-    
-    
+        
+        
                 btn.remove();
-    
+        
             };
-    
-    
+        
+        
             config.appendChild(btn);
-    
+        
+        },
+
+
+        showResultButton(){
+
+            const btn =
+                document.createElement("button");
+        
+        
+            btn.textContent =
+                "結果発表";
+        
+        
+            btn.onclick=()=>{
+        
+                const socket=getSocket();
+        
+                socket.send(
+                    JSON.stringify({
+        
+                        type:
+                        "show_ranking_result"
+        
+                    })
+                );
+        
+                btn.remove();
+        
+            };
+        
+        
+            config.appendChild(btn);
+        
+        },
+
+        showNextButton(){
+
+            const btn =
+                document.createElement("button");
+        
+        
+            btn.textContent =
+                "次の問題";
+        
+        
+            btn.onclick=()=>{
+        
+                const socket=getSocket();
+        
+                socket.send(
+                    JSON.stringify({
+        
+                        type:
+                        "next_ranking_question"
+        
+                    })
+                );
+        
+        
+                btn.remove();
+        
+            };
+        
+        
+            config.appendChild(btn);
+        
         },
     
     
