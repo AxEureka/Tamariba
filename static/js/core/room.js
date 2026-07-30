@@ -489,17 +489,21 @@ if(myName === hostName){
     container.innerHTML = `
 
     <h2>
-    予測受付中
+    第${msg.question.id}問
     </h2>
 
     <p>
-    回答状況を監視しています
+    出題者：
+    ${Object.values(msg.answerers).join("、")}
+    </p>
+
+    <p id="answer-progress">
+    出題者回答待ち
     </p>
 
     `;
 
 }
-
 
 // 出題者
 else if(isAnswerer){
@@ -726,6 +730,51 @@ if(msg.type==="ranking_prediction_progress"){
             container.appendChild(btn);
 
         }
+
+    }
+
+}
+
+if(msg.type==="ranking_prediction_done"){
+
+
+    const container =
+        document.getElementById("game-container");
+
+
+    if(myName === hostName){
+
+        container.innerHTML = `
+
+        <h2>
+        予測終了
+        </h2>
+
+        <p>
+        結果発表できます
+        </p>
+
+        `;
+
+
+        const btn =
+            document.createElement("button");
+
+
+        btn.textContent =
+            "結果発表";
+
+
+        btn.onclick=()=>{
+
+            socket.send(JSON.stringify({
+                type:"ranking_check"
+            }));
+
+        };
+
+
+        container.appendChild(btn);
 
     }
 
