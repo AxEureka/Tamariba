@@ -625,7 +625,7 @@ container,
 
 msg.question,
 
-null,
+msg.question.choices,,
 
 (ranking)=>{
 
@@ -713,11 +713,78 @@ const container =
 document.getElementById("game-container");
 
 
+// =====================
+// 親画面
+// =====================
+if(myName === hostName){
+
+
 container.innerHTML = `
 
 <h2>
 結果発表
 </h2>
+
+<h3>
+出題者のランキング
+</h3>
+
+<p>
+${msg.answer.join(",")}
+</p>
+
+<h3>
+全員の結果
+</h3>
+
+<div id="all-result">
+結果一覧を表示
+</div>
+
+`;
+
+
+// 次の問題ボタン
+
+const btn =
+document.createElement("button");
+
+
+btn.textContent =
+"次の問題";
+
+
+btn.onclick = ()=>{
+
+socket.send(JSON.stringify({
+
+type:
+"ranking_next_question"
+
+}));
+
+};
+
+
+container.appendChild(btn);
+
+
+
+}
+
+
+// =====================
+// 子画面
+// =====================
+else{
+
+
+container.innerHTML = `
+
+<h2>
+結果発表
+</h2>
+
 
 <h3>
 出題者のランキング
@@ -733,7 +800,7 @@ ${msg.answer.join(",")}
 </h3>
 
 <p>
-${msg.prediction ? msg.prediction.join(",") : "親画面"}
+${msg.prediction.join(",")}
 </p>
 
 
@@ -742,8 +809,17 @@ ${msg.prediction ? msg.prediction.join(",") : "親画面"}
 </h3>
 
 <p>
-${msg.score ?? "-"}点
+${msg.score}点
 </p>
+
+`;
+
+
+}
+
+
+}
+
 
 if(myName===hostName){
 
@@ -772,6 +848,7 @@ container.appendChild(btn);
 
 }
 
+}
     if (msg.type === "end_quiz" || msg.type === "end_nasa" || msg.type === "end_compatibility") {
       const container = document.getElementById("game-container");
       container.classList.remove("active");
