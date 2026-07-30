@@ -625,7 +625,6 @@ async def handle_quiz(room,data):
             )
 
 
-
         await broadcast(
             room,
             {
