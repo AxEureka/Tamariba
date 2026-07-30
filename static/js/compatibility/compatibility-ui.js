@@ -1,3 +1,84 @@
+
+// ===============================
+// 相性診断回答UI
+// ===============================
+
+export function createCompatibilityUI(
+    container,
+    questions,
+    onSubmit
+){
+
+    container.innerHTML="";
+
+    const box=document.createElement("div");
+    box.className="compatibility-ui";
+
+    const title=document.createElement("h2");
+    title.textContent="相性診断";
+    box.appendChild(title);
+
+
+    const answers=[];
+
+
+    questions.forEach((q,index)=>{
+
+        const div=document.createElement("div");
+
+        const h=document.createElement("h3");
+        h.textContent=q.question;
+
+        div.appendChild(h);
+
+
+        const select=document.createElement("select");
+
+
+        q.choices.forEach(choice=>{
+
+            const option=document.createElement("option");
+
+            option.value=choice.id;
+            option.textContent=choice.text;
+
+            select.appendChild(option);
+
+        });
+
+
+        div.appendChild(select);
+
+        box.appendChild(div);
+
+        answers.push(select);
+
+    });
+
+
+    const btn=document.createElement("button");
+
+    btn.textContent="回答する";
+
+
+    btn.onclick=()=>{
+
+        const result =
+            answers.map(
+                s=>Number(s.value)
+            );
+
+        onSubmit(result);
+
+    };
+
+
+    box.appendChild(btn);
+
+    container.appendChild(box);
+
+}
+
 export function createRankingUI(
     container,
     question,
