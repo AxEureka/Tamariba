@@ -75,14 +75,16 @@ export function createRankingUI(
 
     const btn =
         document.createElement("button");
+        console.log("ランキングボタン生成");
 
     btn.textContent =
         mode==="answer"
         ? "確定"
         : "予想する";
 
-   btn.onclick=()=>{
+btn.onclick=()=>{
 
+    console.log("ランキングボタンクリック");
     const ranking =
         selects.map(
             s=>Number(s.value)
