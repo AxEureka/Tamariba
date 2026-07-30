@@ -2156,9 +2156,9 @@ async def handle_ranking(room,data):
         
             team = None
 
-            for t,m in game["current_answerers"].items():
+            for t, members in room["compatibility"]["teams"].items():
             
-                if m == name:
+                if name in members["members"]:
                     team = t
                     break        
         
@@ -2187,19 +2187,28 @@ async def handle_ranking(room,data):
         
         
             # 全員完了確認
-        
-            total_done=len(
+
+            total_done = len(
                 game["prediction_done"]
             )
-        
-        
-            total_need=len(
-                room["members"]
-                -1
-            ) - len(game["current_answerers"])
-        
-        
-        
+            
+            
+            # 実際に予想する人
+            answerers = set(
+                game["current_answerers"].values()
+            )
+            
+            
+            predictors = [
+                name
+                for name in room["members"]
+                if name not in answerers
+            ]
+            
+            
+            total_need = len(predictors)
+            
+            
             await broadcast(
                 room,
                 {
