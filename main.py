@@ -2361,6 +2361,15 @@ async def handle_ranking(room,data):
             }
         )
 
+    
+    elif msg_type=="ranking_next_question":
+
+        game["predictions"]={}
+        game["prediction_done"]={}
+        game["answer_done"]={}
+        game["current_answerers"]={}
+    
+        await start_next_ranking_question(room)
 
 
 
