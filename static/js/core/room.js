@@ -474,70 +474,78 @@ if (msg.type === "ranking_question") {
 
 
 
-    if(isAnswerer){
+    // 親
+if(myName === hostName){
+
+    container.innerHTML = `
+
+    <h2>
+    予測受付中
+    </h2>
+
+    <p>
+    回答状況を監視しています
+    </p>
+
+    `;
+
+}
 
 
-        console.log(
-            "出題者です"
-        );
+// 出題者
+else if(isAnswerer){
+
+    container.innerHTML=`
+
+    <h2>
+    予測受付中
+    </h2>
+
+    <p>
+    他の参加者の回答を待っています
+    </p>
+
+    `;
+
+}
 
 
-        createRankingUI(
-            container,
-            msg.question,
-            msg.question.choices,
-
-            (ranking)=>{
+// 予想者
+else{
 
 
-                socket.send(
-                    JSON.stringify({
+    createRankingUI(
 
-                        type:
-                        "ranking_answer",
+        container,
 
+        msg.question,
 
-                        name:
-                        myName,
+        msg.question.choices,
 
-
-                        answer_type:
-                        "true",
+        (ranking)=>{
 
 
-                        ranking:
-                        ranking
+            socket.send(JSON.stringify({
 
-                    })
-                );
+            type:"ranking_answer",
+            
+            name:myName,
+            
+            answer_type:"prediction",
+            
+            ranking:ranking
+            
+            
+            }));
 
 
-            }
-        );
+        },
 
 
-    }else{
+        "prediction"
 
+    );
 
-        console.log(
-            "回答者待機"
-        );
-    
-    
-        container.innerHTML = `
-    
-            <h2>
-            ${msg.question.question}
-            </h2>
-    
-            <p>
-            出題者の回答を待っています...
-            </p>
-    
-        `;
-    
-    
-    }
 
 }
     
@@ -691,7 +699,7 @@ if(msg.type==="ranking_prediction_progress"){
                 socket.send(JSON.stringify({
 
                     type:
-                    "ranking_show_result"
+                    "ranking_check"
 
                 }));
 
@@ -793,7 +801,7 @@ if(msg.type==="ranking_result"){
         </h3>
 
         <p>
-        ${msg.answer.join(",")}
+        ${JSON.stringify(msg.true_answers)}
         </p>
 
 
