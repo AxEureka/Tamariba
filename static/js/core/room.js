@@ -840,7 +840,6 @@ if(msg.type==="ranking_result"){
     }
 
 }
-}
 
     if (msg.type === "end_quiz" || msg.type === "end_nasa" || msg.type === "end_compatibility") {
       const container = document.getElementById("game-container");
