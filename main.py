@@ -2115,12 +2115,15 @@ async def handle_ranking(room,data):
                     {
                         "type":
                             "ranking_prediction_start",
-            
+                
                         "answerers":
                             game["current_answerers"],
-            
+                
                         "question":
-                            game["current_question"]
+                            game["current_question"],
+                
+                        "players":
+                            list(room["members"])
                     }
                 )
     
@@ -2190,49 +2193,99 @@ async def handle_ranking(room,data):
         
         
         
+            await broadcast(
+                room,
+                {
+                    "type":
+                        "ranking_prediction_progress",
+            
+                    "done":
+                        total_done,
+            
+                    "total":
+                        total_need
+                }
+            )
+            
+            
             if total_done >= total_need:
-        
-                await broadcast(
-                    room,
-                    {
-                        "type":
-                            "ranking_prediction_done"
-                    }
-                )
+            
+                game["mode"]="result"
+
 
 
 
     elif msg_type=="ranking_start_prediction":
 
         game["mode"]="prediction"
-
+    
+    
         await broadcast(
             room,
             {
                 "type":
                     "ranking_prediction_start",
-
+    
                 "answerers":
-                    game["current_answerers"]
+                    game["current_answerers"],
+    
+                "question":
+                    game["current_question"]
             }
         )
 
 
     elif msg_type=="ranking_check":
 
+
+        scores={}
+    
+    
+        for player,questions in game["predictions"].items():
+    
+            score=0
+    
+    
+            for q_index,targets in questions.items():
+    
+                for target,predict in targets.items():
+    
+                    answer = (
+                        game["true_answers"]
+                        [q_index]
+                        .get(target)
+                    )
+    
+    
+                    if answer:
+    
+                        score += calc_sanrentan(
+                            answer,
+                            predict
+                        )
+    
+    
+            scores[player]=score
+    
+    
+    
+        game["scores"]=scores
+    
+    
+    
         await broadcast(
             room,
             {
                 "type":"ranking_result",
-
+    
                 "true_answers":
                     game["true_answers"],
-
+    
                 "predictions":
                     game["predictions"],
-
+    
                 "scores":
-                    game["scores"]
+                    scores
             }
         )
 
