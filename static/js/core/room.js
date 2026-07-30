@@ -504,25 +504,6 @@ if(myName === hostName){
 // 出題者
 else if(isAnswerer){
 
-    container.innerHTML=`
-
-    <h2>
-    予測受付中
-    </h2>
-
-    <p>
-    他の参加者の回答を待っています
-    </p>
-
-    `;
-
-}
-
-
-// 予想者
-else{
-
-
     createRankingUI(
 
         container,
@@ -533,27 +514,41 @@ else{
 
         (ranking)=>{
 
-
             socket.send(JSON.stringify({
 
-            type:"ranking_answer",
-            
-            name:myName,
-            
-            answer_type:"prediction",
-            
-            ranking:ranking
-            
-            
-            }));
+                type:"ranking_answer",
 
+                name:myName,
+
+                answer_type:"true",
+
+                ranking:ranking
+
+            }));
 
         },
 
-
-        "prediction"
+        "answer"
 
     );
+
+}
+
+
+// 予想者（まだ予想しない）
+else {
+
+    container.innerHTML = `
+
+    <h2>
+    出題者回答待ち
+    </h2>
+
+    <p>
+    出題者がランキングを入力しています
+    </p>
+
+    `;
 
 }
 }
