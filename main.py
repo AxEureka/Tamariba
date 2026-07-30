@@ -2195,6 +2195,7 @@ async def handle_ranking(room,data):
         
             total_need=len(
                 room["members"]
+                -1
             ) - len(game["current_answerers"])
         
         
