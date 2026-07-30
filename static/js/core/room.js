@@ -564,6 +564,89 @@ if (msg.type === "ranking_question") {
         }
     
     }
+
+if(msg.type==="ranking_prediction_start"){
+
+
+const container =
+document.getElementById("game-container");
+
+
+// 出題者か確認
+let isAnswerer=false;
+
+
+Object.values(
+ msg.answerers
+)
+.forEach(name=>{
+
+ if(name===myName){
+   isAnswerer=true;
+ }
+
+});
+
+
+// 出題者
+if(isAnswerer){
+
+
+container.innerHTML=`
+
+<h2>
+予測中です
+</h2>
+
+<p>
+しばらくお待ちください
+</p>
+
+`;
+
+
+}
+
+
+// 回答者
+else{
+
+
+createRankingUI(
+
+container,
+
+msg.question,
+
+[],
+
+(ranking)=>{
+
+
+socket.send(JSON.stringify({
+
+type:"ranking_prediction",
+
+name:myName,
+
+ranking:ranking
+
+
+}));
+
+},
+
+
+"prediction"
+
+
+);
+
+
+}
+
+
+}
     if (msg.type === "end_quiz" || msg.type === "end_nasa" || msg.type === "end_compatibility") {
       const container = document.getElementById("game-container");
       container.classList.remove("active");
