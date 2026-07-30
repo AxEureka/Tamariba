@@ -681,11 +681,11 @@ ranking:ranking
 
 if(msg.type==="ranking_prediction_progress"){
 
+    const container =
+    document.getElementById("game-container");
+
+
     if(myName === hostName){
-
-        const container =
-        document.getElementById("game-container");
-
 
         container.innerHTML = `
 
@@ -698,6 +698,10 @@ if(msg.type==="ranking_prediction_progress"){
         </p>
 
         `;
+
+    }
+
+}
 
 
         if(msg.done === msg.total){
