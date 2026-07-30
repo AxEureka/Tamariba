@@ -456,15 +456,6 @@ if (msg.type === "ranking_question") {
 
     rankingAnswerers = msg.answerers;
 
-    console.log(
-        "判定結果",
-        myName,
-        "host=",
-        myName===hostName,
-        "answerer=",
-        isAnswerer
-    );
-
 
     // 自分が今回の出題者か判定
 
@@ -480,6 +471,15 @@ if (msg.type === "ranking_question") {
         }
 
     });
+
+    console.log(
+          "判定結果",
+          myName,
+          "host=",
+          myName===hostName,
+          "answerer=",
+          isAnswerer
+      );
 
 
 
