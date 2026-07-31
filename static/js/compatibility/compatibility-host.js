@@ -297,7 +297,7 @@ export function startCompatibilityHost(
                     JSON.stringify({
         
                         type:
-                        "show_ranking_result"
+                        "ranking_check"
         
                     })
                 );
