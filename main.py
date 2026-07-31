@@ -2113,26 +2113,19 @@ async def handle_ranking(room,data):
     
             if done_count >= need_count:
 
-                game["mode"]="prediction"
-                
-                
+                game["mode"]="waiting_prediction"
+            
                 await broadcast(
                     room,
                     {
                         "type":
-                            "ranking_prediction_start",
-                    
+                            "ranking_answer_complete",
+            
                         "answerers":
                             game["current_answerers"],
             
-                        "teams":
-                            room["compatibility"]["teams"],
-                    
                         "question":
-                            game["current_question"],
-                    
-                        "players":
-                            list(room["members"])
+                            game["current_question"]
                     }
                 )
     
@@ -2233,7 +2226,7 @@ async def handle_ranking(room,data):
 
 
 
-    elif msg_type=="start_ranking_prediction":
+   elif msg_type=="start_ranking_prediction":
 
         game["mode"]="prediction"
     
@@ -2241,16 +2234,20 @@ async def handle_ranking(room,data):
         await broadcast(
             room,
             {
-                "type":"ranking_prediction_start",
-        
+                "type":
+                    "ranking_prediction_start",
+    
                 "answerers":
                     game["current_answerers"],
-        
+    
+                "question":
+                    game["current_question"],
+    
                 "teams":
                     room["compatibility"]["teams"],
-        
-                "question":
-                    game["current_question"]
+    
+                "players":
+                    list(room["members"])
             }
         )
 
