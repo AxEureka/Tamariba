@@ -2246,17 +2246,18 @@ async def handle_ranking(room,data):
         await broadcast(
             room,
             {
-                "type":
-                    "ranking_prediction_start",
-    
+                "type":"ranking_prediction_start",
+        
                 "answerers":
                     game["current_answerers"],
-    
+        
+                "teams":
+                    room["compatibility"]["teams"],
+        
                 "question":
                     game["current_question"]
             }
         )
-
 
     elif msg_type=="ranking_check":
 
