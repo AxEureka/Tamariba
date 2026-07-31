@@ -2114,20 +2114,23 @@ async def handle_ranking(room,data):
             if done_count >= need_count:
 
                 game["mode"]="prediction"
-            
-            
+                
+                
                 await broadcast(
                     room,
                     {
                         "type":
                             "ranking_prediction_start",
-                
+                    
                         "answerers":
                             game["current_answerers"],
-                
+            
+                        "teams":
+                            room["compatibility"]["teams"],
+                    
                         "question":
                             game["current_question"],
-                
+                    
                         "players":
                             list(room["members"])
                     }
@@ -2164,24 +2167,16 @@ async def handle_ranking(room,data):
         
         
             if team:
-        
-        
-                answerer = game["current_answerers"][team]
-        
-        
-                # 自分のチーム代表以外の人数
-                members = room["compatibility"]["teams"][team]["members"]
-        
-                need = len(members)-1
-        
-        
+
+
                 done = len(
                     game["predictions"][name][index]
                 )
-        
-        
-                if done >= need:
-        
+            
+            
+                # 自分のチームの出題者1人だけ予想すれば完了
+                if done >= 1:
+            
                     game["prediction_done"][name]=True
         
         
