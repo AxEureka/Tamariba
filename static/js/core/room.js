@@ -652,39 +652,64 @@ container.innerHTML=`
 else{
 
 
-createRankingUI(
-
-container,
-
-msg.question,
-
-msg.question.choices,
-
-(ranking)=>{
+    // 自分のチームの出題者を取得
+    let target = null;
 
 
-socket.send(JSON.stringify({
+    Object.keys(msg.answerers).forEach(team=>{
 
-type:"ranking_answer",
-
-name:myName,
-
-answer_type:"prediction",
-
-ranking:ranking
+        const answerer = msg.answerers[team];
 
 
-}));
-},
+        // 自分が所属しているチームなら
+        if(
+            msg.teams &&
+            msg.teams[team] &&
+            msg.teams[team].includes(myName)
+        ){
+
+            target = answerer;
+
+        }
+
+    });
 
 
-"prediction"
 
-);
+    createRankingUI(
+
+        container,
+
+        msg.question,
+
+        msg.question.choices,
+
+        (ranking)=>{
+
+
+            socket.send(JSON.stringify({
+
+                type:"ranking_answer",
+
+                name:myName,
+
+                answer_type:"prediction",
+
+                target:target,
+
+                ranking:ranking
+
+            }));
+
+        },
+
+
+        "prediction"
+
+    );
 
 
 }
-
 }
 
 if(msg.type==="ranking_prediction_progress"){
