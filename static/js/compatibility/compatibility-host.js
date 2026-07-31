@@ -245,9 +245,10 @@ export function startCompatibilityHost(
     
         showPredictionButton(){
 
+            console.log("予測開始ボタン表示");
+        
             const btn =
                 document.createElement("button");
-        
         
             btn.textContent =
                 "予測開始";
@@ -258,7 +259,6 @@ export function startCompatibilityHost(
                 const socket =
                     getSocket();
         
-        
                 socket.send(
                     JSON.stringify({
         
@@ -268,16 +268,14 @@ export function startCompatibilityHost(
                     })
                 );
         
-        
                 btn.remove();
         
             };
         
         
-            config.appendChild(btn);
+            wrapper.appendChild(btn);
         
         },
-
 
         showResultButton(){
 
