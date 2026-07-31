@@ -2202,9 +2202,9 @@ async def handle_ranking(room,data):
             predictors = [
                 name
                 for name in room["members"]
-                if name not in answerers
-            ]
-            
+                if name != room["host"]
+                and name not in answerers
+            ]            
             
             total_need = len(predictors)
             
