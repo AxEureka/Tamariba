@@ -2225,8 +2225,15 @@ async def handle_ranking(room,data):
             
             
             if total_done >= total_need:
-            
+
                 game["mode"]="result"
+            
+                await broadcast(
+                    room,
+                    {
+                        "type":"ranking_prediction_complete"
+                    }
+                )
 
 
 
