@@ -557,7 +557,7 @@ else {
 }
 }
     
-    if ( msg.type === "ranking_answerers_done"){
+    if ( msg.type === "ranking_answerers_complete"){
     
         const container =
             document.getElementById("game-container");
