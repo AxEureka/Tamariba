@@ -705,31 +705,23 @@ if(msg.type==="ranking_prediction_progress"){
         ${msg.done}/${msg.total}人 回答済み
         </p>
 
-        `;
+        `;    
+    }
+}
+
+if(msg.type==="ranking_prediction_complete"){
+
+    console.log(
+        "予想完了、結果表示ボタン表示"
+    );
 
 
-        if(msg.done === msg.total){
+    if(
+        myName === hostName &&
+        compatibilityHostUI
+    ){
 
-            const btn =
-                document.createElement("button");
-
-
-            btn.textContent =
-                "結果発表";
-
-
-            btn.onclick=()=>{
-
-                socket.send(JSON.stringify({
-                    type:"ranking_check"
-                }));
-
-            };
-
-
-            container.appendChild(btn);
-
-        }
+        compatibilityHostUI.showResultButton();
 
     }
 
