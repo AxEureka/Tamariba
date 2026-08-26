@@ -122,26 +122,77 @@ def create_room_data(
             "teams":{},
 
             # ranking game
-        "ranking_game":{
-        
+       "ranking_game":{
+
             "mode":"",
             "question_count":0,
         
+            # 現在何問目か
             "current_index":0,
+        
+            # 出題する問題
             "questions":[],
+        
+            # 現在の問題
             "current_question":{},
         
-            # 追加
+            # チームの順番
             "team_order":[],
+        
+            # チーム内の回答者ローテーション
             "team_members_order":{},
+        
             "current_team_index":0,
             "current_member_index":{},
         
-            "current_answerers":None,
+            # 現在の問題の回答者
+            "current_answerers":{},
         
+            # --------------------------------
+            # 回答・予想
+            # --------------------------------
+        
+            # 問題ごとの正解
+            # {
+            #   0: {
+            #       "田中": [1,3,2,...],
+            #       "佐藤": [2,1,3,...]
+            #   }
+            # }
             "true_answers":{},
+        
+            # 現在の問題での予想
             "predictions":{},
-            "scores":{}
+        
+            # 問題ごとの予想履歴
+            "prediction_history":{},
+        
+            # 問題ごとの回答者履歴
+            "question_answerers":{},
+        
+            # 問題ごとの正解履歴
+            "true_answer_history":{},
+        
+            # --------------------------------
+            # 得点
+            # --------------------------------
+        
+            # 累積個人得点
+            "scores":{},
+        
+            # 累積チーム得点
+            "team_scores":{},
+        
+            # 問題ごとの個人得点
+            "question_scores":{},
+        
+            # すでに採点した問題
+            "scored_questions":set(),
+        
+            # 予想完了者
+            "prediction_done":{},
+        
+            "answer_done":{}
         
         }
     }
@@ -2044,6 +2095,8 @@ async def handle_ranking(room,data):
 
             "mode":"answering",
         
+            "question_count":len(questions),
+        
             "questions":questions,
         
             "current_index":0,
@@ -2058,11 +2111,33 @@ async def handle_ranking(room,data):
         
             "current_answerers":{},
         
-        
+            # 回答
             "true_answers":{},
+        
+            # 現在の問題の予想
             "predictions":{},
+        
+            # 過去問題を含む予想履歴
+            "prediction_history":{},
+        
+            # 問題ごとの回答者
+            "question_answerers":{},
+        
+            # 問題ごとの正解
+            "true_answer_history":{},
+        
+            # 得点
             "scores":{},
+        
+            "team_scores":{},
+        
+            "question_scores":{},
+        
+            "scored_questions":set(),
+        
+            # 進行管理
             "prediction_done":{},
+        
             "answer_done":{}
         
         }
@@ -2113,7 +2188,13 @@ async def handle_ranking(room,data):
     
             if done_count >= need_count:
 
+                game["true_answer_history"][index] = (
+                    game["true_answers"][index].copy()
+                )
+            
+            
                 game["mode"]="waiting_prediction"
+            
             
                 await broadcast(
                     room,
@@ -2131,6 +2212,56 @@ async def handle_ranking(room,data):
     
     
         else:
+
+            # =====================
+            # 自分のチームを確認
+            # =====================
+            
+            team = None
+            
+            for team_name, team_info in room["compatibility"]["teams"].items():
+            
+                if name in team_info["members"]:
+            
+                    team = team_name
+                    break
+            
+            
+            if team is None:
+            
+                print(
+                    "チーム未所属の予想:",
+                    name
+                )
+            
+                return
+            
+            
+            # =====================
+            # 自チームの回答者を取得
+            # =====================
+            
+            expected_target = (
+                game["current_answerers"].get(team)
+            )
+            
+            
+            # =====================
+            # 自チーム回答者以外は拒否
+            # =====================
+            
+            if target != expected_target:
+            
+                print(
+                    "不正な予想:",
+                    name,
+                    "target:",
+                    target,
+                    "expected:",
+                    expected_target
+                )
+            
+                return
 
             game["predictions"].setdefault(
                 name,
@@ -2169,8 +2300,19 @@ async def handle_ranking(room,data):
             
                 # 自分のチームの出題者1人だけ予想すれば完了
                 if done >= 1:
-            
+
                     game["prediction_done"][name]=True
+                
+                    # 問題ごとの予想履歴として保存
+                    game["prediction_history"].setdefault(
+                        index,
+                        {}
+                    )
+                
+                    game["prediction_history"][index][name] = {
+                        "target":target,
+                        "ranking":ranking
+                    }
         
         
         
@@ -2224,8 +2366,6 @@ async def handle_ranking(room,data):
                 )
 
 
-
-
    elif msg_type=="start_ranking_prediction":
 
         game["mode"]="prediction"
@@ -2253,46 +2393,139 @@ async def handle_ranking(room,data):
 
     elif msg_type=="ranking_check":
 
-
-        scores={}
+        game=room["compatibility"]["ranking_game"]
     
+        # 現在採点している問題
+        index=game["current_index"]-1
+    
+    
+        # =========================
+        # 二重採点防止
+        # =========================
+    
+        if index in game["scored_questions"]:
+    
+            print(
+                "すでに採点済み:",
+                index
+            )
+    
+            return
+    
+    
+        # =========================
+        # 問題ごとの得点
+        # =========================
+    
+        question_scores={}
+    
+    
+        # =========================
+        # 現在の予想を採点
+        # =========================
     
         for player,questions in game["predictions"].items():
     
             score=0
     
     
-            for q_index,targets in questions.items():
+            current_targets = questions.get(
+                index,
+                {}
+            )
     
-                for target,predict in targets.items():
     
-                    answer = (
-                        game["true_answers"]
-                        [q_index]
-                        .get(target)
+            for target,predict in current_targets.items():
+    
+                answer = (
+                    game["true_answers"]
+                    .get(index, {})
+                    .get(target)
+                )
+    
+    
+                if answer is not None:
+    
+                    score += calc_sanrentan(
+                        answer,
+                        predict
                     )
     
     
-                    if answer:
-    
-                        score += calc_sanrentan(
-                            answer,
-                            predict
-                        )
+            question_scores[player]=score
     
     
-            scores[player]=score
+        # =========================
+        # 問題別得点を保存
+        # =========================
+    
+        game["question_scores"][index] = (
+            question_scores
+        )
     
     
+        # =========================
+        # 個人累積得点
+        # =========================
     
-        game["scores"]=scores
+        for player,score in question_scores.items():
+    
+            game["scores"].setdefault(
+                player,
+                0
+            )
+    
+            game["scores"][player] += score
     
     
+        # =========================
+        # チーム累積得点
+        # =========================
+    
+        for player,score in question_scores.items():
+    
+            player_team=None
+    
+            for team_name,team_info in \
+                room["compatibility"]["teams"].items():
+    
+                if player in team_info["members"]:
+    
+                    player_team=team_name
+                    break
+    
+    
+            if player_team is not None:
+    
+                game["team_scores"].setdefault(
+                    player_team,
+                    0
+                )
+    
+                game["team_scores"][player_team] += score
+    
+    
+        # =========================
+        # 採点済みとして記録
+        # =========================
+    
+        game["scored_questions"].add(
+            index
+        )
+    
+    
+        # =========================
+        # 結果送信
+        # =========================
     
         await broadcast(
             room,
             {
-                "type":"ranking_result",
+                "type":
+                    "ranking_result",
+    
+                "question_index":
+                    index,
     
                 "true_answers":
                     game["true_answers"],
@@ -2300,81 +2533,150 @@ async def handle_ranking(room,data):
                 "predictions":
                     game["predictions"],
     
+                "question_scores":
+                    game["question_scores"],
+    
                 "scores":
-                    scores
+                    game["scores"],
+    
+                "team_scores":
+                    game["team_scores"]
             }
         )
 
-
-
-
     elif msg_type=="ranking_final":
 
-
-        result=sorted(
+        game=room["compatibility"]["ranking_game"]
+    
+    
+        # =========================
+        # 個人ランキング
+        # =========================
+    
+        individual_ranking=sorted(
             game["scores"].items(),
             key=lambda x:-x[1]
         )
-
-
+    
+    
+        # =========================
+        # チームランキング
+        # =========================
+    
+        team_ranking=sorted(
+            game["team_scores"].items(),
+            key=lambda x:-x[1]
+        )
+    
+    
+        # =========================
+        # チーム内メンバーランキング
+        # =========================
+    
+        team_member_ranking={}
+    
+    
+        for team_name,team_info in \
+            room["compatibility"]["teams"].items():
+    
+            members=[]
+    
+    
+            for member in team_info["members"]:
+    
+                members.append(
+                    (
+                        member,
+                        game["scores"].get(
+                            member,
+                            0
+                        )
+                    )
+                )
+    
+    
+            members.sort(
+                key=lambda x:-x[1]
+            )
+    
+    
+            team_member_ranking[
+                team_name
+            ] = members
+    
+    
+        # =========================
+        # 最終結果送信
+        # =========================
+    
         await broadcast(
             room,
             {
-
                 "type":
                     "ranking_final_result",
-
-                "ranking":
-                    result
-
+    
+                # 個人総合
+                "individual_ranking":
+                    individual_ranking,
+    
+                # チーム総合
+                "team_ranking":
+                    team_ranking,
+    
+                # チーム内個人順位
+                "team_member_ranking":
+                    team_member_ranking,
+    
+                # 問題別得点
+                "question_scores":
+                    game["question_scores"],
+    
+                # 各問題の回答者
+                "question_answerers":
+                    game["question_answerers"],
+    
+                # 問題文
+                "questions":
+                    game["questions"],
+    
+                # 各人の予想
+                "prediction_history":
+                    game["prediction_history"],
+    
+                # 各回答者の正解
+                "true_answer_history":
+                    game["true_answer_history"],
+    
+                # チーム情報
+                "teams":
+                    room["compatibility"]["teams"]
             }
         )
 
     elif msg_type=="ranking_score":
 
-
         game=room["compatibility"]["ranking_game"]
-
-
-        scores={}
-
-
-        for player,questions in game["predictions"].items():
-
-            score=0
-                
-            for q_index,targets in questions.items():
-        
-                for target,predict in targets.items():
-        
-                    answer = game["true_answers"][q_index].get(target)
-        
-                    if answer:
-        
-                        score += calc_sanrentan(
-                            answer,
-                            predict
-                        )
-
-            scores[player]=score
-
-
-        game["scores"]=scores
-
-
-
+    
+    
         await broadcast(
             room,
             {
-                "type":"ranking_score_result",
-                "scores":scores
+                "type":
+                    "ranking_score_result",
+    
+                "scores":
+                    game["scores"],
+    
+                "team_scores":
+                    game["team_scores"],
+    
+                "question_scores":
+                    game["question_scores"]
             }
         )
-
     
     elif msg_type=="ranking_next_question":
 
-        game["predictions"]={}
         game["prediction_done"]={}
         game["answer_done"]={}
         game["current_answerers"]={}
@@ -2428,12 +2730,29 @@ async def start_next_ranking_question(room):
     game["current_answerers"]=answerers
 
 
+    # =========================
+    # 問題ごとの回答者履歴を保存
+    # =========================
+    
+    game["question_answerers"][index] = (
+        answerers.copy()
+    )
+    
+    
+    # =========================
+    # 正解保存領域
+    # =========================
+    
     game["true_answers"][index]={}
-
-
+    
+    
+    # =========================
+    # 現在の問題
+    # =========================
+    
     game["current_question"]=question
-
-
+    
+    
     game["current_index"]+=1
 
 
