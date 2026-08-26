@@ -2430,42 +2430,49 @@ async def handle_ranking(room,data):
         # 問題ごとの得点
         # =========================
     
-        question_scores={}
-    
-    
-        # =========================
-        # 現在の予想を採点
-        # =========================
-    
-        for player,questions in game["predictions"].items():
-    
-            score=0
-    
-    
+        question_scores = {}
+
+        question_results = {}
+        
+        
+        for player, questions in game["predictions"].items():
+        
+            score = 0
+            result_types = []
+        
             current_targets = questions.get(
                 index,
                 {}
             )
-    
-    
-            for target,predict in current_targets.items():
-    
+        
+            for target, predict in current_targets.items():
+        
                 answer = (
                     game["true_answers"]
                     .get(index, {})
                     .get(target)
                 )
-    
-    
+        
                 if answer is not None:
-    
-                    score += calc_sanrentan(
+        
+                    result_type, point = calc_ranking_result(
                         answer,
                         predict
                     )
-    
-    
-            question_scores[player]=score
+        
+                    score += point
+        
+                    result_types.append({
+                        "target": target,
+                        "type": result_type,
+                        "score": point,
+                        "answer": answer,
+                        "prediction": predict
+                    })
+        
+            question_scores[player] = score
+        
+            question_results[player] = result_types
     
     
         # =========================
@@ -2536,22 +2543,25 @@ async def handle_ranking(room,data):
             {
                 "type":
                     "ranking_result",
-    
+        
                 "question_index":
                     index,
-    
+        
                 "true_answers":
                     game["true_answers"],
-    
+        
                 "predictions":
                     game["predictions"],
-    
+        
                 "question_scores":
                     game["question_scores"],
-    
+        
+                "question_results":
+                    question_results,
+        
                 "scores":
                     game["scores"],
-    
+        
                 "team_scores":
                     game["team_scores"]
             }
@@ -2843,19 +2853,15 @@ async def broadcast(room,message):
             room["sockets"].remove(socket)
 
 
-def calc_sanrentan(answer, predict):
+def calc_ranking_result(answer, predict):
 
     # =========================
-    # 7択完全一致ボーナス
+    # 7択完全一致
     # =========================
 
     if answer == predict:
-        return 15
+        return "完全一致", 15
 
-
-    # =========================
-    # 上位3位判定
-    # =========================
 
     answer_top3 = answer[:3]
     predict_top3 = predict[:3]
@@ -2870,31 +2876,53 @@ def calc_sanrentan(answer, predict):
         if answer_top3[i] == predict_top3[i]:
             exact += 1
 
-
         if predict_top3[i] in answer_top3:
             hit += 1
 
 
-
+    # =========================
     # サンレンタン
+    # =========================
+
     if exact == 3:
-        return 6
+        return "サンレンタン", 6
 
+
+    # =========================
     # サンレンプク
+    # =========================
+
     elif hit == 3:
-        return 4
+        return "サンレンプク", 4
 
+
+    # =========================
     # ニレンタン
+    # =========================
+
     elif exact == 2:
-        return 3
+        return "ニレンタン", 3
 
-    # プクプク
+
+    # =========================
+    # ニレンプク
+    # =========================
+
     elif hit == 2:
-        return 2
+        return "ニレンプク", 2
 
+
+    # =========================
     # タン
+    # =========================
+
     elif hit == 1:
-        return 1
+        return "タン", 1
+
+
+    # =========================
+    # はずれ
+    # =========================
 
     else:
-        return 0
+        return "はずれ", 0
