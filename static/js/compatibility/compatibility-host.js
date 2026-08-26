@@ -266,34 +266,42 @@ export function startCompatibilityHost(
                 showResultButton(){
 
                     console.log("結果発表ボタン表示");
-        
+                
+                    console.log("config=", config);
+                
                     const btn =
                         document.createElement("button");
-        
+                
                     btn.textContent =
                         "結果発表";
-        
+                
+                    btn.style.display = "block";
+                    btn.style.margin = "20px";
+                    btn.style.fontSize = "24px";
+                
                     btn.onclick = ()=>{
-        
+                
+                        console.log("結果発表クリック");
+                
                         const socket =
                             getSocket();
-        
+                
                         socket.send(
                             JSON.stringify({
-        
-                                type:
-                                    "ranking_check"
-        
+                                type:"ranking_check"
                             })
                         );
-        
+                
                         btn.remove();
-        
                     };
-        
+                
                     config.appendChild(btn);
-        
-                },
+                
+                    console.log(
+                        "append後 children=",
+                        config.children.length
+                    );
+                }
         
                 showNextButton(){
         
