@@ -301,7 +301,7 @@ export function startCompatibilityHost(
                         "append後 children=",
                         config.children.length
                     );
-                }
+                },
         
                 showNextButton(){
         
