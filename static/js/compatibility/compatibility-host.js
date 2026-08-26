@@ -263,45 +263,76 @@ export function startCompatibilityHost(
     
         },
     
-        showResultButton(){
-    
-            console.log("結果発表ボタン表示");
-    
-            const btn =
-                document.createElement("button");
-    
-            btn.textContent =
-                "結果発表";
-    
-            btn.onclick = ()=>{
-    
-                const socket =
-                    getSocket();
-    
-                socket.send(
-                    JSON.stringify({
-    
-                        type:
-                        "ranking_check"
-    
-                    })
-                );
-    
-                btn.remove();
-    
-            };
-    
-            config.appendChild(btn);
-    
-        },
-    
-        setProgress(textValue){
-    
-            progress.textContent =
-                textValue;
-    
-        }
-    
+                showResultButton(){
+
+                    console.log("結果発表ボタン表示");
+        
+                    const btn =
+                        document.createElement("button");
+        
+                    btn.textContent =
+                        "結果発表";
+        
+                    btn.onclick = ()=>{
+        
+                        const socket =
+                            getSocket();
+        
+                        socket.send(
+                            JSON.stringify({
+        
+                                type:
+                                    "ranking_check"
+        
+                            })
+                        );
+        
+                        btn.remove();
+        
+                    };
+        
+                    config.appendChild(btn);
+        
+                },
+        
+                showNextButton(){
+        
+                    console.log("次の問題ボタン表示");
+        
+                    const btn =
+                        document.createElement("button");
+        
+                    btn.textContent =
+                        "次の問題";
+        
+                    btn.onclick = ()=>{
+        
+                        const socket =
+                            getSocket();
+        
+                        socket.send(
+                            JSON.stringify({
+        
+                                type:
+                                    "ranking_next_question"
+        
+                            })
+                        );
+        
+                        btn.remove();
+        
+                    };
+        
+                    config.appendChild(btn);
+        
+                },
+        
+                setProgress(textValue){
+        
+                    progress.textContent =
+                        textValue;
+        
+                }    
     };
 // =================================
 // 共通関数
