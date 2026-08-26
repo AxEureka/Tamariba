@@ -384,54 +384,56 @@ export function showRankingPrediction(
 
         createRankingUI(
             container,
-
+        
             data.question,
-
+        
             [myAnswerer],
-
+        
             (ranking)=>{
-
+        
                 socket.send(
                     JSON.stringify({
-
+        
                         type:
                             "ranking_answer",
-
+        
                         answer_type:
                             "prediction",
-
+        
                         name:
                             myName,
-
+        
                         target:
                             myAnswerer,
-
+        
                         ranking:
                             ranking
-
+        
                     })
                 );
-
-
+        
+        
                 container.innerHTML = `
-
+        
                     <h2>
                     予想を送信しました
                     </h2>
-
+        
                     <p>
                     他のメンバーの予想を待っています。
                     </p>
-
+        
                 `;
-
-            }
+        
+            },
+        
+            "prediction"
+        
         );
-
-
-        return;
-
-    }
+        
+                return;
+        
+            }
 
 
     // =================================
