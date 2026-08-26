@@ -463,7 +463,7 @@ if (msg.type === "ranking_question") {
     );
 }
     
-    if ( msg.type === "ranking_answerer_complete"){
+    if ( msg.type === "ranking_answer_complete"){
     
         const container =
             document.getElementById("game-container");
@@ -658,50 +658,6 @@ if(msg.type==="ranking_prediction_complete"){
 
 }
 
-if(msg.type==="ranking_prediction_done"){
-
-
-    const container =
-        document.getElementById("game-container");
-
-
-    if(myName === hostName){
-
-        container.innerHTML = `
-
-        <h2>
-        予測終了
-        </h2>
-
-        <p>
-        結果発表できます
-        </p>
-
-        `;
-
-
-        const btn =
-            document.createElement("button");
-
-
-        btn.textContent =
-            "結果発表";
-
-
-        btn.onclick=()=>{
-
-            socket.send(JSON.stringify({
-                type:"ranking_check"
-            }));
-
-        };
-
-
-        container.appendChild(btn);
-
-    }
-
-}
 if(msg.type==="ranking_result"){
 
 
