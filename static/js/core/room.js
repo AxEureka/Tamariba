@@ -463,37 +463,23 @@ if (msg.type === "ranking_question") {
     );
 }
     
-    if ( msg.type === "ranking_answer_complete"){
+    if (msg.type === "ranking_answer_complete") {
+
+        console.log(
+            "出題者の回答が完了しました"
+        );
     
-        const container =
-            document.getElementById("game-container");
+        if (
+            myName === hostName &&
+            compatibilityHostUI &&
+            compatibilityHostUI.showPredictionButton
+        ) {
     
-    
-        if(myName === hostName){
-    
-            container.innerHTML = `
-            <h2>
-            出題者の回答が完了しました
-            </h2>
-    
-            <p>
-            全員の予想準備ができました
-            </p>
-            `;
-    
-    
-            if(
-                compatibilityHostUI &&
-                compatibilityHostUI.showPredictionButton
-            ){
-    
-                compatibilityHostUI.showPredictionButton();
-    
-            }
+            compatibilityHostUI.showPredictionButton();
     
         }
-    }
     
+    }    
 if(msg.type==="ranking_prediction_start"){
 
     const container =
