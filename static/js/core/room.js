@@ -572,26 +572,26 @@ if(msg.type==="ranking_prediction_start"){
       
 if(msg.type==="ranking_prediction_progress"){
 
-    const container =
-        document.getElementById("game-container");
+    console.log(
+        "予想進捗:",
+        msg.done,
+        "/",
+        msg.total
+    );
 
+    if(
+        myName === hostName &&
+        compatibilityHostUI &&
+        compatibilityHostUI.setProgress
+    ){
 
-    if(myName === hostName){
+        compatibilityHostUI.setProgress(
+            `予想状況：${msg.done}/${msg.total}人 回答済み`
+        );
 
-        container.innerHTML = `
-
-        <h2>
-        予測状況
-        </h2>
-
-        <p>
-        ${msg.done}/${msg.total}人 回答済み
-        </p>
-
-        `;    
     }
-}
 
+}
 if(msg.type==="ranking_prediction_complete"){
 
     console.log(
