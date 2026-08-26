@@ -122,7 +122,7 @@ def create_room_data(
             "teams":{},
 
             # ranking game
-       "ranking_game":{
+           "ranking_game":{
 
             "mode":"",
             "question_count":0,
@@ -501,9 +501,10 @@ async def websocket_endpoint(
             # ----------------------------
 
             elif (
-                "ranking" in msg_type
+                msg_type
+                and "ranking" in msg_type
             ):
-
+            
                 await handle_ranking(
                     room,
                     data
@@ -2366,7 +2367,7 @@ async def handle_ranking(room,data):
                 )
 
 
-   elif msg_type=="start_ranking_prediction":
+    elif msg_type=="start_ranking_prediction":
 
         game["mode"]="prediction"
     
@@ -2760,7 +2761,8 @@ async def start_next_ranking_question(room):
     await broadcast(
         room,
         {
-            "type":"ranking_question",
+            "type":
+                "ranking_question",
     
             "question":
                 question,
@@ -2772,6 +2774,9 @@ async def start_next_ranking_question(room):
     
             "answerers":
                 answerers,
+    
+            "teams":
+                room["compatibility"]["teams"],
     
             "mode":
                 "answering"
