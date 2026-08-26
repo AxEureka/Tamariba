@@ -5,7 +5,11 @@ import { startQuizPlayer } from "/static/js/quiz/quiz-player.js";
 import { startNASAHost } from "/static/js/nasa/nasa-host.js";
 import { startNASAPlayer } from "/static/js/nasa/nasa-player.js";
 import { startCompatibilityHost } from "/static/js/compatibility/compatibility-host.js";
-import { startCompatibilityPlayer, showCompatibilityTeam } from "/static/js/compatibility/compatibility-player.js";
+import {
+    startCompatibilityPlayer,
+    showCompatibilityTeam,
+    showRankingQuestion
+} from "/static/js/compatibility/compatibility-player.js";
 import { createRankingUI } from "/static/js/compatibility/compatibility-ui.js";
 const params = new URLSearchParams(location.search);
 const roomId = params.get("room");
@@ -441,123 +445,25 @@ if (msg.type === "compatibility_team_created") {
     
 if (msg.type === "ranking_question") {
 
-
     const container =
         document.getElementById("game-container");
 
-
     console.log(
         "ランキング問題受信",
-        JSON.stringify(msg,null,2)
+        JSON.stringify(msg, null, 2)
     );
-
 
     rankingMode = "answering";
-
     rankingAnswerers = msg.answerers;
 
-
-    // 自分が今回の出題者か判定
-
-    let isAnswerer = false;
-
-
-    Object.values(
-        msg.answerers
-    ).forEach(name=>{
-
-        if(name === myName){
-            isAnswerer = true;
-        }
-
-    });
-
-    console.log(
-          "判定結果",
-          myName,
-          "host=",
-          myName===hostName,
-          "answerer=",
-          isAnswerer
-      );
-
-
-
-    // 親
-if(myName === hostName){
-
-    container.innerHTML = `
-
-    <h2>
-    第${msg.question.id}問
-    </h2>
-
-    <p>
-    出題者：
-    ${Object.values(msg.answerers).join("、")}
-    </p>
-
-    <p id="answer-progress">
-    出題者回答待ち
-    </p>
-
-    `;
-
-}
-
-// 出題者
-else if(isAnswerer){
-
-    createRankingUI(
-
+    showRankingQuestion(
         container,
-
-        msg.question,
-
-        msg.question.choices,
-
-        (ranking)=>{
-
-            socket.send(JSON.stringify({
-
-                type:"ranking_answer",
-
-                name:myName,
-
-                answer_type:"true",
-
-                ranking:ranking
-
-            }));
-
-        },
-
-        "answer"
-
+        msg,
+        socket
     );
-
-}
-
-
-// 予想者（まだ予想しない）
-else {
-
-    container.innerHTML = `
-
-    <h2>
-    出題者回答待ち
-    </h2>
-
-    <p>
-    出題者がランキングを入力しています
-    </p>
-
-    `;
-
-}
 }
     
-    if ( msg.type === "ranking_answerers_complete"){
+    if ( msg.type === "ranking_answerer_complete"){
     
         const container =
             document.getElementById("game-container");
@@ -665,7 +571,7 @@ else{
         if(
             msg.teams &&
             msg.teams[team] &&
-            msg.teams[team].includes(myName)
+            msg.teams[team].members.includes(myName)
         ){
 
             target = answerer;
