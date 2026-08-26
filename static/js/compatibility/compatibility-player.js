@@ -140,6 +140,10 @@ export function showCompatibilityTeam(
 
 }
 
+// =================================
+// ランキング問題
+// =================================
+
 export function showRankingQuestion(
     container,
     data,
@@ -162,7 +166,7 @@ export function showRankingQuestion(
 
 
     // =================================
-    // 自分がどのチームに所属しているか探す
+    // 自分のチームを探す
     // =================================
 
     let myTeam = null;
@@ -189,16 +193,6 @@ export function showRankingQuestion(
     );
 
 
-    console.log(
-        "今回の代表:",
-        answerers
-    );
-
-
-    // =================================
-    // 自分のチームの代表
-    // =================================
-
     const myAnswerer =
         myTeam
         ? answerers[myTeam]
@@ -206,7 +200,7 @@ export function showRankingQuestion(
 
 
     console.log(
-        "自チーム代表:",
+        "今回の自チーム代表:",
         myAnswerer
     );
 
@@ -224,8 +218,6 @@ export function showRankingQuestion(
 
             data.question,
 
-            // ランキング対象
-            // 問題データから取得
             data.players || [],
 
             (ranking)=>{
@@ -256,7 +248,7 @@ export function showRankingQuestion(
                     </h2>
 
                     <p>
-                    他のメンバーの予想を待っています。
+                    他の回答者の回答を待っています。
                     </p>
 
                 `;
@@ -274,6 +266,120 @@ export function showRankingQuestion(
     // 自分が代表ではない場合
     // =================================
 
+    container.innerHTML = `
+
+        <h2>
+        回答者が回答中です
+        </h2>
+
+        <p>
+        回答が終わるまでお待ちください。
+        </p>
+
+    `;
+
+}
+
+
+
+// =================================
+// ランキング予想
+// =================================
+
+export function showRankingPrediction(
+    container,
+    data,
+    socket
+){
+
+    const myName =
+        window.myName ||
+        sessionStorage.getItem(
+            "playerName"
+        );
+
+
+    const answerers =
+        data.answerers || {};
+
+
+    const teams =
+        data.teams || {};
+
+
+    // =================================
+    // 自分のチームを探す
+    // =================================
+
+    let myTeam = null;
+
+    Object.entries(teams).forEach(
+        ([teamName, team]) => {
+
+            if(
+                team.members &&
+                team.members.includes(myName)
+            ){
+
+                myTeam = teamName;
+
+            }
+
+        }
+    );
+
+
+    console.log(
+        "予想時の自分のチーム:",
+        myTeam
+    );
+
+
+    // =================================
+    // 自分のチームの代表
+    // =================================
+
+    const myAnswerer =
+        myTeam
+        ? answerers[myTeam]
+        : null;
+
+
+    console.log(
+        "予想対象:",
+        myAnswerer
+    );
+
+
+    // =================================
+    // 自分が代表なら予想しない
+    // =================================
+
+    if(
+        myAnswerer === myName
+    ){
+
+        container.innerHTML = `
+
+            <h2>
+            回答者です
+            </h2>
+
+            <p>
+            他のメンバーがあなたの回答を予想しています。
+            </p>
+
+        `;
+
+        return;
+
+    }
+
+
+    // =================================
+    // 自分が代表ではない
+    // =================================
+
     if(myAnswerer){
 
         createRankingUI(
@@ -281,8 +387,6 @@ export function showRankingQuestion(
 
             data.question,
 
-            // ★重要
-            // 自分のチームの代表だけを予想
             [myAnswerer],
 
             (ranking)=>{
@@ -316,7 +420,7 @@ export function showRankingQuestion(
                     </h2>
 
                     <p>
-                    次の問題を待っています。
+                    他のメンバーの予想を待っています。
                     </p>
 
                 `;
@@ -331,7 +435,7 @@ export function showRankingQuestion(
 
 
     // =================================
-    // チームが見つからない場合
+    // チーム情報がない場合
     // =================================
 
     container.innerHTML = `
@@ -341,9 +445,5 @@ export function showRankingQuestion(
         </h2>
 
     `;
-
-}
-
-    }
 
 }
