@@ -72,71 +72,60 @@ export function startCompatibilityHost(
     function showTeamCreate(){
 
         config.innerHTML = "";
-
-        const teamCount =
-            createNumberInput(4);
-
+    
         const highCount =
             createNumberInput(2);
-
+    
         const lowCount =
             createNumberInput(2);
-
+    
         const btn =
             document.createElement("button");
-
+    
         btn.textContent =
             "チーム作成";
-
+    
         btn.onclick = ()=>{
-
+    
             const socket = getSocket();
-
+    
             const data = {
-
+    
                 type:
                     "compatibility_make_team",
-
-                team_count:
-                    Number(teamCount.value),
-
+    
                 high_team_count:
                     Number(highCount.value),
-
+    
                 low_team_count:
                     Number(lowCount.value)
-
+    
             };
-
+    
             console.log(
                 "送信データ",
                 data
             );
-
+    
             socket.send(
                 JSON.stringify(data)
             );
         };
-
+    
         config.append(
-
-            text("総チーム数 "),
-            teamCount,
-            br(),
-
+    
             text("高類似チーム数 "),
             highCount,
             br(),
-
+    
             text("低類似チーム数 "),
             lowCount,
             br(),
-
+    
             btn
-
+    
         );
     }
-
     // =================================
     // チーム表示
     // =================================
@@ -242,106 +231,69 @@ export function startCompatibilityHost(
     
         showTeams,
     
-    
         showPredictionButton(){
-
+    
             console.log("予測開始ボタン表示");
-        
+    
             const btn =
                 document.createElement("button");
-        
+    
             btn.textContent =
                 "予測開始";
-        
-        
+    
             btn.onclick = ()=>{
-        
+    
                 const socket =
                     getSocket();
-        
+    
                 socket.send(
                     JSON.stringify({
-        
+    
                         type:
                         "start_ranking_prediction"
-        
+    
                     })
                 );
-        
+    
                 btn.remove();
-        
+    
             };
-        
-        
-            wrapper.appendChild(btn);
-        
-        },
-
-        showResultButton(){
-
-            const btn =
-                document.createElement("button");
-        
-        
-            btn.textContent =
-                "結果発表";
-        
-        
-            btn.onclick=()=>{
-        
-                const socket=getSocket();
-        
-                socket.send(
-                    JSON.stringify({
-        
-                        type:
-                        "ranking_check"
-        
-                    })
-                );
-        
-                btn.remove();
-        
-            };
-        
-        
+    
             config.appendChild(btn);
-        
-        },
-
-        showNextButton(){
-
-            const btn =
-                document.createElement("button");
-        
-        
-            btn.textContent =
-                "次の問題";
-        
-        
-            btn.onclick=()=>{
-        
-                const socket=getSocket();
-        
-                socket.send(
-                    JSON.stringify({
-        
-                        type:
-                        "next_ranking_question"
-        
-                    })
-                );
-        
-        
-                btn.remove();
-        
-            };
-        
-        
-            config.appendChild(btn);
-        
+    
         },
     
+        showResultButton(){
+    
+            console.log("結果発表ボタン表示");
+    
+            const btn =
+                document.createElement("button");
+    
+            btn.textContent =
+                "結果発表";
+    
+            btn.onclick = ()=>{
+    
+                const socket =
+                    getSocket();
+    
+                socket.send(
+                    JSON.stringify({
+    
+                        type:
+                        "ranking_check"
+    
+                    })
+                );
+    
+                btn.remove();
+    
+            };
+    
+            config.appendChild(btn);
+    
+        },
     
         setProgress(textValue){
     
@@ -351,8 +303,6 @@ export function startCompatibilityHost(
         }
     
     };
-}
-
 // =================================
 // 共通関数
 // =================================
