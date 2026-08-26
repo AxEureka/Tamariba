@@ -456,6 +456,25 @@ if (msg.type === "ranking_question") {
     rankingMode = "answering";
     rankingAnswerers = msg.answerers;
 
+
+    // =================================
+    // 親はランキング回答画面を表示しない
+    // =================================
+
+    if (myName === hostName) {
+
+        console.log(
+            "親画面：回答者の回答を待機"
+        );
+
+        return;
+    }
+
+
+    // =================================
+    // 子だけランキング回答画面を表示
+    // =================================
+
     showRankingQuestion(
         container,
         msg,
