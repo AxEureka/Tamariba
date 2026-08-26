@@ -1919,6 +1919,18 @@ async def handle_compatibility(room,data):
             }
         )
 
+    # ----------------------------------
+    # 終了
+    # ----------------------------------
+
+    elif msg_type=="end_compatibility":
+
+        await broadcast(
+            room,
+            {
+                "type":"end_compatibility"
+            }
+        )
 
 # ==================================================
 # Compatibility Team
