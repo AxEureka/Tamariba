@@ -8,9 +8,9 @@ import { startCompatibilityHost } from "/static/js/compatibility/compatibility-h
 import {
     startCompatibilityPlayer,
     showCompatibilityTeam,
-    showRankingQuestion
+    showRankingQuestion,
+    showRankingPrediction
 } from "/static/js/compatibility/compatibility-player.js";
-import { createRankingUI } from "/static/js/compatibility/compatibility-ui.js";
 const params = new URLSearchParams(location.search);
 const roomId = params.get("room");
 let myName = params.get("name") || "";
@@ -496,128 +496,75 @@ if (msg.type === "ranking_question") {
     
 if(msg.type==="ranking_prediction_start"){
 
-
-const container =
-document.getElementById("game-container");
-
-
-// 出題者か確認
-let isAnswerer=false;
+    const container =
+        document.getElementById("game-container");
 
 
-Object.values(
- msg.answerers
-)
-.forEach(name=>{
-
- if(name===myName){
-   isAnswerer=true;
- }
-
-});
-
-// 親（監督）
-if(myName === hostName){
+    // 出題者か確認
+    let isAnswerer=false;
 
 
-container.innerHTML=`
+    Object.values(
+        msg.answerers
+    )
+    .forEach(name=>{
 
-<h2>
-予測状況
-</h2>
-
-<p>
-参加者の回答を待っています
-</p>
-
-`;
-
-}
-
-
-// 出題者
-else if(isAnswerer){
-
-
-container.innerHTML=`
-
-<h2>
-予測中です
-</h2>
-
-<p>
-他の参加者の予想を待っています
-</p>
-
-`;
-
-}
-
-
-// 予想者
-else{
-
-
-    // 自分のチームの出題者を取得
-    let target = null;
-
-
-    Object.keys(msg.answerers).forEach(team=>{
-
-        const answerer = msg.answerers[team];
-
-
-        // 自分が所属しているチームなら
-        if(
-            msg.teams &&
-            msg.teams[team] &&
-            msg.teams[team].members.includes(myName)
-        ){
-
-            target = answerer;
-
+        if(name===myName){
+            isAnswerer=true;
         }
 
     });
 
 
+    // 親（監督）
+    if(myName === hostName){
 
-    createRankingUI(
+        container.innerHTML=`
 
-        container,
+            <h2>
+            予測状況
+            </h2>
 
-        msg.question,
+            <p>
+            参加者の回答を待っています
+            </p>
 
-        msg.question.choices,
+        `;
 
-        (ranking)=>{
-
-
-            socket.send(JSON.stringify({
-
-                type:"ranking_answer",
-
-                name:myName,
-
-                answer_type:"prediction",
-
-                target:target,
-
-                ranking:ranking
-
-            }));
-
-        },
+    }
 
 
-        "prediction"
+    // 出題者
+    else if(isAnswerer){
 
-    );
+        container.innerHTML=`
 
+            <h2>
+            予測中です
+            </h2>
+
+            <p>
+            他の参加者の予想を待っています
+            </p>
+
+        `;
+
+    }
+
+
+    // 予想者
+    else{
+
+        showRankingPrediction(
+            container,
+            msg,
+            socket
+        );
+
+    }
 
 }
-}
-
+      
 if(msg.type==="ranking_prediction_progress"){
 
     const container =
@@ -671,61 +618,40 @@ if(msg.type==="ranking_result"){
     // =====================
     if(myName === hostName){
 
-
         container.innerHTML = `
-
+    
         <h2>
         結果発表
         </h2>
-
-
+    
         <h3>
         出題者のランキング
         </h3>
-
+    
         <p>
         ${JSON.stringify(msg.true_answers)}
         </p>
-
-
+    
         <h3>
         全員の結果
         </h3>
-
+    
         <div id="all-result">
         結果一覧を表示
         </div>
-
+    
         `;
-
-
-
-        const btn =
-            document.createElement("button");
-
-
-        btn.textContent =
-            "次の問題";
-
-
-        btn.onclick = ()=>{
-
-            socket.send(JSON.stringify({
-
-                type:
-                "ranking_next_question"
-
-            }));
-
-        };
-
-
-        container.appendChild(btn);
-
-
-
+    
+        if(
+            compatibilityHostUI &&
+            compatibilityHostUI.showNextButton
+        ){
+    
+            compatibilityHostUI.showNextButton();
+    
+        }
+    
     }
-
 
     // =====================
     // 子画面
