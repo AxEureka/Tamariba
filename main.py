@@ -2315,28 +2315,69 @@ async def handle_ranking(room,data):
         
         
         
+            # =========================
             # 全員完了確認
-
+            # =========================
+            
             total_done = len(
                 game["prediction_done"]
             )
             
             
-            # 実際に予想する人
+            # =========================
+            # 今回の回答者
+            # =========================
+            
             answerers = set(
                 game["current_answerers"].values()
             )
             
+            
+            # =========================
+            # 今回の予想者
+            # =========================
             
             predictors = [
                 name
                 for name in room["members"]
                 if name != room["host"]
                 and name not in answerers
-            ]            
+            ]
             
-            total_need = len(predictors)
             
+            total_need = len(
+                predictors
+            )
+            
+            
+            print(
+                "今回の回答者:",
+                answerers
+            )
+            
+            print(
+                "今回の予想者:",
+                predictors
+            )
+            
+            print(
+                "予想完了者:",
+                list(
+                    game["prediction_done"].keys()
+                )
+            )
+            
+            print(
+                "予想進捗:",
+                total_done,
+                "/",
+                total_need
+            )
+            
+            
+            # =========================
+            # 予想進捗送信
+            # =========================
             
             await broadcast(
                 room,
@@ -2353,25 +2394,53 @@ async def handle_ranking(room,data):
             )
             
             
-            if total_need == 0 or total_done >= total_need:
-
+            # =========================
+            # 全員完了
+            # =========================
+            
+            if (
+                total_need > 0
+                and total_done >= total_need
+            ):
+            
+                print(
+                    "全予想者の回答完了"
+                )
+            
                 await broadcast(
                     room,
                     {
-                        "type": "ranking_prediction_complete"
+                        "type":
+                            "ranking_prediction_complete"
                     }
                 )
-
     elif msg_type == "start_ranking_prediction":
 
         game["mode"] = "prediction"
     
+        # =========================
+        # 予想フェーズ初期化
+        # =========================
+    
+        game["prediction_done"] = {}
+    
+        print(
+            "予想フェーズ開始"
+        )
+    
+        print(
+            "今回の回答者:",
+            game["current_answerers"]
+        )
+    
         await broadcast(
             room,
             {
-                "type": "ranking_phase",
+                "type":
+                    "ranking_phase",
     
-                "phase": "prediction",
+                "phase":
+                    "prediction",
     
                 "question":
                     game["current_question"],
@@ -2382,8 +2451,7 @@ async def handle_ranking(room,data):
                 "teams":
                     room["compatibility"]["teams"]
             }
-        )
-        
+        )        
     elif msg_type == "ranking_show_result":
 
         game=room["compatibility"]["ranking_game"]
@@ -2517,9 +2585,7 @@ async def handle_ranking(room,data):
             game["current_index"]
             >= len(game["questions"])
         )
-        
-        await broadcast(...)    
-    
+            
         # =========================
         # 結果送信
         # =========================
