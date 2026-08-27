@@ -697,47 +697,6 @@ if(msg.type==="ranking_result"){
 
     }
 
-if(msg.type==="ranking_final_result"){
-
-    const container =
-        document.getElementById("game-container");
-
-    container.innerHTML = `
-
-        <h2>
-            最終結果
-        </h2>
-
-        <h3>
-            チームランキング
-        </h3>
-
-        <div id="final-team-ranking"></div>
-
-    `;
-
-    const rankingBox =
-        document.getElementById("final-team-ranking");
-
-    if(msg.team_ranking){
-
-        msg.team_ranking.forEach(
-            ([team, score], index) => {
-
-                rankingBox.innerHTML += `
-                    <p>
-                        ${index + 1}位：
-                        ${team}
-                        ${score}点
-                    </p>
-                `;
-
-            }
-        );
-
-    }
-
-}
 
 
     // =====================================
@@ -912,6 +871,49 @@ if(msg.type==="ranking_final_result"){
     }
 
 }
+
+    if(msg.type==="ranking_final_result"){
+
+        const container =
+            document.getElementById("game-container");
+    
+        container.innerHTML = `
+    
+            <h2>
+                最終結果
+            </h2>
+    
+            <h3>
+                チームランキング
+            </h3>
+    
+            <div id="final-team-ranking"></div>
+    
+        `;
+    
+        const rankingBox =
+            document.getElementById("final-team-ranking");
+    
+        if(msg.team_ranking){
+    
+            msg.team_ranking.forEach(
+                ([team, score], index) => {
+    
+                    rankingBox.innerHTML += `
+                        <p>
+                            ${index + 1}位：
+                            ${team}
+                            ${score}点
+                        </p>
+                    `;
+    
+                }
+            );
+    
+        }
+    
+    }
+
     if (msg.type === "end_quiz" || msg.type === "end_nasa" || msg.type === "end_compatibility") {
       const container = document.getElementById("game-container");
       container.classList.remove("active");
