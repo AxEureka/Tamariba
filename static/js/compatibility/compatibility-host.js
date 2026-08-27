@@ -272,45 +272,59 @@ export function startCompatibilityHost(
         },
     
         showResultButton(){
-    
+
             console.log("結果発表ボタン表示");
-    
-            console.log("config=", config);
-    
+        
             const btn =
                 document.createElement("button");
-    
+        
             btn.textContent =
                 "結果発表";
-    
+        
             btn.style.display = "block";
             btn.style.margin = "20px";
             btn.style.fontSize = "24px";
-    
+        
+            // ★一時確認
+            btn.style.position = "relative";
+            btn.style.zIndex = "9999";
+            btn.style.visibility = "visible";
+            btn.style.opacity = "1";
+        
             btn.onclick = ()=>{
-    
+        
                 console.log("結果発表クリック");
-    
+        
                 const socket =
                     getSocket();
-    
+        
                 socket.send(
                     JSON.stringify({
                         type:"ranking_check"
                     })
                 );
-    
+        
                 btn.remove();
             };
-    
+        
             config.appendChild(btn);
-    
+        
             console.log(
                 "append後 children=",
                 config.children.length
             );
-    
-        },
+        
+            console.log(
+                "結果発表ボタン:",
+                btn,
+                "display=",
+                getComputedStyle(btn).display,
+                "visibility=",
+                getComputedStyle(btn).visibility,
+                "opacity=",
+                getComputedStyle(btn).opacity
+            );
+        }
     
         showFinalResultButton(){
     
