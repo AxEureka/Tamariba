@@ -521,8 +521,9 @@ if(msg.type==="ranking_prediction_start"){
     });
 
     // 親（監督）
-    if(myName === hostName){
-    
+   if(myName === hostName){
+
+        // 親の結果待ち画面を表示
         container.innerHTML = `
     
             <h2>結果待ち</h2>
@@ -533,18 +534,41 @@ if(msg.type==="ranking_prediction_start"){
     
         `;
     
-        // ★全員の予想完了を待たずに表示
-        if (
-            compatibilityHostUI &&
-            compatibilityHostUI.showResultButton
-        ) {
+        // ★現在表示されているcontainerに
+        // 結果発表ボタンを追加する
+        if (compatibilityHostUI) {
     
-            compatibilityHostUI.showResultButton();
+            const btn = document.createElement("button");
+    
+            btn.textContent = "結果発表";
+    
+            btn.onclick = () => {
+    
+                if (
+                    socket &&
+                    socket.readyState === WebSocket.OPEN
+                ) {
+    
+                    socket.send(
+                        JSON.stringify({
+                            type: "ranking_result_request"
+                        })
+                    );
+    
+                }
+    
+            };
+    
+            container.appendChild(btn);
+    
+            console.log(
+                "親画面に結果発表ボタンを直接追加",
+                container
+            );
     
         }
     
     }
-
     // 出題者
     else if(isAnswerer){
 
