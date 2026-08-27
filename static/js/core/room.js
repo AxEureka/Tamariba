@@ -817,63 +817,205 @@ if(msg.type==="ranking_result"){
 
 
         // -----------------------------
+        // 今回の結果詳細
+        // -----------------------------
+        
+        let myResult = null;
+        
+        if(
+            msg.question_results &&
+            msg.question_results[myName]
+        ){
+        
+            const results =
+                msg.question_results[myName];
+        
+            myResult =
+                results.find(
+                    r => r.target === answerer
+                );
+        
+        }
+        
+        
+        // -----------------------------
+        // 個人ランキング作成
+        // -----------------------------
+        
+        let individualRanking = [];
+        
+        if(msg.scores){
+        
+            individualRanking =
+                Object.entries(msg.scores)
+                .sort(
+                    (a,b) => b[1] - a[1]
+                );
+        
+        }
+        
+        
+        // -----------------------------
+        // チームランキング作成
+        // -----------------------------
+        
+        let teamRanking = [];
+        
+        if(msg.team_scores){
+        
+            teamRanking =
+                Object.entries(msg.team_scores)
+                .sort(
+                    (a,b) => b[1] - a[1]
+                );
+        
+        }
+        
+        
+        // -----------------------------
+        // 個人ランキングHTML
+        // -----------------------------
+        
+        let individualRankingHTML = "";
+        
+        individualRanking.forEach(
+            ([name, score], rank) => {
+        
+                individualRankingHTML += `
+                    <p>
+                        ${rank + 1}位：
+                        ${name}
+                        ${score}点
+                    </p>
+                `;
+        
+            }
+        );
+        
+        
+        // -----------------------------
+        // チームランキングHTML
+        // -----------------------------
+        
+        let teamRankingHTML = "";
+        
+        teamRanking.forEach(
+            ([team, score], rank) => {
+        
+                teamRankingHTML += `
+                    <p>
+                        ${rank + 1}位：
+                        ${team}
+                        ${score}点
+                    </p>
+                `;
+        
+            }
+        );
+        
+        
+        // -----------------------------
+        // 結果タイプ
+        // -----------------------------
+        
+        let resultType =
+            myResult?.type ?? "―";
+        
+        let resultScore =
+            myResult?.score ?? myQuestionScore;
+        
+        
+        // -----------------------------
         // 表示
         // -----------------------------
-
+        
         container.innerHTML = `
-
+        
             <h2>
                 第${index + 1}問 結果
             </h2>
-
+        
             <h3>
                 問題
             </h3>
-
+        
             <p>
                 ${msg.questions?.[index]?.question
                     ?? msg.questions?.[index]
                     ?? ""}
             </p>
-
+        
+        
             <h3>
                 ${myTeam ?? "自チーム"}の回答者
             </h3>
-
+        
             <p>
                 ${answerer ?? "―"}
             </p>
-
+        
+        
             <h3>
                 回答者の結果
             </h3>
-
+        
             <p>
                 ${answer
                     ? JSON.stringify(answer)
                     : "―"}
             </p>
-
+        
+        
             <h3>
                 あなたの予想
             </h3>
-
+        
             <p>
                 ${myPrediction
                     ? JSON.stringify(myPrediction)
                     : "―"}
             </p>
-
+        
+        
+            <h3>
+                あなたの結果
+            </h3>
+        
+            <p>
+                ${resultType}
+            </p>
+        
+        
             <h3>
                 あなたの得点
             </h3>
-
+        
             <p>
-                ${myQuestionScore}点
+                ${resultScore}点
             </p>
-
+        
+        
+            <hr>
+        
+        
+            <h3>
+                個人ランキング
+            </h3>
+        
+            <div>
+                ${individualRankingHTML}
+            </div>
+        
+        
+            <h3>
+                チームランキング
+            </h3>
+        
+            <div>
+                ${teamRankingHTML}
+            </div>
+        
         `;
-
     }
 
 }
