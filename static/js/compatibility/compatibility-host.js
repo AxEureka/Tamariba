@@ -231,6 +231,14 @@ export function startCompatibilityHost(
     
         showTeams,
     
+        getQuestionCount(){
+    
+            return Number(
+                questionCount.value
+            );
+    
+        },
+    
         showPredictionButton(){
     
             console.log("予測開始ボタン表示");
@@ -263,84 +271,124 @@ export function startCompatibilityHost(
     
         },
     
-                showResultButton(){
-
-                    console.log("結果発表ボタン表示");
-                
-                    console.log("config=", config);
-                
-                    const btn =
-                        document.createElement("button");
-                
-                    btn.textContent =
-                        "結果発表";
-                
-                    btn.style.display = "block";
-                    btn.style.margin = "20px";
-                    btn.style.fontSize = "24px";
-                
-                    btn.onclick = ()=>{
-                
-                        console.log("結果発表クリック");
-                
-                        const socket =
-                            getSocket();
-                
-                        socket.send(
-                            JSON.stringify({
-                                type:"ranking_check"
-                            })
-                        );
-                
-                        btn.remove();
-                    };
-                
-                    config.appendChild(btn);
-                
-                    console.log(
-                        "append後 children=",
-                        config.children.length
-                    );
-                },
-        
-                showNextButton(){
-        
-                    console.log("次の問題ボタン表示");
-        
-                    const btn =
-                        document.createElement("button");
-        
-                    btn.textContent =
-                        "次の問題";
-        
-                    btn.onclick = ()=>{
-        
-                        const socket =
-                            getSocket();
-        
-                        socket.send(
-                            JSON.stringify({
-        
-                                type:
-                                    "ranking_next_question"
-        
-                            })
-                        );
-        
-                        btn.remove();
-        
-                    };
-        
-                    config.appendChild(btn);
-        
-                },
-        
-                setProgress(textValue){
-        
-                    progress.textContent =
-                        textValue;
-        
-                }    
+        showResultButton(){
+    
+            console.log("結果発表ボタン表示");
+    
+            console.log("config=", config);
+    
+            const btn =
+                document.createElement("button");
+    
+            btn.textContent =
+                "結果発表";
+    
+            btn.style.display = "block";
+            btn.style.margin = "20px";
+            btn.style.fontSize = "24px";
+    
+            btn.onclick = ()=>{
+    
+                console.log("結果発表クリック");
+    
+                const socket =
+                    getSocket();
+    
+                socket.send(
+                    JSON.stringify({
+                        type:"ranking_check"
+                    })
+                );
+    
+                btn.remove();
+            };
+    
+            config.appendChild(btn);
+    
+            console.log(
+                "append後 children=",
+                config.children.length
+            );
+    
+        },
+    
+        showFinalResultButton(){
+    
+            console.log("最終結果ボタン表示");
+    
+            const btn =
+                document.createElement("button");
+    
+            btn.textContent =
+                "最終結果を見る";
+    
+            btn.style.display = "block";
+            btn.style.margin = "20px";
+            btn.style.fontSize = "24px";
+    
+            btn.onclick = ()=>{
+    
+                console.log(
+                    "最終結果ボタンクリック"
+                );
+    
+                const socket =
+                    getSocket();
+    
+                socket.send(
+                    JSON.stringify({
+                        type:
+                            "ranking_final_check"
+                    })
+                );
+    
+                btn.remove();
+    
+            };
+    
+            config.appendChild(btn);
+    
+        },
+    
+        showNextButton(){
+    
+            console.log("次の問題ボタン表示");
+    
+            const btn =
+                document.createElement("button");
+    
+            btn.textContent =
+                "次の問題";
+    
+            btn.onclick = ()=>{
+    
+                const socket =
+                    getSocket();
+    
+                socket.send(
+                    JSON.stringify({
+    
+                        type:
+                            "ranking_next_question"
+    
+                    })
+                );
+    
+                btn.remove();
+    
+            };
+    
+            config.appendChild(btn);
+    
+        },
+    
+        setProgress(textValue){
+    
+            progress.textContent =
+                textValue;
+    
+        }
+    
     };
 // =================================
 // 共通関数
