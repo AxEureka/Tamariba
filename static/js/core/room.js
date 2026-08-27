@@ -524,50 +524,17 @@ if(msg.type==="ranking_prediction_start"){
     // 親（監督）
    if(myName === hostName){
 
-        // 親の結果待ち画面を表示
         container.innerHTML = `
     
-            <h2>結果待ち</h2>
+            <h2>
+            結果待ち
+            </h2>
     
             <p>
             予想を受け付けています
             </p>
     
         `;
-    
-        // ★現在表示されているcontainerに
-        // 結果発表ボタンを追加する
-        if (compatibilityHostUI) {
-    
-            const btn = document.createElement("button");
-    
-            btn.textContent = "結果発表";
-    
-            btn.onclick = () => {
-    
-                if (
-                    socket &&
-                    socket.readyState === WebSocket.OPEN
-                ) {
-    
-                    socket.send(
-                        JSON.stringify({
-                            type: "ranking_result_request"
-                        })
-                    );
-    
-                }
-    
-            };
-    
-            container.appendChild(btn);
-    
-            console.log(
-                "親画面に結果発表ボタンを直接追加",
-                container
-            );
-    
-        }
     
     }
     // 出題者
@@ -619,6 +586,23 @@ if(msg.type==="ranking_prediction_progress"){
         compatibilityHostUI.setProgress(
             `予想状況：${msg.done}/${msg.total}人 回答済み`
         );
+
+    }
+
+}
+if(msg.type==="ranking_prediction_complete"){
+
+    console.log(
+        "全員の予想が完了しました"
+    );
+
+    if(
+        myName === hostName &&
+        compatibilityHostUI &&
+        compatibilityHostUI.showResultButton
+    ){
+
+        compatibilityHostUI.showResultButton();
 
     }
 
