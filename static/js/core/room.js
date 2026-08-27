@@ -325,6 +325,7 @@ let rankingMode = "";
 let rankingAnswerers = {};
 let rankingPredictionCount = 0;
 let rankingTotalPredictors = 0;
+let rankingQuestionCount = 0;
 
 // =====================
 // WebSocket 接続（再接続対応）
@@ -456,6 +457,11 @@ if (msg.type === "ranking_question") {
 
     rankingMode = "answering";
     rankingAnswerers = msg.answerers;
+
+    // ★ランキングの全問題数を保存
+    if (msg.total_questions !== undefined) {
+        rankingQuestionCount = msg.total_questions;
+    }
 
 
     // =================================
@@ -667,359 +673,257 @@ if(msg.type==="ranking_result"){
         // =================================
         // 最終問題かどうか
         // =================================
-    
-        const totalQuestions =
-            compatibilityHostUI?.getQuestionCount
-                ? compatibilityHostUI.getQuestionCount()
-                : null;
-    
-    
+        
         if(
-            totalQuestions !== null &&
-            index >= totalQuestions - 1
+            rankingQuestionCount > 0 &&
+            index >= rankingQuestionCount - 1
         ){
-    
+        
             if(
                 compatibilityHostUI &&
                 compatibilityHostUI.showFinalResultButton
             ){
-    
+        
                 compatibilityHostUI.showFinalResultButton();
-    
+        
             }
-    
+        
         }
         else{
-    
+        
             if(
                 compatibilityHostUI &&
                 compatibilityHostUI.showNextButton
             ){
-    
+        
                 compatibilityHostUI.showNextButton();
-    
+        
             }
-    
+        
         }
     
     }
 
 
-    // =====================================
-    // 子画面
-    // =====================================
-
-    else{
-
-        // -----------------------------
-        // 自分のチームを探す
-        // -----------------------------
-
-        let myTeam = null;
-
-        if(msg.teams){
-
-            for(
-                const [teamName, teamInfo]
-                of Object.entries(msg.teams)
-            ){
-
-                if(
-                    teamInfo.members &&
-                    teamInfo.members.includes(myName)
-                ){
-
-                    myTeam = teamName;
-                    break;
-
+            // =====================================
+            // 子画面
+            // =====================================
+        
+            else{
+        
+                // -----------------------------
+                // 自分のチームを探す
+                // -----------------------------
+        
+                let myTeam = null;
+        
+                if(msg.teams){
+        
+                    for(
+                        const [teamName, teamInfo]
+                        of Object.entries(msg.teams)
+                    ){
+        
+                        if(
+                            teamInfo.members &&
+                            teamInfo.members.includes(myName)
+                        ){
+        
+                            myTeam = teamName;
+                            break;
+        
+                        }
+        
+                    }
+        
                 }
-
-            }
-
-        }
-
-
-        // -----------------------------
-        // 自チームの回答者
-        // -----------------------------
-
-        let answerer = null;
-
-        if(
-            msg.question_answerers &&
-            msg.question_answerers[index]
-        ){
-
-            answerer =
-                msg.question_answerers[index][myTeam];
-
-        }
-
-
-        // -----------------------------
-        // 回答者の正解
-        // -----------------------------
-
-        let answer = null;
-
-        if(
-            answerer &&
-            msg.true_answers &&
-            msg.true_answers[index]
-        ){
-
-            answer =
-                msg.true_answers[index][answerer];
-
-        }
-
-
-        // -----------------------------
-        // 自分の予想
-        // -----------------------------
-
-        let myPrediction = null;
-
-        if(
-            msg.predictions &&
-            msg.predictions[myName] &&
-            msg.predictions[myName][index]
-        ){
-
-            const predictionData =
-                msg.predictions[myName][index];
-
-            if(answerer){
-
-                myPrediction =
-                    predictionData[answerer];
-
-            }
-
-        }
-
-
-        // -----------------------------
-        // 自分の今回の得点
-        // -----------------------------
-
-        let myQuestionScore = 0;
-
-        if(
-            msg.question_scores &&
-            msg.question_scores[index]
-        ){
-
-            myQuestionScore =
-                msg.question_scores[index][myName] ?? 0;
-
-        }
-
-
-        // -----------------------------
-        // 今回の結果詳細
-        // -----------------------------
-        
-        let myResult = null;
-        
-        if(
-            msg.question_results &&
-            msg.question_results[myName]
-        ){
-        
-            const results =
-                msg.question_results[myName];
-        
-            myResult =
-                results.find(
-                    r => r.target === answerer
-                );
-        
-        }
         
         
-        // -----------------------------
-        // 個人ランキング作成
-        // -----------------------------
+                // -----------------------------
+                // 自チームの回答者
+                // -----------------------------
         
-        let individualRanking = [];
+                let answerer = null;
         
-        if(msg.scores){
+                if(
+                    msg.question_answerers &&
+                    msg.question_answerers[index]
+                ){
         
-            individualRanking =
-                Object.entries(msg.scores)
-                .sort(
-                    (a,b) => b[1] - a[1]
-                );
+                    answerer =
+                        msg.question_answerers[index][myTeam];
         
-        }
-        
-        
-        // -----------------------------
-        // チームランキング作成
-        // -----------------------------
-        
-        let teamRanking = [];
-        
-        if(msg.team_scores){
-        
-            teamRanking =
-                Object.entries(msg.team_scores)
-                .sort(
-                    (a,b) => b[1] - a[1]
-                );
-        
-        }
+                }
         
         
-        // -----------------------------
-        // 個人ランキングHTML
-        // -----------------------------
+                // -----------------------------
+                // 回答者の答え
+                // -----------------------------
         
-        let individualRankingHTML = "";
+                let answer = null;
         
-        individualRanking.forEach(
-            ([name, score], rank) => {
+                if(
+                    answerer &&
+                    msg.true_answers &&
+                    msg.true_answers[index]
+                ){
         
-                individualRankingHTML += `
+                    answer =
+                        msg.true_answers[index][answerer];
+        
+                }
+        
+        
+                // -----------------------------
+                // 自分の予想
+                // -----------------------------
+        
+                let myPrediction = null;
+        
+                if(
+                    msg.predictions &&
+                    msg.predictions[myName] &&
+                    msg.predictions[myName][index]
+                ){
+        
+                    const predictionData =
+                        msg.predictions[myName][index];
+        
+                    if(answerer){
+        
+                        myPrediction =
+                            predictionData[answerer];
+        
+                    }
+        
+                }
+        
+        
+                // -----------------------------
+                // 自分の今回の得点
+                // -----------------------------
+        
+                let myQuestionScore = 0;
+        
+                if(
+                    msg.question_scores &&
+                    msg.question_scores[index]
+                ){
+        
+                    myQuestionScore =
+                        msg.question_scores[index][myName] ?? 0;
+        
+                }
+        
+        
+                // -----------------------------
+                // 今回の結果詳細
+                // -----------------------------
+        
+                let myResult = null;
+        
+                if(
+                    msg.question_results &&
+                    msg.question_results[myName]
+                ){
+        
+                    const results =
+                        msg.question_results[myName];
+        
+                    myResult =
+                        results.find(
+                            r => r.target === answerer
+                        );
+        
+                }
+        
+        
+                // -----------------------------
+                // 結果タイプ
+                // -----------------------------
+        
+                let resultType =
+                    myResult?.type ?? "―";
+        
+                let resultScore =
+                    myResult?.score ?? myQuestionScore;
+        
+        
+                // -----------------------------
+                // 通常の結果表示
+                // -----------------------------
+        
+                container.innerHTML = `
+        
+                    <h2>
+                        第${index + 1}問 結果
+                    </h2>
+        
+                    <h3>
+                        問題
+                    </h3>
+        
                     <p>
-                        ${rank + 1}位：
-                        ${name}
-                        ${score}点
+                        ${msg.questions?.[index]?.question
+                            ?? msg.questions?.[index]
+                            ?? ""}
                     </p>
+        
+        
+                    <h3>
+                        ${myTeam ?? "自チーム"}の回答者
+                    </h3>
+        
+                    <p>
+                        ${answerer ?? "―"}
+                    </p>
+        
+        
+                    <h3>
+                        回答者の答え
+                    </h3>
+        
+                    <p>
+                        ${answer
+                            ? JSON.stringify(answer)
+                            : "―"}
+                    </p>
+        
+        
+                    <h3>
+                        あなたの予想
+                    </h3>
+        
+                    <p>
+                        ${myPrediction
+                            ? JSON.stringify(myPrediction)
+                            : "―"}
+                    </p>
+        
+        
+                    <h3>
+                        あなたの結果
+                    </h3>
+        
+                    <p>
+                        ${resultType}
+                    </p>
+        
+        
+                    <h3>
+                        あなたの得点
+                    </h3>
+        
+                    <p>
+                        ${resultScore}点
+                    </p>
+        
                 `;
         
             }
-        );
         
-        
-        // -----------------------------
-        // チームランキングHTML
-        // -----------------------------
-        
-        let teamRankingHTML = "";
-        
-        teamRanking.forEach(
-            ([team, score], rank) => {
-        
-                teamRankingHTML += `
-                    <p>
-                        ${rank + 1}位：
-                        ${team}
-                        ${score}点
-                    </p>
-                `;
-        
-            }
-        );
-        
-        
-        // -----------------------------
-        // 結果タイプ
-        // -----------------------------
-        
-        let resultType =
-            myResult?.type ?? "―";
-        
-        let resultScore =
-            myResult?.score ?? myQuestionScore;
-        
-        
-        // -----------------------------
-        // 表示
-        // -----------------------------
-        
-        container.innerHTML = `
-        
-            <h2>
-                第${index + 1}問 結果
-            </h2>
-        
-            <h3>
-                問題
-            </h3>
-        
-            <p>
-                ${msg.questions?.[index]?.question
-                    ?? msg.questions?.[index]
-                    ?? ""}
-            </p>
-        
-        
-            <h3>
-                ${myTeam ?? "自チーム"}の回答者
-            </h3>
-        
-            <p>
-                ${answerer ?? "―"}
-            </p>
-        
-        
-            <h3>
-                回答者の結果
-            </h3>
-        
-            <p>
-                ${answer
-                    ? JSON.stringify(answer)
-                    : "―"}
-            </p>
-        
-        
-            <h3>
-                あなたの予想
-            </h3>
-        
-            <p>
-                ${myPrediction
-                    ? JSON.stringify(myPrediction)
-                    : "―"}
-            </p>
-        
-        
-            <h3>
-                あなたの結果
-            </h3>
-        
-            <p>
-                ${resultType}
-            </p>
-        
-        
-            <h3>
-                あなたの得点
-            </h3>
-        
-            <p>
-                ${resultScore}点
-            </p>
-        
-        
-            <hr>
-        
-        
-            <h3>
-                個人ランキング
-            </h3>
-        
-            <div>
-                ${individualRankingHTML}
-            </div>
-        
-        
-            <h3>
-                チームランキング
-            </h3>
-        
-            <div>
-                ${teamRankingHTML}
-            </div>
-        
-        `;
-    }
-
-}
-
+        }
+    
     if(msg.type==="ranking_final_result"){
 
         const container =
