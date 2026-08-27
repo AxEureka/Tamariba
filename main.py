@@ -1502,14 +1502,25 @@ async def handle_compatibility(room,data):
 
 
 
-        done=len(
+        # -------------------------
+        # 相性診断の回答進捗
+        # -------------------------
+        
+        done = len(
             room["compatibility"]["answers"]
         )
-
-        total=len(
-            room["members"]
-        )-1
-
+        
+        total = max(
+            0,
+            len(room["members"]) - 1
+        )
+        
+        print(
+            "相性診断回答進捗:",
+            done,
+            "/",
+            total
+        )
 
 
         await broadcast(
@@ -1530,7 +1541,7 @@ async def handle_compatibility(room,data):
 
 
 
-        if done>=total:
+        if total > 0 and done >= total:
 
 
             players=list(
@@ -2189,14 +2200,24 @@ async def handle_ranking(room,data):
         
             game["true_answers"][index][name]=ranking
         
-            done_count=len(
-                game["true_answers"][index]
+            # -------------------------
+            # ランキング回答者の進捗
+            # -------------------------
+            
+            done_count = len(
+                game["true_answers"].get(index, {})
             )
-        
-            need_count=len(
+            
+            need_count = len(
                 game["current_answerers"]
             )
-        
+            
+            print(
+                "ランキング回答進捗:",
+                done_count,
+                "/",
+                need_count
+            )        
             # ★回答進捗を常時送る
             await broadcast(
                 room,
@@ -2207,7 +2228,7 @@ async def handle_ranking(room,data):
                 }
             )
         
-            if done_count >= need_count:
+            if need_count > 0 and done_count >= need_count:
         
                 game["true_answer_history"][index] = (
                     game["true_answers"][index].copy()
@@ -2373,17 +2394,17 @@ async def handle_ranking(room,data):
             )
             
             
-            if total_done >= total_need:
+            if total_need == 0 or total_done >= total_need:
 
-                game["mode"]="result"
+                game["mode"] = "result"
             
                 await broadcast(
                     room,
                     {
-                        "type":"ranking_prediction_complete"
+                        "type":
+                            "ranking_prediction_complete"
                     }
                 )
-
 
     elif msg_type=="start_ranking_prediction":
 
@@ -2759,6 +2780,14 @@ async def start_next_ranking_question(room):
     game["current_answerers"]=answerers
 
 
+    # =========================
+    # この問題の進捗を初期化
+    # =========================
+    
+    game["prediction_done"] = {}
+    game["answer_done"] = {}
+    
+    
     # =========================
     # 問題ごとの回答者履歴を保存
     # =========================
