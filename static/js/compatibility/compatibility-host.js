@@ -295,7 +295,7 @@ export function startCompatibilityHost(
         
                 socket.send(
                     JSON.stringify({
-                        type:"ranking_check"
+                        type:"ranking_show_result"
                     })
                 );
         
