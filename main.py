@@ -122,79 +122,42 @@ def create_room_data(
             "teams":{},
 
             # ranking game
-           "ranking_game":{
+            "ranking_game": {
 
-            "mode":"",
-            "question_count":0,
-        
-            # 現在何問目か
-            "current_index":0,
-        
-            # 出題する問題
-            "questions":[],
-        
-            # 現在の問題
-            "current_question":{},
-        
-            # チームの順番
-            "team_order":[],
-        
-            # チーム内の回答者ローテーション
-            "team_members_order":{},
-        
-            "current_team_index":0,
-            "current_member_index":{},
-        
-            # 現在の問題の回答者
-            "current_answerers":{},
-        
-            # --------------------------------
-            # 回答・予想
-            # --------------------------------
-        
-            # 問題ごとの正解
-            # {
-            #   0: {
-            #       "田中": [1,3,2,...],
-            #       "佐藤": [2,1,3,...]
-            #   }
-            # }
-            "true_answers":{},
-        
-            # 現在の問題での予想
-            "predictions":{},
-        
-            # 問題ごとの予想履歴
-            "prediction_history":{},
-        
-            # 問題ごとの回答者履歴
-            "question_answerers":{},
-        
-            # 問題ごとの正解履歴
-            "true_answer_history":{},
-        
-            # --------------------------------
-            # 得点
-            # --------------------------------
-        
-            # 累積個人得点
-            "scores":{},
-        
-            # 累積チーム得点
-            "team_scores":{},
-        
-            # 問題ごとの個人得点
-            "question_scores":{},
-        
-            # すでに採点した問題
-            "scored_questions":set(),
-        
-            # 予想完了者
-            "prediction_done":{},
-        
-            "answer_done":{}
-        
-        }
+                # 現在の画面状態
+                "mode": "waiting",
+            
+                # 問題
+                "question_count": 0,
+                "current_index": 0,
+                "questions": [],
+                "current_question": {},
+            
+                # チーム・回答者ローテーション
+                "team_order": [],
+                "team_members_order": {},
+                "current_member_index": {},
+                "current_answerers": {},
+            
+                # 現在までの回答・予想
+                "true_answers": {},
+                "predictions": {},
+            
+                # 履歴
+                "question_answerers": {},
+                "prediction_history": {},
+                "true_answer_history": {},
+            
+                # 得点
+                "scores": {},
+                "team_scores": {},
+                "question_scores": {},
+            
+                # 現在の問題の進捗
+                "prediction_done": {},
+                "answer_done": {}
+            
+            }
     }
 }
 
@@ -2156,8 +2119,8 @@ async def handle_ranking(room,data):
             "team_scores":{},
         
             "question_scores":{},
-        
-            "scored_questions":set(),
+
+            "scored_questions": set(),
         
             # 進行管理
             "prediction_done":{},
@@ -2229,29 +2192,25 @@ async def handle_ranking(room,data):
             )
         
             if need_count > 0 and done_count >= need_count:
-        
+
                 game["true_answer_history"][index] = (
                     game["true_answers"][index].copy()
                 )
-        
-                game["mode"]="waiting_prediction"
-        
+            
                 await broadcast(
                     room,
                     {
-                        "type":
-                            "ranking_answer_complete",
-        
+                        "type": "ranking_answer_complete",
+            
                         "answerers":
                             game["current_answerers"],
-        
+            
                         "question":
                             game["current_question"]
                     }
-                )
+                )    
     
-    
-        else:
+        elif data.get("answer_type") == "prediction":
 
             # =====================
             # 自分のチームを確認
@@ -2396,42 +2355,36 @@ async def handle_ranking(room,data):
             
             if total_need == 0 or total_done >= total_need:
 
-                game["mode"] = "result"
-            
                 await broadcast(
                     room,
                     {
-                        "type":
-                            "ranking_prediction_complete"
+                        "type": "ranking_prediction_complete"
                     }
                 )
 
-    elif msg_type=="start_ranking_prediction":
+    elif msg_type == "start_ranking_prediction":
 
-        game["mode"]="prediction"
-    
+        game["mode"] = "prediction"
     
         await broadcast(
             room,
             {
-                "type":
-                    "ranking_prediction_start",
+                "type": "ranking_phase",
     
-                "answerers":
-                    game["current_answerers"],
+                "phase": "prediction",
     
                 "question":
                     game["current_question"],
     
-                "teams":
-                    room["compatibility"]["teams"],
+                "answerers":
+                    game["current_answerers"],
     
-                "players":
-                    list(room["members"])
+                "teams":
+                    room["compatibility"]["teams"]
             }
         )
-
-    elif msg_type=="ranking_check":
+        
+    elif msg_type == "ranking_show_result":
 
         game=room["compatibility"]["ranking_game"]
     
@@ -2556,10 +2509,16 @@ async def handle_ranking(room,data):
         # 採点済みとして記録
         # =========================
     
-        game["scored_questions"].add(
-            index
+        game["scored_questions"].add(index)
+
+        game["mode"] = "result"
+
+        is_final = (
+            game["current_index"]
+            >= len(game["questions"])
         )
-    
+        
+        await broadcast(...)    
     
         # =========================
         # 結果送信
@@ -2573,6 +2532,8 @@ async def handle_ranking(room,data):
         
                 "question_index":
                     index,
+
+                "is_final": is_final,
         
                 "true_answers":
                     game["true_answers"],
@@ -2596,7 +2557,12 @@ async def handle_ranking(room,data):
 
     elif msg_type=="ranking_final":
 
-        game=room["compatibility"]["ranking_game"]
+        game = room["compatibility"]["ranking_game"]
+
+        if game["mode"] != "result":
+            return
+    
+        game["mode"] = "final"
     
     
         # =========================
@@ -2725,14 +2691,17 @@ async def handle_ranking(room,data):
             }
         )
     
-    elif msg_type=="ranking_next_question":
+    elif msg_type == "ranking_next_question":
 
-        game["prediction_done"]={}
-        game["answer_done"]={}
-        game["current_answerers"]={}
+        game = room["compatibility"]["ranking_game"]
+    
+        game["mode"] = "answering"
+    
+        game["prediction_done"] = {}
+        game["answer_done"] = {}
+        game["current_answerers"] = {}
     
         await start_next_ranking_question(room)
-
 
 
 # ==================================================
