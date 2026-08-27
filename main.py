@@ -2181,43 +2181,49 @@ async def handle_ranking(room,data):
     
     
         if data.get("answer_type")=="true":
-    
+
             game["true_answers"].setdefault(
                 index,
                 {}
             )
-    
+        
             game["true_answers"][index][name]=ranking
-    
-    
+        
             done_count=len(
                 game["true_answers"][index]
             )
-    
+        
             need_count=len(
                 game["current_answerers"]
             )
-    
-    
+        
+            # ★回答進捗を常時送る
+            await broadcast(
+                room,
+                {
+                    "type": "ranking_answer_progress",
+                    "done": done_count,
+                    "total": need_count
+                }
+            )
+        
             if done_count >= need_count:
-
+        
                 game["true_answer_history"][index] = (
                     game["true_answers"][index].copy()
                 )
-            
-            
+        
                 game["mode"]="waiting_prediction"
-            
-            
+        
                 await broadcast(
                     room,
                     {
                         "type":
                             "ranking_answer_complete",
-            
+        
                         "answerers":
                             game["current_answerers"],
-            
+        
                         "question":
                             game["current_question"]
                     }
