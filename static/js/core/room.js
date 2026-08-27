@@ -520,24 +520,30 @@ if(msg.type==="ranking_prediction_start"){
 
     });
 
-
     // 親（監督）
     if(myName === hostName){
-
-        container.innerHTML=`
-
-            <h2>
-            予測状況
-            </h2>
-
+    
+        container.innerHTML = `
+    
+            <h2>結果待ち</h2>
+    
             <p>
-            参加者の回答を待っています
+            予想を受け付けています
             </p>
-
+    
         `;
-
+    
+        // ★全員の予想完了を待たずに表示
+        if (
+            compatibilityHostUI &&
+            compatibilityHostUI.showResultButton
+        ) {
+    
+            compatibilityHostUI.showResultButton();
+    
+        }
+    
     }
-
 
     // 出題者
     else if(isAnswerer){
@@ -592,118 +598,320 @@ if(msg.type==="ranking_prediction_progress"){
     }
 
 }
-if(msg.type==="ranking_prediction_complete"){
-
-    console.log(
-        "予想完了、結果表示ボタン表示"
-    );
-
-
-    if(
-        myName === hostName &&
-        compatibilityHostUI
-    ){
-
-        compatibilityHostUI.showResultButton();
-
-    }
-
 }
 
 if(msg.type==="ranking_result"){
-
 
     const container =
         document.getElementById("game-container");
 
 
+    // =====================================
+    // 現在の問題番号
+    // =====================================
 
-    // =====================
+    const index = msg.question_index;
+
+
+    // =====================================
     // 親画面
-    // =====================
+    // =====================================
+
     if(myName === hostName){
 
-        container.innerHTML = `
-    
-        <h2>
-        結果発表
-        </h2>
-    
-        <h3>
-        出題者のランキング
-        </h3>
-    
-        <p>
-        ${JSON.stringify(msg.true_answers)}
-        </p>
-    
-        <h3>
-        全員の結果
-        </h3>
-    
-        <div id="all-result">
-        結果一覧を表示
-        </div>
-    
-        `;
-    
-        if(
-            compatibilityHostUI &&
-            compatibilityHostUI.showNextButton
-        ){
-    
-            compatibilityHostUI.showNextButton();
-    
+        let teamScoreHTML = "";
+
+        if(msg.team_scores){
+
+            for(
+                const [team, score]
+                of Object.entries(msg.team_scores)
+            ){
+
+                teamScoreHTML += `
+                    <p>
+                        ${team}：
+                        <strong>${score}点</strong>
+                    </p>
+                `;
+
+            }
+
         }
-    
+
+
+        container.innerHTML = `
+
+            <h2>
+                第${index + 1}問 結果
+            </h2>
+
+            <h3>
+                各チーム得点
+            </h3>
+
+            <div>
+                ${teamScoreHTML}
+            </div>
+
+        `;
+
+
+        // =================================
+        // 最終問題かどうか
+        // =================================
+
+        const totalQuestions =
+            compatibilityHostUI?.getQuestionCount
+                ? compatibilityHostUI.getQuestionCount()
+                : null;
+
+
+        if(
+            totalQuestions !== null &&
+            index >= totalQuestions - 1
+        ){
+
+            if(
+                compatibilityHostUI &&
+                compatibilityHostUI.showFinalResultButton
+            ){
+
+                compatibilityHostUI.showFinalResultButton();
+
+            }
+
+        }
+        else{
+
+            if(
+                compatibilityHostUI &&
+                compatibilityHostUI.showNextButton
+            ){
+
+                compatibilityHostUI.showNextButton();
+
+            }
+
+        }
+
     }
 
-    // =====================
-    // 子画面
-    // =====================
-    else{
+if(msg.type==="ranking_final_result"){
 
+    const container =
+        document.getElementById("game-container");
 
-        container.innerHTML = `
+    container.innerHTML = `
 
         <h2>
-        結果発表
+            最終結果
         </h2>
 
-
         <h3>
-        出題者のランキング
+            チームランキング
         </h3>
 
-        <p>
-        ${JSON.stringify(msg.true_answers)}
-        </p>
+        <div id="final-team-ranking"></div>
 
+    `;
 
-        <h3>
-        あなたの予想
-        </h3>
+    const rankingBox =
+        document.getElementById("final-team-ranking");
 
-        <p>
-        ${JSON.stringify(msg.predictions)}
-        </p>
+    if(msg.team_ranking){
 
+        msg.team_ranking.forEach(
+            ([team, score], index) => {
 
-        <h3>
-        得点
-        </h3>
+                rankingBox.innerHTML += `
+                    <p>
+                        ${index + 1}位：
+                        ${team}
+                        ${score}点
+                    </p>
+                `;
 
-        <p>
-        ${JSON.stringify(msg.scores)}点
-        </p>
-
-        `;
-
+            }
+        );
 
     }
 
 }
 
+
+    // =====================================
+    // 子画面
+    // =====================================
+
+    else{
+
+        // -----------------------------
+        // 自分のチームを探す
+        // -----------------------------
+
+        let myTeam = null;
+
+        if(msg.teams){
+
+            for(
+                const [teamName, teamInfo]
+                of Object.entries(msg.teams)
+            ){
+
+                if(
+                    teamInfo.members &&
+                    teamInfo.members.includes(myName)
+                ){
+
+                    myTeam = teamName;
+                    break;
+
+                }
+
+            }
+
+        }
+
+
+        // -----------------------------
+        // 自チームの回答者
+        // -----------------------------
+
+        let answerer = null;
+
+        if(
+            msg.question_answerers &&
+            msg.question_answerers[index]
+        ){
+
+            answerer =
+                msg.question_answerers[index][myTeam];
+
+        }
+
+
+        // -----------------------------
+        // 回答者の正解
+        // -----------------------------
+
+        let answer = null;
+
+        if(
+            answerer &&
+            msg.true_answers &&
+            msg.true_answers[index]
+        ){
+
+            answer =
+                msg.true_answers[index][answerer];
+
+        }
+
+
+        // -----------------------------
+        // 自分の予想
+        // -----------------------------
+
+        let myPrediction = null;
+
+        if(
+            msg.predictions &&
+            msg.predictions[myName] &&
+            msg.predictions[myName][index]
+        ){
+
+            const predictionData =
+                msg.predictions[myName][index];
+
+            if(answerer){
+
+                myPrediction =
+                    predictionData[answerer];
+
+            }
+
+        }
+
+
+        // -----------------------------
+        // 自分の今回の得点
+        // -----------------------------
+
+        let myQuestionScore = 0;
+
+        if(
+            msg.question_scores &&
+            msg.question_scores[index]
+        ){
+
+            myQuestionScore =
+                msg.question_scores[index][myName] ?? 0;
+
+        }
+
+
+        // -----------------------------
+        // 表示
+        // -----------------------------
+
+        container.innerHTML = `
+
+            <h2>
+                第${index + 1}問 結果
+            </h2>
+
+            <h3>
+                問題
+            </h3>
+
+            <p>
+                ${msg.questions?.[index]?.question
+                    ?? msg.questions?.[index]
+                    ?? ""}
+            </p>
+
+            <h3>
+                ${myTeam ?? "自チーム"}の回答者
+            </h3>
+
+            <p>
+                ${answerer ?? "―"}
+            </p>
+
+            <h3>
+                回答者の結果
+            </h3>
+
+            <p>
+                ${answer
+                    ? JSON.stringify(answer)
+                    : "―"}
+            </p>
+
+            <h3>
+                あなたの予想
+            </h3>
+
+            <p>
+                ${myPrediction
+                    ? JSON.stringify(myPrediction)
+                    : "―"}
+            </p>
+
+            <h3>
+                あなたの得点
+            </h3>
+
+            <p>
+                ${myQuestionScore}点
+            </p>
+
+        `;
+
+    }
+
+}
     if (msg.type === "end_quiz" || msg.type === "end_nasa" || msg.type === "end_compatibility") {
       const container = document.getElementById("game-container");
       container.classList.remove("active");
