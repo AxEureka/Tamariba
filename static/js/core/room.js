@@ -627,84 +627,82 @@ if(msg.type==="ranking_result"){
 
     if(myName === hostName){
 
-        let teamScoreHTML = "";
-
+        console.log(
+            "親画面：結果受信",
+            index + 1,
+            "問目"
+        );
+    
+        // =================================
+        // 結果表示
+        // =================================
+    
+        let teamScoreText = "";
+    
         if(msg.team_scores){
-
+    
             for(
                 const [team, score]
                 of Object.entries(msg.team_scores)
             ){
-
-                teamScoreHTML += `
-                    <p>
-                        ${team}：
-                        <strong>${score}点</strong>
-                    </p>
-                `;
-
+    
+                teamScoreText +=
+                    `${team}：${score}点　`;
             }
-
+    
         }
-
-
-        container.innerHTML = `
-
-            <h2>
-                第${index + 1}問 結果
-            </h2>
-
-            <h3>
-                各チーム得点
-            </h3>
-
-            <div>
-                ${teamScoreHTML}
-            </div>
-
-        `;
-
-
+    
+        if(
+            compatibilityHostUI &&
+            compatibilityHostUI.setProgress
+        ){
+    
+            compatibilityHostUI.setProgress(
+                `第${index + 1}問 結果　｜　${teamScoreText}`
+            );
+    
+        }
+    
+    
         // =================================
         // 最終問題かどうか
         // =================================
-
+    
         const totalQuestions =
             compatibilityHostUI?.getQuestionCount
                 ? compatibilityHostUI.getQuestionCount()
                 : null;
-
-
+    
+    
         if(
             totalQuestions !== null &&
             index >= totalQuestions - 1
         ){
-
+    
             if(
                 compatibilityHostUI &&
                 compatibilityHostUI.showFinalResultButton
             ){
-
+    
                 compatibilityHostUI.showFinalResultButton();
-
+    
             }
-
+    
         }
         else{
-
+    
             if(
                 compatibilityHostUI &&
                 compatibilityHostUI.showNextButton
             ){
-
+    
                 compatibilityHostUI.showNextButton();
-
+    
             }
-
+    
         }
-
+    
     }
-
 
 
     // =====================================
