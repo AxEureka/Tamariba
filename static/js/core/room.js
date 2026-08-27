@@ -500,62 +500,59 @@ if (msg.type === "ranking_question") {
         }
     
     }    
-if(msg.type==="ranking_prediction_start"){
+if(msg.type === "ranking_phase" &&
+   msg.phase === "prediction"){
 
     const container =
         document.getElementById("game-container");
 
 
     // 出題者か確認
-    let isAnswerer=false;
-
+    let isAnswerer = false;
 
     Object.values(
         msg.answerers
-    )
-    .forEach(name=>{
+    ).forEach(name => {
 
-        if(name===myName){
-            isAnswerer=true;
+        if(name === myName){
+            isAnswerer = true;
         }
 
     });
 
-    // 親（監督）
-   if(myName === hostName){
+
+    // =========================
+    // 親
+    // =========================
+
+    if(myName === hostName){
 
         container.innerHTML = `
-    
-            <h2>
-            結果待ち
-            </h2>
-    
-            <p>
-            予想を受け付けています
-            </p>
-    
+            <h2>結果待ち</h2>
+            <p>予想を受け付けています</p>
         `;
-    
+
     }
+
+
+    // =========================
     // 出題者
+    // =========================
+
     else if(isAnswerer){
 
-        container.innerHTML=`
-
-            <h2>
-            予測中です
-            </h2>
-
-            <p>
-            他の参加者の予想を待っています
-            </p>
-
+        container.innerHTML = `
+            <h2>予測中です</h2>
+            <p>他の参加者の予想を待っています</p>
         `;
 
     }
 
 
+    // =========================
     // 予想者
+    // =========================
+
     else{
 
         showRankingPrediction(
@@ -566,8 +563,7 @@ if(msg.type==="ranking_prediction_start"){
 
     }
 
-}
-      
+}      
 if(msg.type==="ranking_prediction_progress"){
 
     console.log(
