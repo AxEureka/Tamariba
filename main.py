@@ -2598,29 +2598,50 @@ async def handle_ranking(room,data):
         
                 "question_index":
                     index,
-
-                "is_final": is_final,
         
+                "is_final":
+                    is_final,
+        
+                # 現在までの正解
                 "true_answers":
                     game["true_answers"],
         
+                # 現在までの予想
                 "predictions":
                     game["predictions"],
         
+                # 問題ごとの得点
                 "question_scores":
                     game["question_scores"],
         
+                # 今回の結果詳細
                 "question_results":
                     question_results,
         
+                # 累積個人得点
                 "scores":
                     game["scores"],
         
+                # 累積チーム得点
                 "team_scores":
-                    game["team_scores"]
+                    game["team_scores"],
+        
+                # ★追加
+                # 問題一覧
+                "questions":
+                    game["questions"],
+        
+                # ★追加
+                # 各問題の回答者
+                "question_answerers":
+                    game["question_answerers"],
+        
+                # ★追加
+                # チーム情報
+                "teams":
+                    room["compatibility"]["teams"]
             }
         )
-
     elif msg_type=="ranking_final":
 
         game = room["compatibility"]["ranking_game"]
