@@ -240,40 +240,41 @@ export function startCompatibilityHost(
         },
     
         showPredictionButton(){
-    
+
             console.log("予測開始ボタン表示");
-    
+        
+            // 現在のUIを消す
+            config.innerHTML = "";
+        
             const btn =
                 document.createElement("button");
-    
+        
             btn.textContent =
                 "予測開始";
-    
+        
             btn.onclick = ()=>{
-    
+        
                 const socket =
                     getSocket();
-    
+        
                 socket.send(
                     JSON.stringify({
-    
-                        type:
-                        "start_ranking_prediction"
-    
+                        type: "start_ranking_prediction"
                     })
                 );
-    
-                btn.remove();
-    
+        
+                // 予測開始後はボタンを消す
+                config.innerHTML = "";
             };
-    
+        
             config.appendChild(btn);
-    
-        },
-    
+        
+        },    
         showResultButton(){
 
             console.log("結果発表ボタン表示");
+        
+            config.innerHTML = "";
         
             const btn =
                 document.createElement("button");
@@ -284,12 +285,6 @@ export function startCompatibilityHost(
             btn.style.display = "block";
             btn.style.margin = "20px";
             btn.style.fontSize = "24px";
-        
-            // ★一時確認
-            btn.style.position = "relative";
-            btn.style.zIndex = "9999";
-            btn.style.visibility = "visible";
-            btn.style.opacity = "1";
         
             btn.onclick = ()=>{
         
@@ -304,28 +299,13 @@ export function startCompatibilityHost(
                     })
                 );
         
-                btn.remove();
+                config.innerHTML = "";
+        
             };
         
             config.appendChild(btn);
         
-            console.log(
-                "append後 children=",
-                config.children.length
-            );
-        
-            console.log(
-                "結果発表ボタン:",
-                btn,
-                "display=",
-                getComputedStyle(btn).display,
-                "visibility=",
-                getComputedStyle(btn).visibility,
-                "opacity=",
-                getComputedStyle(btn).opacity
-            );
-        }
-    
+        },    
         showFinalResultButton(){
     
             console.log("最終結果ボタン表示");
