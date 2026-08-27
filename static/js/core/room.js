@@ -598,7 +598,6 @@ if(msg.type==="ranking_prediction_progress"){
     }
 
 }
-}
 
 if(msg.type==="ranking_result"){
 
