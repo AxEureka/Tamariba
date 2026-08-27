@@ -1,4 +1,5 @@
 // 修正版 room.js（ボタン位置調整済 / 再接続対応・巻き添え防止）
+console.log("ROOM JS VERSION: RESULT-BUTTON-DIRECT-2026");
 
 import { startQuizHost } from "/static/js/quiz/quiz-host.js";
 import { startQuizPlayer } from "/static/js/quiz/quiz-player.js";
