@@ -521,19 +521,23 @@ if(msg.type === "ranking_phase" &&
     });
 
 
-    // =========================
-    // 親
-    // =========================
-
+   // 親（監督）
     if(myName === hostName){
-
-        container.innerHTML = `
-            <h2>結果待ち</h2>
-            <p>予想を受け付けています</p>
-        `;
-
+    
+        console.log("親画面：予想受付中");
+    
+        if(
+            compatibilityHostUI &&
+            compatibilityHostUI.setProgress
+        ){
+    
+            compatibilityHostUI.setProgress(
+                "予想を受け付けています"
+            );
+    
+        }
+    
     }
-
 
     // =========================
     // 出題者
