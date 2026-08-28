@@ -112,24 +112,49 @@ export function showCompatibilityTeam(
 
                 container.innerHTML = `
 
-                    <h2>
-                    あなたは
-                    ${teamName}
-                    です
-                    </h2>
-
-
-                    <div>
-                    メンバー:
-                    ${team.members.join(", ")}
+                    <div class="compatibility-player-result">
+                
+                        <h2>
+                            あなたのチーム
+                        </h2>
+                
+                        <div class="compatibility-team-name">
+                            ${teamName}
+                        </div>
+                
+                        <div class="compatibility-result-card">
+                
+                            <h3>
+                                メンバー
+                            </h3>
+                
+                            <div class="compatibility-member-list">
+                                ${team.members
+                                    .map(member =>
+                                        `<div class="compatibility-member">
+                                            ${member}
+                                        </div>`
+                                    )
+                                    .join("")
+                                }
+                            </div>
+                
+                        </div>
+                
+                        <div class="compatibility-result-card">
+                
+                            <h3>
+                                チームの相性
+                            </h3>
+                
+                            <div class="compatibility-score-large">
+                                ${team.shown_score}%
+                            </div>
+                
+                        </div>
+                
                     </div>
-
-
-                    <div>
-                    相性:
-                    ${team.shown_score}%
-                    </div>
-
+                
                 `;
 
 
