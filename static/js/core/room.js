@@ -680,11 +680,8 @@ if(msg.type==="ranking_result"){
             "rankingQuestionCount=", rankingQuestionCount
         );
         
-        if(
-            rankingQuestionCount > 0 &&
-            index >= rankingQuestionCount - 1
-        ){
-        
+        if(msg.is_final){
+
             if(
                 compatibilityHostUI &&
                 compatibilityHostUI.showFinalResultButton
