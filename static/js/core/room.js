@@ -673,6 +673,12 @@ if(msg.type==="ranking_result"){
         // =================================
         // 最終問題かどうか
         // =================================
+
+        console.log(
+            "判定確認",
+            "index=", index,
+            "rankingQuestionCount=", rankingQuestionCount
+        );
         
         if(
             rankingQuestionCount > 0 &&
