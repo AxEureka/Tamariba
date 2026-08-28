@@ -332,7 +332,7 @@ export function startCompatibilityHost(
                 socket.send(
                     JSON.stringify({
                         type:
-                            "ranking_final_check"
+                            "ranking_final"
                     })
                 );
     
