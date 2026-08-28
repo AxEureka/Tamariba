@@ -1,3 +1,4 @@
+
 // ============================================
 // 相性診断・サンレンタン 最終結果UI
 // ============================================
@@ -6,7 +7,7 @@ console.log("compatibility-results loaded");
 
 
 // ============================================
-// 最終結果表示
+// メイン
 // ============================================
 
 export function showCompatibilityFinalResult(
@@ -19,364 +20,1320 @@ export function showCompatibilityFinalResult(
     console.log("最終結果表示", msg);
     console.log("team_matrix", msg.team_matrix);
 
-    container.innerHTML = "";
+    // ----------------------------------------
+    // 自分のチーム
+    // ----------------------------------------
 
-    const wrapper =
-        document.createElement("div");
+    let myTeam = null;
 
-    wrapper.className =
-        "compatibility-ui";
+    if(myName !== hostName && msg.teams){
 
-    // ========================================
-    // タイトル
-    // ========================================
+        for(
+            const [teamName, teamInfo]
+            of Object.entries(msg.teams)
+        ){
 
-    const title =
-        document.createElement("h2");
+            if(
+                Array.isArray(teamInfo.members) &&
+                teamInfo.members.includes(myName)
+            ){
 
-    title.textContent =
-        "最終結果";
+                myTeam = teamName;
+                break;
 
-    wrapper.appendChild(title);
+            }
 
+        }
 
-    // ========================================
-    // チームランキング
-    // ========================================
-
-    const rankingTitle =
-        document.createElement("h3");
-
-    rankingTitle.textContent =
-        "チームランキング";
-
-    wrapper.appendChild(
-        rankingTitle
-    );
-
-
-    const rankingBox =
-        document.createElement("div");
-
-    rankingBox.className =
-        "compatibility-team-list";
+    }
 
 
     // ========================================
-    // team_final_ranking
+    // ランキングページを表示
     // ========================================
 
-    if(
-        msg.team_final_ranking &&
-        Array.isArray(msg.team_final_ranking)
-    ){
+    function showRankingPage(){
 
-        msg.team_final_ranking.forEach(
-            (item, index)=>{
+        container.innerHTML = "";
 
-                /*
-                 * 想定形式
-                 *
-                 * {
-                 *   rank: 1,
-                 *   team: "高類似チーム1",
-                 *   shown_score: 80,
-                 *   actual_score: 75,
-                 *   members: [...]
-                 * }
-                 */
+        const wrapper =
+            document.createElement("div");
 
-                const rank =
-                    item.rank ??
-                    (index + 1);
-
-                const teamName =
-                    item.team ??
-                    `チーム${index + 1}`;
-
-                const card =
-                    document.createElement("div");
-
-                card.className =
-                    "compatibility-team";
+        wrapper.className =
+            "compatibility-ui";
 
 
-                // =================================
-                // 自分のチームか確認
-                // =================================
+        // ====================================
+        // タイトル
+        // ====================================
 
-                let isMyTeam = false;
+        const title =
+            document.createElement("h2");
 
-                if(
-                    Array.isArray(item.members) &&
-                    item.members.includes(myName)
-                ){
+        title.textContent =
+            "🏆 最終結果";
 
-                    isMyTeam = true;
+        title.style.textAlign =
+            "center";
 
-                }
-
-
-                if(isMyTeam){
-
-                    card.style.border =
-                        "3px solid gold";
-
-                    card.style.boxShadow =
-                        "0 0 15px rgba(255,215,0,0.5)";
-
-                }
+        wrapper.appendChild(title);
 
 
-                // =================================
-                // 順位
-                // =================================
+        // ====================================
+        // ランキング表
+        // ====================================
 
-                const rankText =
-                    document.createElement("div");
+        const tableWrapper =
+            document.createElement("div");
 
-                rankText.className =
-                    "compatibility-team-title";
+        tableWrapper.style.overflowX =
+            "auto";
 
-                rankText.textContent =
-                    `${rank}位　${teamName}`;
+        tableWrapper.style.width =
+            "100%";
 
-                card.appendChild(
-                    rankText
+
+        const table =
+            document.createElement("table");
+
+        table.className =
+            "compatibility-ranking-table";
+
+        table.style.width =
+            "100%";
+
+        table.style.borderCollapse =
+            "collapse";
+
+        table.style.margin =
+            "20px auto";
+
+
+        // ====================================
+        // ヘッダー
+        // ====================================
+
+        const thead =
+            document.createElement("thead");
+
+        const headerRow =
+            document.createElement("tr");
+
+        const headers = [
+            "順位",
+            "チーム名",
+            "チーム得点",
+            "表示相性",
+            "実際の相性"
+        ];
+
+
+        headers.forEach(
+            text=>{
+
+                const th =
+                    document.createElement("th");
+
+                th.textContent =
+                    text;
+
+                th.style.border =
+                    "1px solid #ccc";
+
+                th.style.padding =
+                    "10px 8px";
+
+                th.style.textAlign =
+                    "center";
+
+                th.style.background =
+                    "#f5f5f5";
+
+                headerRow.appendChild(
+                    th
                 );
 
+            }
+        );
 
-                // =================================
-                // メンバー
-                // =================================
 
-                if(
-                    Array.isArray(item.members)
-                ){
+        thead.appendChild(
+            headerRow
+        );
 
-                    const memberBox =
-                        document.createElement("div");
+        table.appendChild(
+            thead
+        );
 
-                    item.members.forEach(
-                        member=>{
 
-                            const memberText =
-                                document.createElement("div");
+        // ====================================
+        // 本体
+        // ====================================
 
-                            memberText.className =
-                                "compatibility-member";
+        const tbody =
+            document.createElement("tbody");
 
-                            memberText.textContent =
-                                `・${member}`;
 
-                            memberBox.appendChild(
-                                memberText
-                            );
+        const ranking =
+            Array.isArray(msg.team_final_ranking)
+                ? msg.team_final_ranking.slice(0,5)
+                : [];
+
+
+        if(ranking.length === 0){
+
+            const row =
+                document.createElement("tr");
+
+            const cell =
+                document.createElement("td");
+
+            cell.colSpan = 5;
+
+            cell.textContent =
+                "チームランキングを取得できませんでした。";
+
+            cell.style.textAlign =
+                "center";
+
+            cell.style.padding =
+                "20px";
+
+            row.appendChild(
+                cell
+            );
+
+            tbody.appendChild(
+                row
+            );
+
+        }
+        else{
+
+            ranking.forEach(
+                (item,index)=>{
+
+                    const row =
+                        document.createElement("tr");
+
+
+                    const teamName =
+                        item.team ??
+                        `チーム${index + 1}`;
+
+
+                    // ----------------------------
+                    // 自分のチーム
+                    // ----------------------------
+
+                    const isMyTeam =
+                        myTeam !== null &&
+                        teamName === myTeam;
+
+
+                    if(isMyTeam){
+
+                        row.style.background =
+                            "#fff3a3";
+
+                        row.style.fontWeight =
+                            "bold";
+
+                    }
+
+
+                    // ----------------------------
+                    // 順位
+                    // ----------------------------
+
+                    const rankCell =
+                        document.createElement("td");
+
+                    rankCell.textContent =
+                        `${item.rank ?? index + 1}位`;
+
+                    // ----------------------------
+                    // チーム名
+                    // ----------------------------
+
+                    const teamCell =
+                        document.createElement("td");
+
+                    teamCell.textContent =
+                        teamName;
+
+
+                    // ----------------------------
+                    // チーム得点
+                    // ----------------------------
+
+                    const scoreCell =
+                        document.createElement("td");
+
+                    scoreCell.textContent =
+                        `${item.total_score ?? 0}点`;
+
+
+                    // ----------------------------
+                    // 表示相性
+                    // ----------------------------
+
+                    const shownCell =
+                        document.createElement("td");
+
+                    const shownScore =
+                        item.shown_score;
+
+                    shownCell.textContent =
+                        shownScore !== undefined &&
+                        shownScore !== null
+                            ? `${shownScore}%`
+                            : "―";
+
+
+                    // ----------------------------
+                    // 実際の相性
+                    // ----------------------------
+
+                    const actualCell =
+                        document.createElement("td");
+
+                    const actualScore =
+                        item.actual_score;
+
+                    actualCell.textContent =
+                        actualScore !== undefined &&
+                        actualScore !== null
+                            ? `${actualScore}%`
+                            : "―";
+
+
+                    // ----------------------------
+                    // 共通スタイル
+                    // ----------------------------
+
+                    [
+                        rankCell,
+                        teamCell,
+                        scoreCell,
+                        shownCell,
+                        actualCell
+                    ].forEach(
+                        cell=>{
+
+                            cell.style.border =
+                                "1px solid #ccc";
+
+                            cell.style.padding =
+                                "10px 8px";
+
+                            cell.style.textAlign =
+                                "center";
 
                         }
                     );
 
-                    card.appendChild(
-                        memberBox
+
+                    row.appendChild(
+                        rankCell
+                    );
+
+                    row.appendChild(
+                        teamCell
+                    );
+
+                    row.appendChild(
+                        scoreCell
+                    );
+
+                    row.appendChild(
+                        shownCell
+                    );
+
+                    row.appendChild(
+                        actualCell
+                    );
+
+
+                    tbody.appendChild(
+                        row
                     );
 
                 }
+            );
+
+        }
 
 
-                // =================================
-                // 表示相性
-                // =================================
-
-                if(
-                    item.shown_score !== undefined
-                ){
-
-                    const shownScore =
-                        document.createElement("div");
-
-                    shownScore.className =
-                        "compatibility-score";
-
-                    shownScore.textContent =
-                        `表示相性：${item.shown_score}%`;
-
-                    card.appendChild(
-                        shownScore
-                    );
-
-                }
-
-
-                // =================================
-                // 実際の相性
-                // =================================
-
-                if(
-                    item.actual_score !== undefined
-                ){
-
-                    const actualScore =
-                        document.createElement("div");
-
-                    actualScore.className =
-                        "compatibility-score";
-
-                    actualScore.textContent =
-                        `実際の相性：${item.actual_score}%`;
-
-                    card.appendChild(
-                        actualScore
-                    );
-
-                }
-
-
-                rankingBox.appendChild(
-                    card
-                );
-
-            }
+        table.appendChild(
+            tbody
         );
 
-    }
-    else{
 
-        const empty =
-            document.createElement("p");
-
-        empty.textContent =
-            "チームランキングを取得できませんでした。";
-
-        rankingBox.appendChild(
-            empty
+        tableWrapper.appendChild(
+            table
         );
-
-    }
-
-
-    wrapper.appendChild(
-        rankingBox
-    );
-
-
-    // ========================================
-    // 問題別結果
-    // ========================================
-
-    if(
-        msg.team_matrix
-    ){
-
-        const detailTitle =
-            document.createElement("h3");
-
-        detailTitle.textContent =
-            "問題別結果";
 
         wrapper.appendChild(
-            detailTitle
+            tableWrapper
         );
 
 
-        const detailBox =
+        // ====================================
+        // チーム成績ボタン
+        // ====================================
+
+        const buttonArea =
             document.createElement("div");
 
-        detailBox.className =
-            "compatibility-team-list";
+        buttonArea.style.textAlign =
+            "center";
+
+        buttonArea.style.marginTop =
+            "25px";
 
 
-        Object.entries(
-            msg.team_matrix
-        ).forEach(
-            ([teamName, data])=>{
+        const teamButton =
+            document.createElement("button");
 
-                const card =
-                    document.createElement("div");
+        teamButton.textContent =
+            "チーム成績";
 
-                card.className =
-                    "compatibility-team";
+        teamButton.style.fontSize =
+            "16px";
 
+        teamButton.style.padding =
+            "10px 24px";
 
-                const teamTitle =
-                    document.createElement("div");
-
-                teamTitle.className =
-                    "compatibility-team-title";
-
-                teamTitle.textContent =
-                    teamName;
-
-                card.appendChild(
-                    teamTitle
-                );
+        teamButton.style.cursor =
+            "pointer";
 
 
-                // --------------------------------
-                // データをそのまま確認できる
-                // --------------------------------
-
-                const pre =
-                    document.createElement("pre");
-
-                pre.style.whiteSpace =
-                    "pre-wrap";
-
-                pre.style.wordBreak =
-                    "break-word";
-
-                pre.style.fontSize =
-                    "14px";
-
-                pre.textContent =
-                    JSON.stringify(
-                        data,
-                        null,
-                        2
-                    );
-
-                card.appendChild(
-                    pre
-                );
+        teamButton.onclick =
+            showTeamResultPage;
 
 
-                detailBox.appendChild(
-                    card
-                );
+        buttonArea.appendChild(
+            teamButton
+        );
 
-            }
+        wrapper.appendChild(
+            buttonArea
         );
 
 
+        // ====================================
+        // 終了表示
+        // ====================================
+
+        const closeText =
+            document.createElement("p");
+
+        closeText.style.marginTop =
+            "20px";
+
+        closeText.style.textAlign =
+            "center";
+
+        closeText.style.opacity =
+            "0.7";
+
+        closeText.textContent =
+            "サンレンタン終了";
+
         wrapper.appendChild(
-            detailBox
+            closeText
+        );
+
+
+        container.appendChild(
+            wrapper
         );
 
     }
 
 
     // ========================================
-    // 親・子共通
+    // チーム成績ページ
     // ========================================
 
-    const closeText =
-        document.createElement("p");
+    function showTeamResultPage(){
 
-    closeText.style.marginTop =
-        "20px";
+        container.innerHTML = "";
 
-    closeText.style.opacity =
-        "0.7";
+        const wrapper =
+            document.createElement("div");
 
-    closeText.textContent =
-        "サンレンタン終了";
-
-    wrapper.appendChild(
-        closeText
-    );
+        wrapper.className =
+            "compatibility-ui";
 
 
-    container.appendChild(
+        // ====================================
+        // 表示するチーム
+        // ====================================
+
+        let targetTeam = myTeam;
+
+
+        // 親画面の場合
+        // → 最初はチーム1
+
+        if(!targetTeam){
+
+            const teamNames =
+                Object.keys(
+                    msg.team_matrix || {}
+                );
+
+            targetTeam =
+                teamNames[0] ?? null;
+
+        }
+
+
+        // ====================================
+        // タイトル
+        // ====================================
+
+        const title =
+            document.createElement("h2");
+
+        title.textContent =
+            targetTeam
+                ? `${targetTeam}の成績`
+                : "チーム成績";
+
+        title.style.textAlign =
+            "center";
+
+        wrapper.appendChild(
+            title
+        );
+
+
+        // ====================================
+        // チームデータ
+        // ====================================
+
+        const teamData =
+            targetTeam &&
+            msg.team_matrix
+                ? msg.team_matrix[targetTeam]
+                : null;
+
+
+        if(!teamData){
+
+            const error =
+                document.createElement("p");
+
+            error.textContent =
+                "チーム成績を取得できませんでした。";
+
+            error.style.textAlign =
+                "center";
+
+            wrapper.appendChild(
+                error
+            );
+
+            addBackButton(
+                wrapper
+            );
+
+            container.appendChild(
+                wrapper
+            );
+
+            return;
+
+        }
+
+
+        const members =
+            Array.isArray(teamData.members)
+                ? teamData.members
+                : [];
+
+
+        const questions =
+            Array.isArray(teamData.questions)
+                ? teamData.questions
+                : [];
+
+
+        // ====================================
+        // マトリクス
+        // ====================================
+
+        const matrixWrapper =
+            document.createElement("div");
+
+        matrixWrapper.style.overflowX =
+            "auto";
+
+        matrixWrapper.style.width =
+            "100%";
+
+
+        const table =
+            document.createElement("table");
+
+        table.className =
+            "compatibility-team-matrix";
+
+        table.style.borderCollapse =
+            "collapse";
+
+        table.style.width =
+            "100%";
+
+        table.style.margin =
+            "20px auto";
+
+
+        // ====================================
+        // ヘッダー
+        // ====================================
+
+        const thead =
+            document.createElement("thead");
+
+        const headerRow =
+            document.createElement("tr");
+
+
+        const questionHeader =
+            document.createElement("th");
+
+        questionHeader.textContent =
+            "問題";
+
+        styleHeaderCell(
+            questionHeader
+        );
+
+        headerRow.appendChild(
+            questionHeader
+        );
+
+
+        members.forEach(
+            member=>{
+
+                const th =
+                    document.createElement("th");
+
+                th.textContent =
+                    member;
+
+                styleHeaderCell(
+                    th
+                );
+
+                headerRow.appendChild(
+                    th
+                );
+
+            }
+        );
+
+
+        thead.appendChild(
+            headerRow
+        );
+
+        table.appendChild(
+            thead
+        );
+
+
+        // ====================================
+        // 問題ごとの行
+        // ====================================
+
+        const tbody =
+            document.createElement("tbody");
+
+
+        questions.forEach(
+            questionData=>{
+
+                const row =
+                    document.createElement("tr");
+
+
+                // ----------------------------
+                // 問題
+                // ----------------------------
+
+                const questionCell =
+                    document.createElement("td");
+
+
+                const number =
+                    questionData.number ??
+                    "";
+
+
+                const questionText =
+                    questionData.question ??
+                    "";
+
+
+                questionCell.innerHTML =
+                    `<strong>第${number}問</strong><br>${escapeHTML(questionText)}`;
+
+
+                styleBodyCell(
+                    questionCell
+                );
+
+
+                row.appendChild(
+                    questionCell
+                );
+
+
+                // ----------------------------
+                // メンバー
+                // ----------------------------
+
+                members.forEach(
+                    member=>{
+
+                        const cellData =
+                            questionData.cells?.[member];
+
+
+                        const cell =
+                            document.createElement("td");
+
+
+                        styleBodyCell(
+                            cell
+                        );
+
+
+                        if(!cellData){
+
+                            cell.textContent =
+                                "―";
+
+                            row.appendChild(
+                                cell
+                            );
+
+                            return;
+
+                        }
+
+
+                        // ------------------------
+                        // 役割
+                        // ------------------------
+
+                        if(
+                            cellData.role ===
+                            "answerer"
+                        ){
+
+                            cell.textContent =
+                                "回答者";
+
+                            cell.style.background =
+                                "#e8f4ff";
+
+                        }
+                        else if(
+                            cellData.role ===
+                            "predictor"
+                        ){
+
+                            cell.textContent =
+                                "予想者";
+
+                            cell.style.background =
+                                "#fff4e5";
+
+                        }
+                        else{
+
+                            cell.textContent =
+                                "―";
+
+                        }
+
+
+                        // ------------------------
+                        // クリック可能
+                        // ------------------------
+
+                        cell.style.cursor =
+                            "pointer";
+
+                        cell.title =
+                            "クリックして詳細を見る";
+
+
+                        cell.onclick =
+                            ()=>{
+
+                                if(
+                                    cellData.role ===
+                                    "answerer"
+                                ){
+
+                                    showAnswerDetail(
+                                        member,
+                                        cellData
+                                    );
+
+                                }
+                                else if(
+                                    cellData.role ===
+                                    "predictor"
+                                ){
+
+                                    showPredictionDetail(
+                                        member,
+                                        cellData
+                                    );
+
+                                }
+
+                            };
+
+
+                        row.appendChild(
+                            cell
+                        );
+
+                    }
+                );
+
+
+                tbody.appendChild(
+                    row
+                );
+
+            }
+        );
+
+
+        table.appendChild(
+            tbody
+        );
+
+
+        matrixWrapper.appendChild(
+            table
+        );
+
+        wrapper.appendChild(
+            matrixWrapper
+        );
+
+
+        // ====================================
+        // ランキングへ戻る
+        // ====================================
+
+        addBackButton(
+            wrapper
+        );
+
+
+        container.appendChild(
+            wrapper
+        );
+
+
+        // ====================================
+        // 回答詳細
+        // ====================================
+
+        function showAnswerDetail(
+            member,
+            cellData
+        ){
+
+            const ranking =
+                Array.isArray(cellData.ranking)
+                    ? cellData.ranking
+                    : [];
+
+
+            showModal(
+                `${member}さんの回答`,
+                createRankingList(
+                    ranking
+                )
+            );
+
+        }
+
+
+        // ====================================
+        // 予想詳細
+        // ====================================
+
+        function showPredictionDetail(
+            member,
+            cellData
+        ){
+
+            const ranking =
+                Array.isArray(cellData.ranking)
+                    ? cellData.ranking
+                    : [];
+
+
+            const target =
+                cellData.target ??
+                "―";
+
+
+            const resultList =
+                Array.isArray(cellData.results)
+                    ? cellData.results
+                    : [];
+
+
+            const content =
+                document.createElement("div");
+
+
+            const targetText =
+                document.createElement("p");
+
+            targetText.textContent =
+                `予想対象：${target}`;
+
+            content.appendChild(
+                targetText
+            );
+
+
+            const rankingTitle =
+                document.createElement("h4");
+
+            rankingTitle.textContent =
+                "予想";
+
+            content.appendChild(
+                rankingTitle
+            );
+
+
+            content.appendChild(
+                createRankingList(
+                    ranking
+                )
+            );
+
+
+            // ----------------------------
+            // 判定結果
+            // ----------------------------
+
+            if(resultList.length > 0){
+
+                const result =
+                    resultList[0];
+
+
+                const resultTitle =
+                    document.createElement("h4");
+
+                resultTitle.textContent =
+                    "結果";
+
+                content.appendChild(
+                    resultTitle
+                );
+
+
+                const resultText =
+                    document.createElement("p");
+
+
+                resultText.style.fontWeight =
+                    "bold";
+
+
+                resultText.textContent =
+                    `${result.type ?? "―"}　＋${result.score ?? 0}点`;
+
+
+                content.appendChild(
+                    resultText
+                );
+
+            }
+
+
+            showModal(
+                `${member}さんの予想`,
+                content
+            );
+
+        }
+
+    }
+
+
+    // ========================================
+    // ランキングリスト生成
+    // ========================================
+
+    function createRankingList(
+        ranking
+    ){
+
+        const box =
+            document.createElement("div");
+
+
+        if(!Array.isArray(ranking) ||
+           ranking.length === 0){
+
+            const empty =
+                document.createElement("p");
+
+            empty.textContent =
+                "回答データがありません。";
+
+            box.appendChild(
+                empty
+            );
+
+            return box;
+
+        }
+
+
+        ranking.forEach(
+            (choice,index)=>{
+
+                const line =
+                    document.createElement("div");
+
+
+                let text =
+                    choice;
+
+
+                // 文字列以外にも対応
+                if(
+                    typeof choice !==
+                    "string"
+                ){
+
+                    if(
+                        choice &&
+                        typeof choice.text ===
+                        "string"
+                    ){
+
+                        text =
+                            choice.text;
+
+                    }
+                    else{
+
+                        text =
+                            JSON.stringify(
+                                choice
+                            );
+
+                    }
+
+                }
+
+
+                line.textContent =
+                    `${index + 1}位　${text}`;
+
+
+                line.style.margin =
+                    "6px 0";
+
+
+                box.appendChild(
+                    line
+                );
+
+            }
+        );
+
+
+        return box;
+
+    }
+
+
+    // ========================================
+    // モーダル
+    // ========================================
+
+    function showModal(
+        titleText,
+        content
+    ){
+
+        const overlay =
+            document.createElement("div");
+
+        overlay.style.position =
+            "fixed";
+
+        overlay.style.left =
+            "0";
+
+        overlay.style.top =
+            "0";
+
+        overlay.style.width =
+            "100%";
+
+        overlay.style.height =
+            "100%";
+
+        overlay.style.background =
+            "rgba(0,0,0,0.45)";
+
+        overlay.style.display =
+            "flex";
+
+        overlay.style.alignItems =
+            "center";
+
+        overlay.style.justifyContent =
+            "center";
+
+        overlay.style.zIndex =
+            "9999";
+
+
+        const modal =
+            document.createElement("div");
+
+        modal.style.background =
+            "white";
+
+        modal.style.borderRadius =
+            "12px";
+
+        modal.style.padding =
+            "25px";
+
+        modal.style.width =
+            "min(90%, 420px)";
+
+        modal.style.maxHeight =
+            "80vh";
+
+        modal.style.overflowY =
+            "auto";
+
+        modal.style.boxShadow =
+            "0 5px 25px rgba(0,0,0,0.3)";
+
+
+        const title =
+            document.createElement("h3");
+
+        title.textContent =
+            titleText;
+
+        title.style.marginTop =
+            "0";
+
+        modal.appendChild(
+            title
+        );
+
+
+        modal.appendChild(
+            content
+        );
+
+
+        const closeButton =
+            document.createElement("button");
+
+        closeButton.textContent =
+            "閉じる";
+
+        closeButton.style.display =
+            "block";
+
+        closeButton.style.margin =
+            "20px auto 0";
+
+        closeButton.style.padding =
+            "8px 20px";
+
+        closeButton.style.cursor =
+            "pointer";
+
+
+        closeButton.onclick =
+            ()=>{
+
+                overlay.remove();
+
+            };
+
+
+        modal.appendChild(
+            closeButton
+        );
+
+
+        overlay.appendChild(
+            modal
+        );
+
+
+        // 背景クリックでも閉じる
+
+        overlay.onclick =
+            e=>{
+
+                if(e.target === overlay){
+
+                    overlay.remove();
+
+                }
+
+            };
+
+
+        document.body.appendChild(
+            overlay
+        );
+
+    }
+
+
+    // ========================================
+    // ランキングへ戻るボタン
+    // ========================================
+
+    function addBackButton(
         wrapper
-    );
+    ){
+
+        const area =
+            document.createElement("div");
+
+        area.style.textAlign =
+            "center";
+
+        area.style.marginTop =
+            "25px";
+
+
+        const button =
+            document.createElement("button");
+
+        button.textContent =
+            "ランキングを見る";
+
+        button.style.fontSize =
+            "16px";
+
+        button.style.padding =
+            "10px 24px";
+
+        button.style.cursor =
+            "pointer";
+
+
+        button.onclick =
+            showRankingPage;
+
+
+        area.appendChild(
+            button
+        );
+
+        wrapper.appendChild(
+            area
+        );
+
+    }
+
+
+    // ========================================
+    // スタイル
+    // ========================================
+
+    function styleHeaderCell(
+        cell
+    ){
+
+        cell.style.border =
+            "1px solid #ccc";
+
+        cell.style.padding =
+            "10px 8px";
+
+        cell.style.textAlign =
+            "center";
+
+        cell.style.background =
+            "#f5f5f5";
+
+        cell.style.whiteSpace =
+            "nowrap";
+
+    }
+
+
+    function styleBodyCell(
+        cell
+    ){
+
+        cell.style.border =
+            "1px solid #ccc";
+
+        cell.style.padding =
+            "10px 8px";
+
+        cell.style.textAlign =
+            "center";
+
+        cell.style.verticalAlign =
+            "middle";
+
+    }
+
+
+    // ========================================
+    // HTMLエスケープ
+    // ========================================
+
+    function escapeHTML(
+        value
+    ){
+
+        return String(value)
+            .replaceAll("&","&amp;")
+            .replaceAll("<","&lt;")
+            .replaceAll(">","&gt;")
+            .replaceAll('"',"&quot;")
+            .replaceAll("'","&#039;");
+
+    }
+
+
+    // ========================================
+    // 最初はランキングページ
+    // ========================================
+
+    showRankingPage();
 
 }
