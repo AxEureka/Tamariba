@@ -635,6 +635,96 @@
 .ranking-ui > button:hover{
     background:#2f68d9;
 }
+
+
+/* ==================================================
+   プレイヤー側 チーム結果
+================================================== */
+
+.compatibility-player-result {
+    width: 100%;
+    max-width: 650px;
+
+    margin: 0 auto;
+
+    text-align: center;
+}
+
+
+.compatibility-player-result h2 {
+    margin-bottom: 18px;
+}
+
+
+.compatibility-team-name {
+    font-size: 30px;
+    font-weight: 700;
+
+    color: #315f9e;
+
+    margin-bottom: 24px;
+}
+
+
+.compatibility-result-card {
+    box-sizing: border-box;
+
+    background: #f7f8fb;
+
+    border: 1px solid #ddd;
+
+    border-radius: 12px;
+
+    padding: 18px;
+
+    margin-top: 16px;
+
+    box-shadow:
+        0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+
+.compatibility-result-card h3 {
+    margin: 0 0 12px;
+
+    font-size: 18px;
+
+    color: #333;
+}
+
+
+.compatibility-member-list {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 6px;
+}
+
+
+.compatibility-member {
+    padding: 7px 10px;
+
+    background: white;
+
+    border-radius: 7px;
+
+    color: #333;
+
+    font-size: 16px;
+}
+
+
+.compatibility-score-large {
+    font-size: 36px;
+
+    font-weight: 700;
+
+    color: #315f9e;
+
+    padding: 8px 0;
+}
+
 /* ==================================================
    スマホ対応
 ================================================== */
