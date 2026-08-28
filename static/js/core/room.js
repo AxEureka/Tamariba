@@ -840,77 +840,171 @@ if(msg.type==="ranking_result"){
         
                 let resultScore =
                     myResult?.score ?? myQuestionScore;
-        
-        
+                
+                // -----------------------------
+                // ランキング表示用の選択肢変換
+                // -----------------------------
+                
+                const question =
+                    msg.questions?.[index];
+                
+                const choices =
+                    question?.choices || [];
+                
+                function getChoiceText(id){
+                
+                    const choice =
+                        choices.find(
+                            c => Number(c.id) === Number(id)
+                        );
+                
+                    return choice
+                        ? choice.text
+                        : `選択肢${id}`;
+                }
+                
+                
+                // 回答者のランキング
+                const answerRanking =
+                    Array.isArray(answer)
+                        ? answer
+                        : [];
+                
+                // 自分の予想ランキング
+                const predictionRanking =
+                    Array.isArray(myPrediction)
+                        ? myPrediction
+                        : [];
+                
+                
                 // -----------------------------
                 // 通常の結果表示
                 // -----------------------------
-        
+
                 container.innerHTML = `
-        
-                    <h2>
-                        第${index + 1}問 結果
-                    </h2>
-        
-                    <h3>
-                        問題
-                    </h3>
-        
-                    <p>
-                        ${msg.questions?.[index]?.question
-                            ?? msg.questions?.[index]
-                            ?? ""}
-                    </p>
-        
-        
-                    <h3>
-                        ${myTeam ?? "自チーム"}の回答者
-                    </h3>
-        
-                    <p>
-                        ${answerer ?? "―"}
-                    </p>
-        
-        
-                    <h3>
-                        回答者の答え
-                    </h3>
-        
-                    <p>
-                        ${answer
-                            ? JSON.stringify(answer)
-                            : "―"}
-                    </p>
-        
-        
-                    <h3>
-                        あなたの予想
-                    </h3>
-        
-                    <p>
-                        ${myPrediction
-                            ? JSON.stringify(myPrediction)
-                            : "―"}
-                    </p>
-        
-        
-                    <h3>
-                        あなたの結果
-                    </h3>
-        
-                    <p>
-                        ${resultType}
-                    </p>
-        
-        
-                    <h3>
-                        あなたの得点
-                    </h3>
-        
-                    <p>
-                        ${resultScore}点
-                    </p>
-        
+
+                    <div class="ranking-result">
+                
+                        <h2>
+                            第${index + 1}問 結果
+                        </h2>
+                
+                
+                        <div class="ranking-result-question">
+                
+                            <h3>
+                                問題
+                            </h3>
+                
+                            <p>
+                                ${question?.question
+                                    ?? question
+                                    ?? ""}
+                            </p>
+                
+                        </div>
+                
+                
+                        <div class="ranking-result-answerer">
+                
+                            <p>
+                                <strong>
+                                    ${myTeam ?? "自チーム"}の回答者：
+                                </strong>
+                                ${answerer ?? "―"}
+                            </p>
+                
+                        </div>
+                
+                
+                        <!-- =========================
+                             回答と予想
+                        ========================== -->
+                
+                        <div class="ranking-comparison">
+                
+                            <!-- 回答者 -->
+                
+                            <div class="ranking-column">
+                
+                                <h3>
+                                    回答者の回答
+                                </h3>
+                
+                                ${
+                                    answerRanking.length
+                                    ?
+                                    answerRanking.map(
+                                        (id, i) => `
+                                            <div class="ranking-row">
+                                                <span class="ranking-position">
+                                                    ${i + 1}位
+                                                </span>
+                
+                                                <span class="ranking-choice">
+                                                    ${getChoiceText(id)}
+                                                </span>
+                                            </div>
+                                        `
+                                    ).join("")
+                                    :
+                                    `<div class="ranking-empty">―</div>`
+                                }
+                
+                            </div>
+                
+                
+                            <!-- 自分の予想 -->
+                
+                            <div class="ranking-column">
+                
+                                <h3>
+                                    あなたの予想
+                                </h3>
+                
+                                ${
+                                    predictionRanking.length
+                                    ?
+                                    predictionRanking.map(
+                                        (id, i) => `
+                                            <div class="ranking-row">
+                                                <span class="ranking-position">
+                                                    ${i + 1}位
+                                                </span>
+                
+                                                <span class="ranking-choice">
+                                                    ${getChoiceText(id)}
+                                                </span>
+                                            </div>
+                                        `
+                                    ).join("")
+                                    :
+                                    `<div class="ranking-empty">―</div>`
+                                }
+                
+                            </div>
+                
+                        </div>
+                
+                
+                        <!-- =========================
+                             結果・得点
+                        ========================== -->
+                
+                        <div class="ranking-result-summary">
+                
+                            <div class="ranking-result-type">
+                                ${resultType}
+                            </div>
+                
+                            <div class="ranking-result-score">
+                                ${resultScore}点
+                            </div>
+                
+                        </div>
+                
+                    </div>
+                
                 `;
         
             }
