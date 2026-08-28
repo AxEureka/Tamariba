@@ -3036,6 +3036,9 @@ async def start_next_ranking_question(room):
         {
             "type":
                 "ranking_question",
+
+            "total_questions":
+                len(game["questions"]),
     
             "question":
                 question,
