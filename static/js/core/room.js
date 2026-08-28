@@ -476,7 +476,17 @@ if (msg.type === "ranking_question") {
         console.log(
             "親画面：回答者の回答を待機"
         );
-
+    
+        // 回答完了を待たずに予測開始ボタンを表示
+        if (
+            compatibilityHostUI &&
+            compatibilityHostUI.showPredictionButton
+        ) {
+    
+            compatibilityHostUI.showPredictionButton();
+    
+        }
+    
         return;
     }
 
@@ -491,24 +501,7 @@ if (msg.type === "ranking_question") {
         socket
     );
 }
-    
-    if (msg.type === "ranking_answer_complete") {
-
-        console.log(
-            "出題者の回答が完了しました"
-        );
-    
-        if (
-            myName === hostName &&
-            compatibilityHostUI &&
-            compatibilityHostUI.showPredictionButton
-        ) {
-    
-            compatibilityHostUI.showPredictionButton();
-    
-        }
-    
-    }    
+        
 if(msg.type === "ranking_phase" &&
    msg.phase === "prediction"){
 
@@ -532,7 +525,7 @@ if(msg.type === "ranking_phase" &&
 
    // 親（監督）
     if(myName === hostName){
-    
+
         console.log("親画面：予想受付中");
     
         if(
@@ -543,6 +536,17 @@ if(msg.type === "ranking_phase" &&
             compatibilityHostUI.setProgress(
                 "予想を受け付けています"
             );
+    
+        }
+    
+        // 全員の予想完了を待たずに
+        // 結果発表ボタンを表示
+        if(
+            compatibilityHostUI &&
+            compatibilityHostUI.showResultButton
+        ){
+    
+            compatibilityHostUI.showResultButton();
     
         }
     
@@ -599,24 +603,7 @@ if(msg.type==="ranking_prediction_progress"){
     }
 
 }
-if(msg.type==="ranking_prediction_complete"){
-
-    console.log(
-        "全員の予想が完了しました"
-    );
-
-    if(
-        myName === hostName &&
-        compatibilityHostUI &&
-        compatibilityHostUI.showResultButton
-    ){
-
-        compatibilityHostUI.showResultButton();
-
-    }
-
-}
-
+      
 if(msg.type==="ranking_result"){
 
     const container =
