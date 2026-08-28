@@ -44,7 +44,7 @@ export function startCompatibilityHost(
     startBtn.onclick = ()=>{
 
         const socket = getSocket();
-
+    
         socket.send(
             JSON.stringify({
                 type:"start_compatibility",
@@ -53,6 +53,10 @@ export function startCompatibilityHost(
                 )
             })
         );
+    
+        // 相性診断開始後は設定UIを消す
+        questionCount.style.display = "none";
+        startBtn.style.display = "none";
     };
 
     wrapper.insertBefore(
@@ -168,7 +172,17 @@ export function startCompatibilityHost(
             }
         );
 
-        showRankingStart();
+        const okBtn =
+            document.createElement("button");
+
+        okBtn.textContent = "OK";
+
+        okBtn.onclick = ()=>{
+            config.innerHTML = "";
+            showRankingStart();
+        };
+
+        config.appendChild(okBtn);    
     }
 
     // =================================
