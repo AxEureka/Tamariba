@@ -70,7 +70,7 @@ export function createCompatibilityUI(
             }
         });
 
-
+    });
     const btn=document.createElement("button");
 
     btn.textContent="回答する";
