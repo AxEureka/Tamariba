@@ -32,28 +32,43 @@ export function createCompatibilityUI(
         div.appendChild(h);
 
 
-        const select=document.createElement("select");
-
-
-        q.choices.forEach(choice=>{
-
-            const option=document.createElement("option");
-
-            option.value=choice.id;
-            option.textContent=choice.text;
-
-            select.appendChild(option);
-
+        const choiceBox = document.createElement("div");
+        choiceBox.className = "compatibility-choices";
+        
+        let selectedValue = null;
+        
+        q.choices.forEach((choice) => {
+        
+            const choiceBtn = document.createElement("button");
+        
+            choiceBtn.type = "button";
+            choiceBtn.className = "compatibility-choice";
+            choiceBtn.textContent = choice.text;
+        
+            choiceBtn.onclick = () => {
+        
+                selectedValue = choice.id;
+        
+                choiceBox
+                    .querySelectorAll(".compatibility-choice")
+                    .forEach(btn => {
+                        btn.classList.remove("selected");
+                    });
+        
+                choiceBtn.classList.add("selected");
+            };
+        
+            choiceBox.appendChild(choiceBtn);
         });
-
-
-        div.appendChild(select);
-
+        
+        div.appendChild(choiceBox);
         box.appendChild(div);
-
-        answers.push(select);
-
-    });
+        
+        answers.push({
+            get value() {
+                return selectedValue;
+            }
+        });
 
 
     const btn=document.createElement("button");
@@ -63,12 +78,16 @@ export function createCompatibilityUI(
 
     btn.onclick=()=>{
 
-        const result =
-            answers.map(
-                s=>Number(s.value)
-            );
+        const result = answers.map(
+            s => s.value
+        );
+        
+        if(result.some(v => v === null)){
+            alert("すべての質問に回答してください");
+            return;
+        }
 
-        onSubmit(result);
+onSubmit(result);
 
     };
 
