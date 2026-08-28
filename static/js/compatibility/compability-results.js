@@ -16,10 +16,8 @@ export function showCompatibilityFinalResult(
     hostName
 ){
 
-    console.log(
-        "最終結果表示",
-        msg
-    );
+    console.log("最終結果表示", msg);
+    console.log("team_matrix", msg.team_matrix);
 
     container.innerHTML = "";
 
