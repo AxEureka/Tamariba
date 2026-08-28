@@ -58,10 +58,12 @@ export function showCompatibilityFinalResult(
 
         const wrapper =
             document.createElement("div");
-
+        
         wrapper.className =
             "compatibility-ui";
-
+        
+        wrapper.style.color =
+            "#222";
 
         // ====================================
         // タイトル
