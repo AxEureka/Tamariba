@@ -12,6 +12,9 @@ import {
     showRankingQuestion,
     showRankingPrediction
 } from "/static/js/compatibility/compatibility-player.js";
+import {
+    showCompatibilityFinalResult
+} from "/static/js/compatibility/compability-results.js";
 const params = new URLSearchParams(location.search);
 const roomId = params.get("room");
 let myName = params.get("name") || "";
@@ -932,40 +935,17 @@ if(msg.type==="ranking_result"){
         const container =
             document.getElementById("game-container");
     
-        container.innerHTML = `
+        console.log(
+            "最終結果受信",
+            msg
+        );
     
-            <h2>
-                最終結果
-            </h2>
-    
-            <h3>
-                チームランキング
-            </h3>
-    
-            <div id="final-team-ranking"></div>
-    
-        `;
-    
-        const rankingBox =
-            document.getElementById("final-team-ranking");
-    
-        if(msg.team_ranking){
-    
-            msg.team_ranking.forEach(
-                ([team, score], index) => {
-    
-                    rankingBox.innerHTML += `
-                        <p>
-                            ${index + 1}位：
-                            ${team}
-                            ${score}点
-                        </p>
-                    `;
-    
-                }
-            );
-    
-        }
+        showCompatibilityFinalResult(
+            container,
+            msg,
+            myName,
+            hostName
+        );
     
     }
 
