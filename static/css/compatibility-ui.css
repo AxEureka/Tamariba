@@ -1,192 +1,572 @@
-/* =========================
+/* ==================================================
    相性診断UI
-========================= */
+================================================== */
 
-.compatibility-ui{
-    background:#1e1e2f;
-    color:white;
+.compatibility-ui {
+    box-sizing: border-box;
 
-    padding:20px;
+    background: rgba(255, 255, 255, 0.97);
+    color: #222;
 
-    border-radius:12px;
+    padding: 28px;
 
-    width:min(900px,90vw);
+    border-radius: 16px;
 
-    max-height:85vh;
-    overflow-y:auto;
+    width: min(1000px, 94vw);
+    max-height: 88vh;
 
-    box-shadow:0 15px 50px rgba(0,0,0,0.7);
+    overflow-y: auto;
 
-    text-align:center;
+    box-shadow:
+        0 15px 50px rgba(0, 0, 0, 0.45);
 
-    animation:compatibilityPop 0.25s ease;
+    text-align: center;
 
-    position:relative;
-    z-index:20;
+    animation: compatibilityPop 0.25s ease;
 
-    pointer-events:auto;
+    position: relative;
+    z-index: 20;
+
+    pointer-events: auto;
+
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
 }
 
-/* =========================
+
+/* ==================================================
    タイトル
-========================= */
+================================================== */
 
-.compatibility-ui h2,
-.compatibility-ui h3{
-    margin-top:0;
-    color:white;
+.compatibility-ui h2 {
+    margin: 0 0 24px;
+
+    color: #222;
+
+    font-size: 30px;
+    font-weight: 700;
 }
 
-/* =========================
+.compatibility-ui h3 {
+    margin: 28px 0 14px;
+
+    color: #333;
+
+    font-size: 21px;
+    font-weight: 700;
+}
+
+
+/* ==================================================
+   テキスト
+================================================== */
+
+.compatibility-ui p {
+    color: #333;
+
+    line-height: 1.6;
+}
+
+
+/* ==================================================
    入力欄
-========================= */
+================================================== */
 
 .compatibility-ui input,
-.compatibility-ui select{
-    width:100%;
-    box-sizing:border-box;
+.compatibility-ui select {
+    width: 100%;
 
-    padding:10px;
+    box-sizing: border-box;
 
-    margin:5px 0;
+    padding: 11px;
 
-    border:none;
-    border-radius:6px;
+    margin: 5px 0;
 
-    background:#2a2a40;
-    color:white;
+    border: 1px solid #ccc;
+
+    border-radius: 8px;
+
+    background: #fff;
+
+    color: #222;
+
+    font-size: 16px;
 }
 
-/* =========================
+
+/* ==================================================
    ボタン
-========================= */
+================================================== */
 
-.compatibility-ui button{
-    width:100%;
+.compatibility-ui button {
+    box-sizing: border-box;
 
-    margin-top:10px;
+    width: auto;
+    min-width: 180px;
 
-    padding:12px;
+    margin-top: 12px;
 
-    border:none;
-    border-radius:8px;
+    padding: 11px 20px;
 
-    background:#3a7cff;
-    color:white;
+    border: none;
+    border-radius: 9px;
 
-    font-size:16px;
+    background: #3a7cff;
+    color: white;
 
-    cursor:pointer;
+    font-size: 16px;
+    font-weight: 600;
 
-    transition:background .2s;
+    cursor: pointer;
+
+    transition:
+        background 0.2s,
+        transform 0.1s;
 }
 
-.compatibility-ui button:hover{
-    background:#2f68d9;
+.compatibility-ui button:hover {
+    background: #2f68d9;
 }
 
-/* =========================
+.compatibility-ui button:active {
+    transform: scale(0.98);
+}
+
+
+/* ==================================================
    チーム一覧
-========================= */
+================================================== */
 
-.compatibility-team-list{
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-    margin-top:15px;
+.compatibility-team-list {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 14px;
+
+    margin-top: 15px;
 }
 
-/* =========================
-   各チームカード
-========================= */
 
-.compatibility-team{
-    background:#2a2a40;
+/* ==================================================
+   チームカード
+================================================== */
 
-    padding:14px;
+.compatibility-team {
+    box-sizing: border-box;
 
-    border-radius:10px;
+    background: #f7f8fb;
 
-    text-align:left;
+    border: 1px solid #ddd;
+
+    padding: 16px;
+
+    border-radius: 12px;
+
+    text-align: left;
+
+    color: #222;
+
+    box-shadow:
+        0 3px 10px rgba(0, 0, 0, 0.08);
 }
 
-/* チーム名 */
 
-.compatibility-team-title{
-    font-size:18px;
-    font-weight:bold;
+/* ==================================================
+   チーム名
+================================================== */
 
-    margin-bottom:8px;
+.compatibility-team-title {
+    font-size: 19px;
 
-    color:#7cb4ff;
+    font-weight: 700;
+
+    margin-bottom: 10px;
+
+    color: #333;
 }
 
-/* メンバー */
 
-.compatibility-member{
-    padding:3px 0;
+/* ==================================================
+   メンバー
+================================================== */
+
+.compatibility-member {
+    padding: 4px 0;
+
+    color: #444;
+
+    font-size: 15px;
 }
 
-/* =========================
+
+/* ==================================================
    相性スコア
-========================= */
+================================================== */
 
-.compatibility-score{
-    margin-top:10px;
+.compatibility-score {
+    margin-top: 8px;
 
-    font-size:18px;
-    font-weight:bold;
+    font-size: 17px;
 
-    color:gold;
+    font-weight: 700;
+
+    color: #333;
 }
 
-.compatibility-team-list{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-    gap:15px;
+
+/* ==================================================
+   最終ランキング
+================================================== */
+
+/*
+   compatibility-results.js 側で
+   ランキング用のクラスを付けた場合に使える。
+*/
+
+.compatibility-ranking {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    margin-top: 15px;
+
+    background: white;
+
+    color: #222;
+
+    border-radius: 10px;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 3px 12px rgba(0, 0, 0, 0.08);
 }
 
-/* =========================
+.compatibility-ranking th {
+    padding: 12px 10px;
+
+    background: #f0f2f5;
+
+    color: #333;
+
+    font-weight: 700;
+
+    border-bottom: 2px solid #ddd;
+}
+
+.compatibility-ranking td {
+    padding: 13px 10px;
+
+    color: #333;
+
+    border-bottom: 1px solid #e5e5e5;
+
+    text-align: center;
+}
+
+.compatibility-ranking tr:last-child td {
+    border-bottom: none;
+}
+
+
+/* ==================================================
+   自分のチーム
+================================================== */
+
+.compatibility-my-team {
+    border: 3px solid #f2c94c !important;
+
+    background: #fffbea !important;
+
+    box-shadow:
+        0 0 12px rgba(242, 201, 76, 0.35);
+}
+
+
+/* ==================================================
+   チーム成績表
+================================================== */
+
+.compatibility-matrix {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    margin-top: 15px;
+
+    background: white;
+
+    color: #222;
+
+    font-size: 14px;
+}
+
+.compatibility-matrix th {
+    padding: 10px;
+
+    background: #f0f2f5;
+
+    color: #333;
+
+    border: 1px solid #ddd;
+
+    font-weight: 700;
+
+    text-align: center;
+
+    white-space: nowrap;
+}
+
+.compatibility-matrix td {
+    padding: 10px;
+
+    background: #fff;
+
+    color: #333;
+
+    border: 1px solid #ddd;
+
+    text-align: center;
+
+    vertical-align: middle;
+}
+
+
+/* ==================================================
+   問題セル
+================================================== */
+
+.compatibility-question-cell {
+    min-width: 150px;
+
+    text-align: left !important;
+
+    font-weight: 600;
+
+    line-height: 1.5;
+}
+
+
+/* ==================================================
+   回答者・予想者セル
+================================================== */
+
+.compatibility-result-cell {
+    cursor: pointer;
+
+    transition:
+        background 0.15s,
+        transform 0.1s;
+}
+
+.compatibility-result-cell:hover {
+    background: #eef4ff;
+
+    transform: scale(1.02);
+}
+
+
+/* 回答者 */
+
+.compatibility-answerer {
+    background: #fff4d6 !important;
+
+    color: #8a6500 !important;
+
+    font-weight: 700;
+}
+
+
+/* 予想者 */
+
+.compatibility-predictor {
+    background: #eef5ff !important;
+
+    color: #315f9e !important;
+
+    font-weight: 600;
+}
+
+
+/* ==================================================
+   詳細表示
+================================================== */
+
+.compatibility-detail {
+    background: white;
+
+    color: #222;
+
+    padding: 22px;
+
+    border-radius: 12px;
+
+    text-align: left;
+
+    box-shadow:
+        0 8px 30px rgba(0, 0, 0, 0.18);
+}
+
+.compatibility-detail h4 {
+    margin-top: 0;
+
+    color: #333;
+
+    font-size: 20px;
+}
+
+.compatibility-detail p {
+    color: #444;
+}
+
+
+/* ==================================================
+   JSON / デバッグ表示
+================================================== */
+
+/*
+   開発中にJSONを表示する場合でも
+   白文字にならないようにする。
+*/
+
+.compatibility-ui pre {
+    box-sizing: border-box;
+
+    background: #f5f5f5;
+
+    color: #333;
+
+    border: 1px solid #ddd;
+
+    border-radius: 8px;
+
+    padding: 12px;
+
+    text-align: left;
+
+    overflow-x: auto;
+}
+
+
+/* ==================================================
    スクロールバー
-========================= */
+================================================== */
 
-.compatibility-ui::-webkit-scrollbar{
-    width:8px;
+.compatibility-ui::-webkit-scrollbar {
+    width: 8px;
 }
 
-.compatibility-ui::-webkit-scrollbar-thumb{
-    background:#555;
-    border-radius:4px;
+.compatibility-ui::-webkit-scrollbar-track {
+    background: #eee;
+
+    border-radius: 4px;
 }
 
-/* =========================
-   出現アニメーション
-========================= */
+.compatibility-ui::-webkit-scrollbar-thumb {
+    background: #bbb;
 
-@keyframes compatibilityPop{
-    from{
-        opacity:0;
-        transform:scale(0.9);
+    border-radius: 4px;
+}
+
+.compatibility-ui::-webkit-scrollbar-thumb:hover {
+    background: #999;
+}
+
+
+/* ==================================================
+   アニメーション
+================================================== */
+
+@keyframes compatibilityPop {
+
+    from {
+        opacity: 0;
+
+        transform: scale(0.94);
     }
 
-    to{
-        opacity:1;
-        transform:scale(1);
+    to {
+        opacity: 1;
+
+        transform: scale(1);
     }
 }
 
-.ranking-ui{
-    background:#1e1e2f;
-    color:white;
 
-    padding:20px;
+/* ==================================================
+   旧 ranking-ui
+================================================== */
 
-    border-radius:12px;
+.ranking-ui {
+    box-sizing: border-box;
 
-    position:relative;
-    z-index:1000;
+    background: rgba(255, 255, 255, 0.97);
 
-    pointer-events:auto;
+    color: #222;
 
-    box-shadow:0 15px 50px rgba(0,0,0,0.7);
+    padding: 20px;
+
+    border-radius: 12px;
+
+    position: relative;
+
+    z-index: 1000;
+
+    pointer-events: auto;
+
+    box-shadow:
+        0 15px 50px rgba(0, 0, 0, 0.35);
+}
+
+
+/* ==================================================
+   スマホ対応
+================================================== */
+
+@media (max-width: 700px) {
+
+    .compatibility-ui {
+        width: 96vw;
+
+        padding: 18px;
+
+        max-height: 90vh;
+    }
+
+
+    .compatibility-ui h2 {
+        font-size: 24px;
+    }
+
+
+    .compatibility-ui h3 {
+        font-size: 19px;
+    }
+
+
+    .compatibility-ranking {
+        font-size: 13px;
+    }
+
+
+    .compatibility-ranking th,
+    .compatibility-ranking td {
+        padding: 9px 6px;
+    }
+
+
+    .compatibility-matrix {
+        font-size: 12px;
+    }
+
+
+    .compatibility-matrix th,
+    .compatibility-matrix td {
+        padding: 7px 5px;
+    }
+
 }
