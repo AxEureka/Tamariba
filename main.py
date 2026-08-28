@@ -2649,14 +2649,14 @@ async def handle_ranking(room,data):
             }
         )    
     
-        elif msg_type=="ranking_final":
+    elif msg_type=="ranking_final":
     
-            game = room["compatibility"]["ranking_game"]
+        game = room["compatibility"]["ranking_game"]
     
-            if game["mode"] != "result":
-                return
+        if game["mode"] != "result":
+            return
     
-            game["mode"] = "final"
+        game["mode"] = "final"
     
     
             # =========================
