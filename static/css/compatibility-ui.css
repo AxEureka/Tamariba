@@ -726,6 +726,229 @@
 }
 
 /* ==================================================
+   ランキング結果
+================================================== */
+
+.ranking-result {
+    box-sizing: border-box;
+
+    width: 100%;
+    max-width: 900px;
+
+    margin: 0 auto;
+
+    color: #222;
+}
+
+
+/* 問題 */
+
+.ranking-result-question {
+    margin-bottom: 16px;
+
+    padding: 14px;
+
+    background: #f7f8fb;
+
+    border-radius: 10px;
+
+    text-align: left;
+}
+
+.ranking-result-question h3 {
+    margin: 0 0 8px;
+}
+
+.ranking-result-question p {
+    margin: 0;
+
+    line-height: 1.5;
+}
+
+
+/* 回答者 */
+
+.ranking-result-answerer {
+    margin-bottom: 18px;
+
+    text-align: center;
+
+    color: #333;
+}
+
+
+/* 回答と予想の横並び */
+
+.ranking-comparison {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 18px;
+
+    margin-top: 10px;
+}
+
+
+/* 各ランキング */
+
+.ranking-column {
+    box-sizing: border-box;
+
+    padding: 14px;
+
+    background: #f7f8fb;
+
+    border: 1px solid #ddd;
+
+    border-radius: 12px;
+
+    text-align: left;
+}
+
+.ranking-column h3 {
+    margin: 0 0 12px;
+
+    text-align: center;
+
+    font-size: 18px;
+}
+
+
+/* 1位～7位 */
+
+.ranking-row {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 9px 8px;
+
+    border-bottom: 1px solid #e2e2e2;
+
+    background: white;
+}
+
+.ranking-row:last-child {
+    border-bottom: none;
+}
+
+.ranking-position {
+    flex: 0 0 42px;
+
+    font-weight: 700;
+
+    color: #555;
+}
+
+.ranking-choice {
+    flex: 1;
+
+    color: #222;
+
+    font-weight: 600;
+}
+
+
+/* データがない場合 */
+
+.ranking-empty {
+    padding: 20px;
+
+    text-align: center;
+
+    color: #777;
+}
+
+
+/* 結果・得点 */
+
+.ranking-result-summary {
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    gap: 24px;
+
+    margin-top: 20px;
+
+    padding: 18px;
+
+    background: #fffbea;
+
+    border: 2px solid #f2c94c;
+
+    border-radius: 12px;
+}
+
+
+/* サンレンタンなど */
+
+.ranking-result-type {
+    font-size: 24px;
+
+    font-weight: 700;
+
+    color: #333;
+}
+
+
+/* 得点 */
+
+.ranking-result-score {
+    font-size: 28px;
+
+    font-weight: 700;
+
+    color: #333;
+}
+
+
+/* スマホ */
+
+@media (max-width: 700px) {
+
+    .ranking-comparison {
+        grid-template-columns: 1fr 1fr;
+
+        gap: 8px;
+    }
+
+    .ranking-column {
+        padding: 8px;
+    }
+
+    .ranking-column h3 {
+        font-size: 15px;
+    }
+
+    .ranking-row {
+        gap: 5px;
+
+        padding: 8px 5px;
+
+        font-size: 13px;
+    }
+
+    .ranking-position {
+        flex-basis: 32px;
+    }
+
+    .ranking-result-type {
+        font-size: 20px;
+    }
+
+    .ranking-result-score {
+        font-size: 24px;
+    }
+
+}
+
+/* ==================================================
    スマホ対応
 ================================================== */
 
