@@ -2659,262 +2659,262 @@ async def handle_ranking(room,data):
         game["mode"] = "final"
     
     
-            # =========================
-            # 個人ランキング
-            # =========================
+        # =========================
+        # 個人ランキング
+        # =========================
     
-            individual_ranking=sorted(
-                game["scores"].items(),
+        individual_ranking=sorted(
+            game["scores"].items(),
+            key=lambda x:-x[1]
+        )
+    
+    
+        # =========================
+        # チーム最終ランキング
+        # =========================
+    
+        team_ranking_raw = sorted(
+            game["team_scores"].items(),
+            key=lambda x:-x[1]
+        )
+    
+        team_final_ranking = []
+    
+        for rank, (team_name, total_score) in enumerate(
+            team_ranking_raw,
+            start=1
+        ):
+    
+            team_info = room["compatibility"]["teams"].get(
+                team_name,
+                {}
+            )
+    
+            team_final_ranking.append(
+                {
+                    "rank": rank,
+                    "team": team_name,
+                    "total_score": total_score,
+                    "shown_score":
+                        team_info.get(
+                            "shown_score"
+                        ),
+                    "actual_score":
+                        team_info.get(
+                            "score"
+                        ),
+                    "members":
+                        team_info.get(
+                            "members",
+                        []
+                        )
+                }
+            )
+    
+        team_top5 = team_final_ranking[:5]
+    
+    
+        # =========================
+        # チーム内メンバーランキング
+        # =========================
+    
+        team_member_ranking={}
+    
+        for team_name,team_info in \
+            room["compatibility"]["teams"].items():
+    
+            members=[]
+    
+            for member in team_info["members"]:
+    
+                members.append(
+                    (
+                        member,
+                        game["scores"].get(
+                            member,
+                            0
+                        )
+                    )
+                )
+    
+            members.sort(
                 key=lambda x:-x[1]
             )
     
+            team_member_ranking[
+                team_name
+            ] = members
     
-            # =========================
-            # チーム最終ランキング
-            # =========================
     
-            team_ranking_raw = sorted(
-                game["team_scores"].items(),
-                key=lambda x:-x[1]
+        # =========================
+        # チーム成績マトリクス
+        # =========================
+    
+        team_matrix = {}
+    
+        for team_name, team_info in \
+            room["compatibility"]["teams"].items():
+    
+            members = team_info.get(
+                "members",
+                []
             )
     
-            team_final_ranking = []
+            team_matrix[team_name] = {
+                "members": members,
+                "questions": []
+            }
     
-            for rank, (team_name, total_score) in enumerate(
-                team_ranking_raw,
-                start=1
+            for index, question in enumerate(
+                game["questions"]
             ):
     
-                team_info = room["compatibility"]["teams"].get(
-                    team_name,
+                cells = {}
+    
+                answerers = game[
+                    "question_answerers"
+                ].get(
+                    index,
                     {}
                 )
     
-                team_final_ranking.append(
+                answerer = answerers.get(
+                    team_name
+                )
+    
+                for member in members:
+    
+                    if member == answerer:
+    
+                        true_answer = game[
+                            "true_answer_history"
+                        ].get(
+                            index,
+                            {}
+                        ).get(
+                            member
+                        )
+    
+                        cells[member] = {
+                            "role": "answerer",
+                            "target": member,
+                            "ranking": true_answer
+                        }
+    
+                    else:
+    
+                        prediction = game[
+                            "prediction_history"
+                        ].get(
+                            index,
+                            {}
+                        ).get(
+                            member
+                        )
+    
+                        result = game[
+                            "question_results"
+                        ].get(
+                            index,
+                            {}
+                        ).get(
+                            member,
+                            []
+                        )
+    
+                        cells[member] = {
+                            "role": "predictor",
+                            "target":
+                                prediction.get(
+                                    "target"
+                                ) if prediction else None,
+                            "ranking":
+                                prediction.get(
+                                    "ranking"
+                                ) if prediction else None,
+                            "results":
+                                result
+                        }
+    
+                team_matrix[team_name][
+                    "questions"
+                ].append(
                     {
-                        "rank": rank,
-                        "team": team_name,
-                        "total_score": total_score,
-                        "shown_score":
-                            team_info.get(
-                                "shown_score"
+                        "index": index,
+                        "number": index + 1,
+                        "question":
+                            question.get(
+                                "question",
+                                ""
                             ),
-                        "actual_score":
-                            team_info.get(
-                                "score"
-                            ),
-                        "members":
-                            team_info.get(
-                                "members",
-                                []
-                            )
+                        "cells": cells
                     }
                 )
     
-            team_top5 = team_final_ranking[:5]
     
+        # =========================
+        # 最終結果送信
+        # =========================
     
-            # =========================
-            # チーム内メンバーランキング
-            # =========================
+        await broadcast(
+            room,
+            {
+                "type":
+                    "ranking_final_result",
     
-            team_member_ranking={}
+                # 個人総合
+                "individual_ranking":
+                    individual_ranking,
     
-            for team_name,team_info in \
-                room["compatibility"]["teams"].items():
+                # 従来のチーム総合
+                "team_ranking":
+                    team_ranking_raw,
     
-                members=[]
+                # ★最終チームランキング
+                "team_final_ranking":
+                    team_final_ranking,
     
-                for member in team_info["members"]:
+                # ★上位5チーム
+                "team_top5":
+                    team_top5,
     
-                    members.append(
-                        (
-                            member,
-                            game["scores"].get(
-                                member,
-                                0
-                            )
-                        )
-                    )
+                # チーム内個人順位
+                "team_member_ranking":
+                    team_member_ranking,
     
-                members.sort(
-                    key=lambda x:-x[1]
-                )
+                # 問題別得点
+                "question_scores":
+                    game["question_scores"],
     
-                team_member_ranking[
-                    team_name
-                ] = members
+                # 問題別採点結果
+                "question_results":
+                    game["question_results"],
     
+                # 各問題の回答者
+                "question_answerers":
+                    game["question_answerers"],
     
-            # =========================
-            # チーム成績マトリクス
-            # =========================
+                # 問題文
+                "questions":
+                    game["questions"],
     
-            team_matrix = {}
+                # 各人の予想
+                "prediction_history":
+                    game["prediction_history"],
     
-            for team_name, team_info in \
-                room["compatibility"]["teams"].items():
+                # 各回答者の正解
+                "true_answer_history":
+                    game["true_answer_history"],
     
-                members = team_info.get(
-                    "members",
-                    []
-                )
+                # チーム情報
+                "teams":
+                    room["compatibility"]["teams"],
     
-                team_matrix[team_name] = {
-                    "members": members,
-                    "questions": []
-                }
-    
-                for index, question in enumerate(
-                    game["questions"]
-                ):
-    
-                    cells = {}
-    
-                    answerers = game[
-                        "question_answerers"
-                    ].get(
-                        index,
-                        {}
-                    )
-    
-                    answerer = answerers.get(
-                        team_name
-                    )
-    
-                    for member in members:
-    
-                        if member == answerer:
-    
-                            true_answer = game[
-                                "true_answer_history"
-                            ].get(
-                                index,
-                                {}
-                            ).get(
-                                member
-                            )
-    
-                            cells[member] = {
-                                "role": "answerer",
-                                "target": member,
-                                "ranking": true_answer
-                            }
-    
-                        else:
-    
-                            prediction = game[
-                                "prediction_history"
-                            ].get(
-                                index,
-                                {}
-                            ).get(
-                                member
-                            )
-    
-                            result = game[
-                                "question_results"
-                            ].get(
-                                index,
-                                {}
-                            ).get(
-                                member,
-                                []
-                            )
-    
-                            cells[member] = {
-                                "role": "predictor",
-                                "target":
-                                    prediction.get(
-                                        "target"
-                                    ) if prediction else None,
-                                "ranking":
-                                    prediction.get(
-                                        "ranking"
-                                    ) if prediction else None,
-                                "results":
-                                    result
-                            }
-    
-                    team_matrix[team_name][
-                        "questions"
-                    ].append(
-                        {
-                            "index": index,
-                            "number": index + 1,
-                            "question":
-                                question.get(
-                                    "question",
-                                    ""
-                                ),
-                            "cells": cells
-                        }
-                    )
-    
-    
-            # =========================
-            # 最終結果送信
-            # =========================
-    
-            await broadcast(
-                room,
-                {
-                    "type":
-                        "ranking_final_result",
-    
-                    # 個人総合
-                    "individual_ranking":
-                        individual_ranking,
-    
-                    # 従来のチーム総合
-                    "team_ranking":
-                        team_ranking_raw,
-    
-                    # ★最終チームランキング
-                    "team_final_ranking":
-                        team_final_ranking,
-    
-                    # ★上位5チーム
-                    "team_top5":
-                        team_top5,
-    
-                    # チーム内個人順位
-                    "team_member_ranking":
-                        team_member_ranking,
-    
-                    # 問題別得点
-                    "question_scores":
-                        game["question_scores"],
-    
-                    # 問題別採点結果
-                    "question_results":
-                        game["question_results"],
-    
-                    # 各問題の回答者
-                    "question_answerers":
-                        game["question_answerers"],
-    
-                    # 問題文
-                    "questions":
-                        game["questions"],
-    
-                    # 各人の予想
-                    "prediction_history":
-                        game["prediction_history"],
-    
-                    # 各回答者の正解
-                    "true_answer_history":
-                        game["true_answer_history"],
-    
-                    # チーム情報
-                    "teams":
-                        room["compatibility"]["teams"],
-    
-                    # ★チーム成績マトリクス
-                    "team_matrix":
-                        team_matrix
-                }
-            )
+                # ★チーム成績マトリクス
+                "team_matrix":
+                    team_matrix
+            }
+        )
 
     elif msg_type=="ranking_score":
 
