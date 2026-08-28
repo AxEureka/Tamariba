@@ -14,7 +14,7 @@ import {
 } from "/static/js/compatibility/compatibility-player.js";
 import {
     showCompatibilityFinalResult
-} from "/static/js/compatibility/compability-results.js";
+} from "/static/js/compatibility/compatibility-results.js";
 const params = new URLSearchParams(location.search);
 const roomId = params.get("room");
 let myName = params.get("name") || "";
