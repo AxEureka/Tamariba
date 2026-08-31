@@ -546,6 +546,12 @@
    旧 ranking-ui
 ================================================== */
 
+.ranking-duplicate {
+    background-color: #ffe0e0 !important;
+    border: 2px solid #e57373 !important;
+}
+
+
 .ranking-ui{
     background:#1e1e2f;
     color:white;
@@ -947,6 +953,8 @@
     }
 
 }
+
+
 
 /* ==================================================
    スマホ対応
