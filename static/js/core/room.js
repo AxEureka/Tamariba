@@ -408,8 +408,30 @@ function connectSocket() {
       }
   
   }
-  
 
+ 
+if(msg.type==="compatibility_progress"){
+
+    console.log(
+        "相性診断回答進捗:",
+        msg.done,
+        "/",
+        msg.total
+    );
+
+    if(
+        myName === hostName &&
+        compatibilityHostUI &&
+        compatibilityHostUI.setProgress
+    ){
+
+        compatibilityHostUI.setProgress(
+            `相性診断：${msg.done}/${msg.total}人 回答済み`
+        );
+
+    }
+
+}
 
 if (msg.type === "compatibility_team_created") {
 
