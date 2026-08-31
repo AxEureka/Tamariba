@@ -130,6 +130,46 @@ export function createRankingUI(
 
     const selects=[];
 
+    // ★ 重複している順位を色付け
+    function updateDuplicateHighlight(){
+
+        const values =
+            selects.map(
+                s => s.value
+            );
+
+        selects.forEach((select) => {
+
+            const row =
+                select.parentElement;
+
+            const value =
+                select.value;
+
+            const isDuplicate =
+                value !== "" &&
+                values.filter(
+                    v => v === value
+                ).length > 1;
+
+            if(isDuplicate){
+
+                row.classList.add(
+                    "ranking-duplicate"
+                );
+
+            }else{
+
+                row.classList.remove(
+                    "ranking-duplicate"
+                );
+
+            }
+
+        });
+
+    }
+
     const choices =
         question.choices || [];
 
@@ -185,62 +225,80 @@ export function createRankingUI(
         box.appendChild(row);
 
         selects.push(select);
+
+        // ★ 選択が変わるたびに重複箇所を更新
+        select.addEventListener(
+            "change",
+            updateDuplicateHighlight
+        );
     }
 
     const btn =
         document.createElement("button");
-        console.log("ランキングボタン生成");
+
+    console.log("ランキングボタン生成");
 
     btn.textContent =
         mode==="answer"
         ? "確定"
         : "予想する";
 
-btn.onclick=()=>{
+    btn.onclick=()=>{
 
-    console.log("ランキングボタンクリック");
-    if(
-        selects.some(
-            s => s.value === ""
-        )
-    ){
-        alert(
-            "全て選択してください"
-        );
-        return;
-    }
-    const ranking =
-        selects.map(
-            s=>Number(s.value)
+        console.log(
+            "ランキングボタンクリック"
         );
 
+        if(
+            selects.some(
+                s => s.value === ""
+            )
+        ){
 
-    if(
-        new Set(ranking).size
-        !==
-        rankCount
-    ){
-        alert(
-            "同じ選択肢を複数順位にできません"
+            alert(
+                "全て選択してください"
+            );
+
+            return;
+        }
+
+        const ranking =
+            selects.map(
+                s=>Number(s.value)
+            );
+
+        // ★ 最終的な重複チェック
+        if(
+            new Set(ranking).size
+            !==
+            rankCount
+        ){
+
+            alert(
+                "同じ選択肢を複数順位にできません"
+            );
+
+            return;
+        }
+
+        if(!confirm("確定しますか？")){
+            return;
+        }
+
+        console.log(
+            "ランキング送信",
+            ranking
         );
-        return;
-    }
 
+        onSubmit(ranking);
+    };
 
-    if(!confirm("確定しますか？")){
-        return;
-    }
-
-
-    console.log(
-        "ランキング送信",
-        ranking
-    );
-
-
-    onSubmit(ranking);
-};
     box.appendChild(btn);
 
     container.appendChild(box);
+}
+
+.ranking-duplicate {
+    background-color: #ffe0e0 !important;
+    border: 2px solid #e57373 !important;
 }
