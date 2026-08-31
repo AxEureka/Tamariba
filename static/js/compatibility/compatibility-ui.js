@@ -150,6 +150,20 @@ export function createRankingUI(
         const select =
             document.createElement("select");
 
+        const placeholder =
+            document.createElement("option");
+        
+        placeholder.value = "";
+        placeholder.textContent =
+            "選択してください";
+        
+        placeholder.selected = true;
+        placeholder.disabled = true;
+        
+        select.appendChild(
+            placeholder
+        );
+
         choices.forEach(choice=>{
 
             const option =
@@ -185,6 +199,16 @@ export function createRankingUI(
 btn.onclick=()=>{
 
     console.log("ランキングボタンクリック");
+    if(
+        selects.some(
+            s => s.value === ""
+        )
+    ){
+        alert(
+            "全て選択してください"
+        );
+        return;
+    }
     const ranking =
         selects.map(
             s=>Number(s.value)
