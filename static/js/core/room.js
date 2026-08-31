@@ -10,7 +10,8 @@ import {
     startCompatibilityPlayer,
     showCompatibilityTeam,
     showRankingQuestion,
-    showRankingPrediction
+    showRankingPrediction,
+    showRankingWaiting
 } from "/static/js/compatibility/compatibility-player.js";
 import {
     showCompatibilityFinalResult
@@ -566,11 +567,11 @@ if(msg.type === "ranking_phase" &&
 
     else if(isAnswerer){
 
-        container.innerHTML = `
-            <h2>予測中です</h2>
-            <p>他の参加者の予想を待っています</p>
-        `;
-
+        showRankingWaiting(
+            container,
+            "他の参加者が予想中です"
+        );
+    
     }
 
 
