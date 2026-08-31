@@ -859,38 +859,53 @@ export function showCompatibilityFinalResult(
             member,
             cellData
         ){
-
+        
+            console.log(
+                "回答者詳細:",
+                member,
+                cellData
+            );
+        
             const ranking =
-                Array.isArray(cellData.ranking)
-                    ? cellData.ranking
-                    : [];
-
-
+                Array.isArray(cellData.answer)
+                    ? cellData.answer
+                    : Array.isArray(cellData.ranking)
+                        ? cellData.ranking
+                        : [];
+        
+        
             showModal(
                 `${member}さんの回答`,
                 createRankingList(
                     ranking
                 )
             );
-
+        
         }
-
 
         // ====================================
         // 予想詳細
         // ====================================
 
-        function showPredictionDetail(
+       function showPredictionDetail(
             member,
             cellData
         ){
-
+        
+            console.log(
+                "予想者詳細:",
+                member,
+                cellData
+            );
+        
             const ranking =
-                Array.isArray(cellData.ranking)
-                    ? cellData.ranking
-                    : [];
-
-
+                Array.isArray(cellData.prediction)
+                    ? cellData.prediction
+                    : Array.isArray(cellData.ranking)
+                        ? cellData.ranking
+                        : [];
+        
+        
             const target =
                 cellData.target ??
                 "―";
