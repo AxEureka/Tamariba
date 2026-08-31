@@ -1176,6 +1176,9 @@ export function showCompatibilityFinalResult(
         modal.style.background =
             "white";
 
+        modal.style.color =
+            "#222";
+
         modal.style.borderRadius =
             "12px";
 
