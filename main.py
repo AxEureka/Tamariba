@@ -2555,28 +2555,61 @@ async def handle_ranking(room,data):
         # =========================
         # チーム累積得点
         # =========================
-    
+        
         for player,score in question_scores.items():
-    
+        
             player_team=None
-    
+        
             for team_name,team_info in \
                 room["compatibility"]["teams"].items():
-    
+        
                 if player in team_info["members"]:
-    
+        
                     player_team=team_name
                     break
-    
-    
+        
+        
             if player_team is not None:
-    
+        
                 game["team_scores"].setdefault(
                     player_team,
                     0
                 )
-    
+        
                 game["team_scores"][player_team] += score
+        
+        
+        # ★ここから追加
+        # =========================
+        # 今回の問題のチーム得点
+        # =========================
+        
+        question_team_scores = {}
+        
+        for team_name, team_info in room["compatibility"]["teams"].items():
+        
+            team_score = 0
+        
+            for member in team_info.get("members", []):
+        
+                team_score += question_scores.get(
+                    member,
+                    0
+                )
+        
+            question_team_scores[team_name] = team_score
+        
+        
+        # 得点の高い順に並べる
+        question_team_ranking = sorted(
+            question_team_scores.items(),
+            key=lambda x: x[1],
+            reverse=True
+        )
+        
+        
+        # 上位3チームだけ
+        question_team_top3 = question_team_ranking[:3]
     
     
         # =========================
@@ -2631,6 +2664,10 @@ async def handle_ranking(room,data):
                 # 累積チーム得点
                 "team_scores":
                     game["team_scores"],
+
+                # 今回の上位3チーム
+                "question_team_top3":
+                    question_team_top3,
         
                 # ★追加
                 # 問題一覧
