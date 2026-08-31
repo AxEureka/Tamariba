@@ -2927,27 +2927,31 @@ async def handle_ranking(room,data):
                 # 問題を追加
                 # -------------------------
 
-                team_matrix[team_name][
-                    "questions"
-                ].append(
+                team_matrix[team_name]["questions"].append(
                     {
                         "index":
                             index,
-
+                
                         "number":
                             index + 1,
-
+                
                         "question":
                             question.get(
                                 "question",
                                 ""
                             ),
-
+                
+                        # ★ 選択肢もチーム成績に渡す
+                        "choices":
+                            question.get(
+                                "choices",
+                                []
+                            ),
+                
                         "cells":
                             cells
                     }
-                )
-    
+                )    
     
         # =========================
         # 最終結果送信
