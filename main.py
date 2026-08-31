@@ -2749,43 +2749,55 @@ async def handle_ranking(room,data):
         # =========================
         # チーム成績マトリクス
         # =========================
-    
+
         team_matrix = {}
-    
+
         for team_name, team_info in \
             room["compatibility"]["teams"].items():
-    
+
             members = team_info.get(
                 "members",
                 []
             )
-    
+
             team_matrix[team_name] = {
                 "members": members,
                 "questions": []
             }
-    
+
             for index, question in enumerate(
                 game["questions"]
             ):
-    
+
                 cells = {}
-    
+
+                # -------------------------
+                # この問題の回答者
+                # -------------------------
+
                 answerers = game[
                     "question_answerers"
                 ].get(
                     index,
                     {}
                 )
-    
+
                 answerer = answerers.get(
                     team_name
                 )
-    
+
+                # -------------------------
+                # 各メンバー
+                # -------------------------
+
                 for member in members:
-    
+
+                    # =================================
+                    # 回答者
+                    # =================================
+
                     if member == answerer:
-    
+
                         true_answer = game[
                             "true_answer_history"
                         ].get(
@@ -2794,15 +2806,31 @@ async def handle_ranking(room,data):
                         ).get(
                             member
                         )
-    
+
                         cells[member] = {
-                            "role": "answerer",
-                            "target": member,
-                            "ranking": true_answer
+                            "role":
+                                "answerer",
+
+                            "member":
+                                member,
+
+                            "target":
+                                member,
+
+                            "ranking":
+                                true_answer,
+
+                            # ★ 明示的に回答として保存
+                            "answer":
+                                true_answer
                         }
-    
+
+                    # =================================
+                    # 予想者
+                    # =================================
+
                     else:
-    
+
                         prediction = game[
                             "prediction_history"
                         ].get(
@@ -2811,7 +2839,7 @@ async def handle_ranking(room,data):
                         ).get(
                             member
                         )
-    
+
                         result = game[
                             "question_results"
                         ].get(
@@ -2821,33 +2849,65 @@ async def handle_ranking(room,data):
                             member,
                             []
                         )
-    
-                        cells[member] = {
-                            "role": "predictor",
-                            "target":
+
+                        predicted_target = None
+                        predicted_ranking = None
+
+                        if prediction:
+
+                            predicted_target = \
                                 prediction.get(
                                     "target"
-                                ) if prediction else None,
-                            "ranking":
+                                )
+
+                            predicted_ranking = \
                                 prediction.get(
                                     "ranking"
-                                ) if prediction else None,
+                                )
+
+                        cells[member] = {
+                            "role":
+                                "predictor",
+
+                            "member":
+                                member,
+
+                            "target":
+                                predicted_target,
+
+                            "ranking":
+                                predicted_ranking,
+
+                            # ★ 明示的に予想として保存
+                            "prediction":
+                                predicted_ranking,
+
                             "results":
                                 result
                         }
-    
+
+                # -------------------------
+                # 問題を追加
+                # -------------------------
+
                 team_matrix[team_name][
                     "questions"
                 ].append(
                     {
-                        "index": index,
-                        "number": index + 1,
+                        "index":
+                            index,
+
+                        "number":
+                            index + 1,
+
                         "question":
                             question.get(
                                 "question",
                                 ""
                             ),
-                        "cells": cells
+
+                        "cells":
+                            cells
                     }
                 )
     
