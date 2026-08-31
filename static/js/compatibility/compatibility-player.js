@@ -115,12 +115,15 @@ export function showCompatibilityTeam(
                     <div class="compatibility-player-result">
                 
                         <h2>
-                            あなたのチーム
+                        あなたは
+                        <span style="
+                        color:white;
+                        font-size:1.4em;
+                        ">
+                        ${teamName}
+                        </span>
+                        です
                         </h2>
-                
-                        <div class="compatibility-team-name">
-                            ${teamName}
-                        </div>
                 
                         <div class="compatibility-result-card">
                 
