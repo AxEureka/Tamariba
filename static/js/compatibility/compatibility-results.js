@@ -1123,6 +1123,12 @@ export function showCompatibilityFinalResult(
     // ========================================
 
     function showModal(
+
+        console.log(
+            "showModal",
+            titleText,
+            content
+        );
         titleText,
         content
     ){
@@ -1254,6 +1260,10 @@ export function showCompatibilityFinalResult(
                 }
 
             };
+
+        console.log(
+            "overlay append"
+        );
 
 
         document.body.appendChild(
