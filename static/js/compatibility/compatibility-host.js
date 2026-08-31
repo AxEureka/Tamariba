@@ -139,6 +139,16 @@ export function startCompatibilityHost(
         console.log("showTeams実行");
         config.innerHTML = "";
 
+        const grid =
+            document.createElement("div");
+        
+        grid.style.display = "grid";
+        grid.style.gridTemplateColumns =
+            "repeat(3, 1fr)";
+        grid.style.gap = "15px";
+        
+        config.appendChild(grid);
+
         Object.entries(teams)
         .forEach(
             ([name, team])=>{
@@ -168,7 +178,7 @@ export function startCompatibilityHost(
                     </div>
                 `;
 
-                config.appendChild(box);
+                grid.appendChild(box);
             }
         );
 
