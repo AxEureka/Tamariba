@@ -567,6 +567,28 @@ if(msg.type === "ranking_phase" &&
     }
 
 }      
+if(msg.type==="ranking_answer_progress"){
+
+    console.log(
+        "ランキング回答進捗:",
+        msg.done,
+        "/",
+        msg.total
+    );
+
+    if(
+        myName === hostName &&
+        compatibilityHostUI &&
+        compatibilityHostUI.setProgress
+    ){
+
+        compatibilityHostUI.setProgress(
+            `回答状況：${msg.done}/${msg.total}人 回答済み`
+        );
+
+    }
+
+}    
 if(msg.type==="ranking_prediction_progress"){
 
     console.log(
