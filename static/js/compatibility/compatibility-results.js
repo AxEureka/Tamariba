@@ -889,9 +889,12 @@ export function showCompatibilityFinalResult(
         ){
         
             console.log(
-                "回答者詳細:",
-                member,
-                cellData
+                "回答者詳細JSON",
+                JSON.stringify(
+                    cellData,
+                    null,
+                    2
+                )
             );
         
             const ranking =
