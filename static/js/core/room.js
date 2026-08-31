@@ -388,6 +388,13 @@ function connectSocket() {
           "相性診断開始受信",
           msg.questions
       );
+
+      if(
+          myName === hostName &&
+          compatibilityHostUI
+      ){
+          compatibilityHostUI.showTeamCreate();
+      }
   
   
       if (myName !== hostName) {
@@ -402,27 +409,6 @@ function connectSocket() {
   
   }
   
-  
-  // ★ここに追加
-  if (msg.type === "compatibility_all_done") {
-  
-  
-      console.log(
-          "全員回答完了",
-          msg
-      );
-  
-  
-      if(
-          myName === hostName &&
-          compatibilityHostUI
-      ){
-  
-          compatibilityHostUI.showTeamCreate();
-  
-      }
-  
-  }
 
 
 if (msg.type === "compatibility_team_created") {
