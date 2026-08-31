@@ -266,18 +266,12 @@ export function showRankingQuestion(
                 );
 
 
-                container.innerHTML = `
-
-                    <h2>
-                    回答しました
-                    </h2>
-
-                    <p>
-                    他の回答者の回答を待っています。
-                    </p>
-
+                container.innerHTML=`
+                <div class="compatibility-card">
+                    <h2>回答しました</h2>
+                    <p>他の回答者の回答を待っています</p>
+                </div>
                 `;
-
             }
         );
 
@@ -291,18 +285,12 @@ export function showRankingQuestion(
     // 自分が代表ではない場合
     // =================================
 
-    container.innerHTML = `
-
-        <h2>
-        回答者が回答中です
-        </h2>
-
-        <p>
-        回答が終わるまでお待ちください。
-        </p>
-
+    container.innerHTML=`
+    <div class="compatibility-card">
+        <h2>回答者が回答中です</h2>
+        <p>しばらくお待ちください</p>
+    </div>
     `;
-
 }
 
 
@@ -384,18 +372,12 @@ export function showRankingPrediction(
         myAnswerer === myName
     ){
 
-        container.innerHTML = `
-
-            <h2>
-            回答者です
-            </h2>
-
-            <p>
-            他のメンバーがあなたの回答を予想しています。
-            </p>
-
+        container.innerHTML=`
+        <div class="compatibility-card">
+            <h2>回答者です</h2>
+            <p>他のメンバーがあなたの回答を予想しています</p>
+        </div>
         `;
-
         return;
 
     }
@@ -438,16 +420,11 @@ export function showRankingPrediction(
                 );
         
         
-                container.innerHTML = `
-        
-                    <h2>
-                    予想を送信しました
-                    </h2>
-        
-                    <p>
-                    他のメンバーの予想を待っています。
-                    </p>
-        
+                container.innerHTML=`
+                <div class="compatibility-card">
+                    <h2>予想を送信しました</h2>
+                    <p>他のメンバーの予想を待っています</p>
+                </div>
                 `;
         
             },
