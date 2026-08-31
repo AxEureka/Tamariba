@@ -804,7 +804,8 @@ export function showCompatibilityFinalResult(
                         
                                     showAnswerDetail(
                                         member,
-                                        cellData
+                                        cellData,
+                                        questionData
                                     );
                         
                                 }
@@ -819,7 +820,8 @@ export function showCompatibilityFinalResult(
                         
                                     showPredictionDetail(
                                         member,
-                                        cellData
+                                        cellData,
+                                        questionData
                                     );
                         
                                 }
@@ -885,7 +887,8 @@ export function showCompatibilityFinalResult(
 
         function showAnswerDetail(
             member,
-            cellData
+            cellData,
+            questionData
         ){
         
             console.log(
@@ -908,7 +911,8 @@ export function showCompatibilityFinalResult(
             showModal(
                 `${member}さんの回答`,
                 createRankingList(
-                    ranking
+                    ranking,
+                    questionData?.choices
                 )
             );
         
@@ -920,7 +924,8 @@ export function showCompatibilityFinalResult(
 
        function showPredictionDetail(
             member,
-            cellData
+            cellData,
+            questionData
         ){
         
             console.log(
@@ -976,7 +981,8 @@ export function showCompatibilityFinalResult(
 
             content.appendChild(
                 createRankingList(
-                    ranking
+                    ranking,
+                    questionData?.choices
                 )
             );
 
@@ -1036,7 +1042,8 @@ export function showCompatibilityFinalResult(
     // ========================================
 
     function createRankingList(
-        ranking
+        ranking,
+        choices = []
     ){
 
         const box =
@@ -1063,58 +1070,70 @@ export function showCompatibilityFinalResult(
 
         ranking.forEach(
             (choice,index)=>{
-
+        
                 const line =
                     document.createElement("div");
-
-
-                let text =
-                    choice;
-
-
-                // 文字列以外にも対応
-                if(
-                    typeof choice !==
-                    "string"
+        
+        
+                // --------------------------------
+                // 選択肢ID → 選択肢名
+                // --------------------------------
+        
+                let text = choice;
+        
+                const choiceData =
+                    choices.find(
+                        c =>
+                            Number(c.id) ===
+                            Number(choice)
+                    );
+        
+                if(choiceData){
+        
+                    text =
+                        choiceData.text;
+        
+                }
+                else if(
+                    typeof choice !== "string"
                 ){
-
+        
                     if(
                         choice &&
                         typeof choice.text ===
                         "string"
                     ){
-
+        
                         text =
                             choice.text;
-
+        
                     }
                     else{
-
+        
                         text =
                             JSON.stringify(
                                 choice
                             );
-
+        
                     }
-
+        
                 }
-
-
+        
+        
                 line.textContent =
                     `${index + 1}位　${text}`;
-
-
+        
+        
                 line.style.margin =
                     "6px 0";
-
-
+        
+        
                 box.appendChild(
                     line
                 );
-
+        
             }
         );
-
 
         return box;
 
