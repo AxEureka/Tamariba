@@ -1123,15 +1123,15 @@ export function showCompatibilityFinalResult(
     // ========================================
 
     function showModal(
+        titleText,
+        content
+    ){
 
         console.log(
             "showModal",
             titleText,
             content
         );
-        titleText,
-        content
-    ){
 
         const overlay =
             document.createElement("div");
