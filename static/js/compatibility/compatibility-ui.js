@@ -298,7 +298,3 @@ export function createRankingUI(
     container.appendChild(box);
 }
 
-.ranking-duplicate {
-    background-color: #ffe0e0 !important;
-    border: 2px solid #e57373 !important;
-}
