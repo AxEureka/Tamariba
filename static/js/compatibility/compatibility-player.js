@@ -52,17 +52,11 @@ export function startCompatibilityPlayer(
             );
 
 
-            container.innerHTML = `
-
-                <h2>
-                回答を送信しました
-                </h2>
-
-                <p>
-                他の参加者を待っています
-                </p>
-
-            `;
+            showRankingWaiting(
+                container,
+                "回答しました",
+                "他の回答者の回答を待っています"
+            );
 
 
         }
@@ -269,12 +263,11 @@ export function showRankingQuestion(
                 );
 
 
-                container.innerHTML=`
-                <div class="compatibility-card">
-                    <h2>回答しました</h2>
-                    <p>他の回答者の回答を待っています</p>
-                </div>
-                `;
+                showRankingWaiting(
+                    container,
+                    "回答しました",
+                    "他の回答者の回答を待っています"
+                );
             }
         );
 
@@ -288,15 +281,11 @@ export function showRankingQuestion(
     // 自分が代表ではない場合
     // =================================
 
-    container.innerHTML=`
-    <div class="compatibility-card">
-        <h2>回答者が回答中です</h2>
-        <p>しばらくお待ちください</p>
-    </div>
-    `;
+    showRankingWaiting(
+        container,
+        "回答者が回答中です"
+    );
 }
-
-
 
 // =================================
 // ランキング予想
@@ -375,12 +364,11 @@ export function showRankingPrediction(
         myAnswerer === myName
     ){
 
-        container.innerHTML=`
-        <div class="compatibility-card">
-            <h2>回答者です</h2>
-            <p>他のメンバーがあなたの回答を予想しています</p>
-        </div>
-        `;
+        showRankingWaiting(
+            container,
+            "回答者です",
+            "他のメンバーがあなたの回答を予想しています"
+        );
         return;
 
     }
@@ -423,12 +411,11 @@ export function showRankingPrediction(
                 );
         
         
-                container.innerHTML=`
-                <div class="compatibility-card">
-                    <h2>予想を送信しました</h2>
-                    <p>他のメンバーの予想を待っています</p>
-                </div>
-                `;
+                showRankingWaiting(
+                    container,
+                    "予想を送信しました",
+                    "他のメンバーの予想を待っています"
+                );
         
             },
         
@@ -450,6 +437,41 @@ export function showRankingPrediction(
         <h2>
         チーム情報を取得できませんでした
         </h2>
+
+    `;
+
+}
+
+
+export function showRankingWaiting(
+    container,
+    message,
+    subMessage = ""
+){
+
+    container.innerHTML = `
+
+        <div class="compatibility-ui">
+
+            <h2>
+                相性診断
+            </h2>
+
+            <div class="compatibility-card">
+
+                <h3>
+                    ${message}
+                </h3>
+
+                ${
+                    subMessage
+                    ? `<p>${subMessage}</p>`
+                    : ""
+                }
+
+            </div>
+
+        </div>
 
     `;
 
