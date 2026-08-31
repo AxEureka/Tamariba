@@ -857,6 +857,12 @@
     font-weight: 600;
 }
 
+.ranking-score-hit {
+    background-color: #fff3a8;
+    border: 2px solid #e0b800;
+    border-radius: 6px;
+    font-weight: bold;
+}
 
 /* データがない場合 */
 
