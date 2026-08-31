@@ -620,18 +620,17 @@ if(msg.type==="ranking_result"){
         // =================================
     
         let teamScoreText = "";
-    
-        if(msg.team_scores){
-    
-            for(
-                const [team, score]
-                of Object.entries(msg.team_scores)
-            ){
-    
-                teamScoreText +=
-                    `${team}：${score}点　`;
-            }
-    
+
+        if(msg.question_team_top3){
+        
+            teamScoreText =
+                msg.question_team_top3
+                    .map(
+                        ([team, score]) =>
+                            `${team}：${score}点`
+                    )
+                    .join("　");
+        
         }
     
         if(
