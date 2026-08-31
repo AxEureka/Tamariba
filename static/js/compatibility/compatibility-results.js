@@ -773,37 +773,65 @@ export function showCompatibilityFinalResult(
 
                         cell.style.cursor =
                             "pointer";
-
+                        
+                        cell.style.userSelect =
+                            "none";
+                        
                         cell.title =
                             "クリックして詳細を見る";
+                        
+                        cell.style.textDecoration =
+                            "underline";
 
 
                         cell.onclick =
                             ()=>{
-
+                        
+                                console.log(
+                                    "★ マトリクスクリック:",
+                                    member,
+                                    cellData
+                                );
+                        
                                 if(
                                     cellData.role ===
                                     "answerer"
                                 ){
-
+                        
+                                    console.log(
+                                        "★ 回答者セル"
+                                    );
+                        
                                     showAnswerDetail(
                                         member,
                                         cellData
                                     );
-
+                        
                                 }
                                 else if(
                                     cellData.role ===
                                     "predictor"
                                 ){
-
+                        
+                                    console.log(
+                                        "★ 予想者セル"
+                                    );
+                        
                                     showPredictionDetail(
                                         member,
                                         cellData
                                     );
-
+                        
                                 }
-
+                                else{
+                        
+                                    console.log(
+                                        "★ role不明:",
+                                        cellData.role
+                                    );
+                        
+                                }
+                        
                             };
 
 
