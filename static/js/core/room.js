@@ -871,11 +871,6 @@ if(msg.type==="ranking_result"){
 
                     <div class="ranking-result">
                 
-                        <h2>
-                            第${index + 1}問 結果
-                        </h2>
-                
-                
                         <div class="ranking-result-question">
                 
                             <h3>
@@ -890,19 +885,6 @@ if(msg.type==="ranking_result"){
                 
                         </div>
                 
-                
-                        <div class="ranking-result-answerer">
-                
-                            <p>
-                                <strong>
-                                    ${myTeam ?? "自チーム"}の回答者：
-                                </strong>
-                                ${answerer ?? "―"}
-                            </p>
-                
-                        </div>
-                
-                
                         <!-- =========================
                              回答と予想
                         ========================== -->
@@ -914,9 +896,8 @@ if(msg.type==="ranking_result"){
                             <div class="ranking-column">
                 
                                 <h3>
-                                    回答者の回答
-                                </h3>
-                
+                                    回答者（${answerer ?? "―"}）の回答
+                                </h3>                
                                 ${
                                     answerRanking.length
                                     ?
