@@ -512,6 +512,45 @@ export function showCompatibilityFinalResult(
             title
         );
 
+            // ====================================
+            // 相性表示
+            // ====================================
+            
+            const rankingInfo =
+                Array.isArray(msg.team_final_ranking)
+                    ? msg.team_final_ranking.find(
+                        t => t.team === targetTeam
+                    )
+                    : null;
+            
+            if(rankingInfo){
+            
+                const compatibilityBox =
+                    document.createElement("div");
+            
+                compatibilityBox.style.textAlign =
+                    "center";
+            
+                compatibilityBox.style.margin =
+                    "10px 0 20px 0";
+            
+                compatibilityBox.style.fontSize =
+                    "18px";
+            
+                compatibilityBox.style.fontWeight =
+                    "bold";
+            
+                compatibilityBox.innerHTML =
+                    `表示相性：${rankingInfo.shown_score ?? "―"}％　
+                    ／　
+                    実際の相性：${rankingInfo.actual_score ?? "―"}％`;
+            
+                wrapper.appendChild(
+                    compatibilityBox
+                );
+            
+            }
+
 
         // ====================================
         // チームデータ
