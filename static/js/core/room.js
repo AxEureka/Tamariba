@@ -666,13 +666,12 @@ if(msg.type==="ranking_result"){
     
         let teamScoreText = "";
 
-        if(msg.question_team_top3){
-        
+        if (msg.question_team_top3) {
+
             teamScoreText =
                 msg.question_team_top3
-                    .map(
-                        ([team, score]) =>
-                            `${team}：${score}点`
+                    .map(item =>
+                        `${item.team}：${item.score}点`
                     )
                     .join("　");
         
