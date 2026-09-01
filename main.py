@@ -2847,34 +2847,6 @@ async def handle_ranking(room,data):
             in top3_scores
         ]
     
-            team_info = room["compatibility"]["teams"].get(
-                team_name,
-                {}
-            )
-    
-            team_final_ranking.append(
-                {
-                    "rank": rank,
-                    "team": team_name,
-                    "total_score": total_score,
-                    "shown_score":
-                        team_info.get(
-                            "shown_score"
-                        ),
-                    "actual_score":
-                        team_info.get(
-                            "score"
-                        ),
-                    "members":
-                        team_info.get(
-                            "members",
-                        []
-                        )
-                }
-            )
-    
-        team_top5 = team_final_ranking[:5]
-    
     
         # =========================
         # チーム内メンバーランキング
