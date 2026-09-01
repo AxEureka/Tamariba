@@ -2607,9 +2607,58 @@ async def handle_ranking(room,data):
             reverse=True
         )
         
+        # =========================
+        # 同点を考慮した順位
+        # =========================
         
-        # 上位3チームだけ
-        question_team_top3 = question_team_ranking[:3]
+        question_unique_scores = []
+        
+        for team_name, score in question_team_ranking:
+        
+            if score not in question_unique_scores:
+        
+                question_unique_scores.append(
+                    score
+                )
+        
+        
+        question_score_to_rank = {
+            score: rank
+            for rank, score in enumerate(
+                question_unique_scores,
+                start=1
+            )
+        }
+        
+        
+        # =========================
+        # トップ3得点のチーム
+        # =========================
+        
+        question_top3_scores = set(
+            question_unique_scores[:3]
+        )
+        
+        
+        question_team_top3 = []
+        
+        for team_name, score in question_team_ranking:
+        
+            if score not in question_top3_scores:
+                continue
+        
+            question_team_top3.append(
+                {
+                    "rank":
+                        question_score_to_rank[score],
+        
+                    "team":
+                        team_name,
+        
+                    "score":
+                        score
+                }
+            )
     
     
         # =========================
@@ -2712,15 +2761,91 @@ async def handle_ranking(room,data):
     
         team_ranking_raw = sorted(
             game["team_scores"].items(),
-            key=lambda x:-x[1]
+            key=lambda x: x[1],
+            reverse=True
         )
-    
+        
+        # =========================
+        # チーム最終ランキング
+        # 同点は同順位
+        # =========================
+        
+        unique_team_scores = []
+        
+        for team_name, total_score in team_ranking_raw:
+        
+            if total_score not in unique_team_scores:
+        
+                unique_team_scores.append(
+                    total_score
+                )
+        
+        
+        score_to_rank = {
+            score: rank
+            for rank, score in enumerate(
+                unique_team_scores,
+                start=1
+            )
+        }
+        
+        
         team_final_ranking = []
-    
-        for rank, (team_name, total_score) in enumerate(
-            team_ranking_raw,
-            start=1
-        ):
+        
+        for team_name, total_score in team_ranking_raw:
+        
+            team_info = room[
+                "compatibility"
+            ]["teams"].get(
+                team_name,
+                {}
+            )
+        
+            team_final_ranking.append(
+                {
+                    "rank":
+                        score_to_rank[total_score],
+        
+                    "team":
+                        team_name,
+        
+                    "total_score":
+                        total_score,
+        
+                    "shown_score":
+                        team_info.get(
+                            "shown_score"
+                        ),
+        
+                    "actual_score":
+                        team_info.get(
+                            "score"
+                        ),
+        
+                    "members":
+                        team_info.get(
+                            "members",
+                            []
+                        )
+                }
+            )
+        
+        
+        # =========================
+        # トップ3得点を取得
+        # 同点はすべて含める
+        # =========================
+        
+        top3_scores = set(
+            unique_team_scores[:3]
+        )
+        
+        team_top5 = [
+            item
+            for item in team_final_ranking
+            if item["total_score"]
+            in top3_scores
+        ]
     
             team_info = room["compatibility"]["teams"].get(
                 team_name,
@@ -3207,6 +3332,83 @@ async def broadcast(room,message):
 
             room["sockets"].remove(socket)
 
+
+def make_team_ranking(scores, top_score_count=None):
+
+    # 得点の高い順
+    sorted_scores = sorted(
+        scores.items(),
+        key=lambda x: x[1],
+        reverse=True
+    )
+
+    result = []
+
+    # -------------------------
+    # 同点をまとめた得点一覧
+    # -------------------------
+
+    unique_scores = []
+
+    for team, score in sorted_scores:
+
+        if score not in unique_scores:
+            unique_scores.append(score)
+
+    # -------------------------
+    # 表示する得点範囲
+    # -------------------------
+
+    if top_score_count is not None:
+
+        target_scores = set(
+            unique_scores[:top_score_count]
+        )
+
+    else:
+
+        target_scores = None
+
+    # -------------------------
+    # 順位付け
+    # 同点は同順位
+    # -------------------------
+
+    score_to_rank = {}
+
+    for rank, score in enumerate(
+        unique_scores,
+        start=1
+    ):
+
+        score_to_rank[score] = rank
+
+    # -------------------------
+    # 結果作成
+    # -------------------------
+
+    for team, score in sorted_scores:
+
+        if (
+            target_scores is not None
+            and score not in target_scores
+        ):
+            continue
+
+        result.append(
+            {
+                "rank":
+                    score_to_rank[score],
+
+                "team":
+                    team,
+
+                "total_score":
+                    score
+            }
+        )
+
+    return result
 
 def calc_ranking_result(answer, predict):
 
