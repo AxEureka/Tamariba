@@ -2515,33 +2515,40 @@ async def handle_ranking(room,data):
         # 黄色表示用の一致箇所
         # =========================
         
-        if answer == predict:
-            # 7つ完全一致なら、7つ全部を一致扱い
+        if point == 0:
+            # 点数なし
+            matched = []
+        
+        elif result_type == "完全一致":
+            # 7つ完全一致
             matched = list(answer)
         
+        elif result_type == "サンレンタン":
+            # 1～3位すべて順位一致
+            matched = predict[:3]
+        
+        elif result_type == "サンレンプク":
+            # 1～3位の3人が一致
+            matched = predict[:3]
+        
+        elif result_type == "ニレンタン":
+            # 1・2位が順位一致
+            matched = predict[:2]
+        
+        elif result_type == "ニレンプク":
+            # 1～3位のうち、正解と同じ人がいる予想位置
+            matched = [
+                predict[i]
+                for i in range(3)
+                if predict[i] in answer[:3]
+            ]
+        
+        elif result_type == "タン":
+            # 1位が順位一致
+            matched = predict[:1]
+        
         else:
-            # それ以外はサンレンタン等の判定対象である1～3位のみ
-            answer_top3 = answer[:3]
-            predict_top3 = predict[:3]
-        
-            matched = list(
-                set(answer_top3) &
-                set(predict_top3)
-            )
-        
-        result_types.append({
-            "target": target,
-            "type": result_type,
-            "score": point,
-            "answer": answer,
-            "prediction": predict,
-            "matched": matched
-        })
-        
-        question_scores[player] = score
-        
-        question_results[player] = result_types
-    
+            matched = []  
     
         # =========================
         # 問題別得点を保存
@@ -3497,45 +3504,24 @@ def calc_ranking_result(answer, predict):
 
 
     # =========================
-    # 1～3位の順位一致
-    # =========================
-
-    exact = sum(
-        answer_top3[i] == predict_top3[i]
-        for i in range(3)
-    )
-
-
-    # =========================
-    # 1～3位の人物一致
-    # =========================
-
-    hit = len(
-        set(answer_top3) & set(predict_top3)
-    )
-
-
-    # =========================
     # サンレンタン
+    # 1～3位すべて順位一致
     # =========================
 
-    if exact == 3:
+    if (
+        answer_top3[0] == predict_top3[0]
+        and answer_top3[1] == predict_top3[1]
+        and answer_top3[2] == predict_top3[2]
+    ):
         return "サンレンタン", 6
 
 
     # =========================
-    # サンレンプク
-    # =========================
-
-    elif hit == 3:
-        return "サンレンプク", 4
-
-
-    # =========================
     # ニレンタン
+    # 1位・2位が順位一致
     # =========================
 
-    elif (
+    if (
         answer_top3[0] == predict_top3[0]
         and answer_top3[1] == predict_top3[1]
     ):
@@ -3543,24 +3529,36 @@ def calc_ranking_result(answer, predict):
 
 
     # =========================
-    # プクプク
-    # =========================
-
-    elif hit == 2:
-        return "プクプク", 2
-
-
-    # =========================
     # タン
+    # 1位が順位一致
     # =========================
 
-    elif answer_top3[0] == predict_top3[0]:
+    if answer_top3[0] == predict_top3[0]:
         return "タン", 1
+
+
+    # =========================
+    # 3人一致
+    # =========================
+
+    hit = len(
+        set(answer_top3) & set(predict_top3)
+    )
+
+    if hit == 3:
+        return "サンレンプク", 4
+
+
+    # =========================
+    # 2人一致
+    # =========================
+
+    if hit == 2:
+        return "ニレンプク", 2
 
 
     # =========================
     # はずれ
     # =========================
 
-    else:
-        return "はずれ", 0
+    return "はずれ", 0
