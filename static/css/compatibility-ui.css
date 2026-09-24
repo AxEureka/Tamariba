@@ -556,7 +556,7 @@
     background:#1e1e2f;
     color:white;
 
-    padding:30px;
+    padding:22px;
 
     border-radius:16px;
 
@@ -566,17 +566,12 @@
     pointer-events:auto;
 
     width:min(700px, 90vw);
-    max-height:85vh;
+    max-height:94vh;
     overflow-y:auto;
-
+   
     box-shadow:0 15px 50px rgba(0,0,0,0.7);
 
     box-sizing:border-box;
-}
-
-.ranking-ui h2{
-    font-size:28px;
-    margin:0 0 20px;
 }
 
 .ranking-ui h2{
@@ -590,7 +585,19 @@
 .compatibility-ranking-title {
     margin: 0 0 10px;
 
-    color: #333;
+    color: white;
+
+    font-size: 22px;
+    font-weight: 600;
+}
+
+
+/* ランキング画面の操作タイトル */
+
+.compatibility-ranking-title {
+    margin: 0 0 10px;
+
+    color: white;
 
     font-size: 22px;
     font-weight: 600;
