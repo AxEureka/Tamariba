@@ -15,7 +15,7 @@ export function createCompatibilityUI(
     box.className="compatibility-ui";
 
     const title=document.createElement("h2");
-    title.textContent="相性診断";
+    title.textContent="好きな方を選んでください";
     box.appendChild(title);
 
 
@@ -119,8 +119,8 @@ export function createRankingUI(
 
     title.textContent =
         mode==="answer"
-        ? "ランキングを付けてください"
-        : "ランキングを予想してください";
+        ? "順位をつけてください"
+        : "回答者の順位を予想してください";
 
     box.appendChild(title);
 
