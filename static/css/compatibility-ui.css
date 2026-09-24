@@ -8,12 +8,12 @@
     background: rgba(255, 255, 255, 0.97);
     color: #222;
 
-    padding: 28px;
+    padding: 22px;
 
     border-radius: 16px;
 
     width: min(1000px, 94vw);
-    max-height: 88vh;
+    max-height: 94vh;
 
     overflow-y: auto;
 
@@ -1012,7 +1012,5 @@
     .compatibility-team-list{
         grid-template-columns:1fr;
     }
-
-}
 
 }
