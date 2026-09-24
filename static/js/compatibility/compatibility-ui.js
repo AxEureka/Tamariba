@@ -117,11 +117,13 @@ export function createRankingUI(
 
     const title=document.createElement("h2");
 
+    title.className = "compatibility-ranking-title";
+
     title.textContent =
         mode==="answer"
         ? "順位をつけてください"
         : "回答者の順位を予想してください";
-
+    
     box.appendChild(title);
 
     const q=document.createElement("h3");
