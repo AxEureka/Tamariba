@@ -2511,26 +2511,36 @@ async def handle_ranking(room,data):
                     )
         
                     score += point
+        # =========================
+        # 黄色表示用の一致箇所
+        # =========================
         
-                    answer_top3 = answer[:3]
-                    predict_top3 = predict[:3]
-                    
-                    matched = list(
-                        set(answer_top3) &
-                        set(predict_top3)
-                    )
-                    result_types.append({
-                        "target": target,
-                        "type": result_type,
-                        "score": point,
-                        "answer": answer,
-                        "prediction": predict,
-                        "matched": matched
-                    })
+        if answer == predict:
+            # 7つ完全一致なら、7つ全部を一致扱い
+            matched = list(answer)
         
-            question_scores[player] = score
+        else:
+            # それ以外はサンレンタン等の判定対象である1～3位のみ
+            answer_top3 = answer[:3]
+            predict_top3 = predict[:3]
         
-            question_results[player] = result_types
+            matched = list(
+                set(answer_top3) &
+                set(predict_top3)
+            )
+        
+        result_types.append({
+            "target": target,
+            "type": result_type,
+            "score": point,
+            "answer": answer,
+            "prediction": predict,
+            "matched": matched
+        })
+        
+        question_scores[player] = score
+        
+        question_results[player] = result_types
     
     
         # =========================
