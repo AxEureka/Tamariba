@@ -366,7 +366,7 @@ export function showRankingPrediction(
 
         showRankingWaiting(
             container,
-            "他のメンバーがあなたの回答を予想しています",
+            "他のメンバーが順位を予想しています",
             "しばらくお待ちください"
         );
         return;
