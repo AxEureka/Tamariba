@@ -1611,7 +1611,7 @@ async def handle_compatibility(room,data):
         # ------------------
         
         team_sizes = []
-        
+
         base = len(players) // actual_team_count
         rest = len(players) % actual_team_count
         
@@ -1622,7 +1622,27 @@ async def handle_compatibility(room,data):
                     1 if i < rest
                     else 0
                 )
-            )  
+            )
+        
+        # ------------------
+        # 1人チーム防止
+        # ------------------
+        
+        if min(team_sizes) < 2:
+        
+            await broadcast(
+                room,
+                {
+                    "type":
+                        "compatibility_team_error",
+        
+                    "message":
+                        "チーム数が多すぎます。全チーム2人以上になるよう設定してください。"
+                }
+            )
+        
+            return
+        
         # -------------------------
         # 類似度取得
         # -------------------------
