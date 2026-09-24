@@ -382,7 +382,7 @@ export function showCompatibilityFinalResult(
 
 
         // ====================================
-        // チーム成績ボタン
+        // 結果切替ボタン
         // ====================================
 
         const buttonArea =
@@ -395,29 +395,71 @@ export function showCompatibilityFinalResult(
             "25px";
 
 
-        const teamButton =
-            document.createElement("button");
+        // ------------------------------------
+        // 親画面
+        // ------------------------------------
 
-        teamButton.textContent =
-            "チーム成績";
+        if(myName === hostName){
 
-        teamButton.style.fontSize =
-            "16px";
+            const factorButton =
+                document.createElement("button");
 
-        teamButton.style.padding =
-            "10px 24px";
+            factorButton.textContent =
+                "条件別平均を見る";
 
-        teamButton.style.cursor =
-            "pointer";
+            factorButton.style.fontSize =
+                "16px";
+
+            factorButton.style.padding =
+                "10px 24px";
+
+            factorButton.style.cursor =
+                "pointer";
 
 
-        teamButton.onclick =
-            showTeamResultPage;
+            factorButton.onclick =
+                showFactorMeanPage;
 
 
-        buttonArea.appendChild(
-            teamButton
-        );
+            buttonArea.appendChild(
+                factorButton
+            );
+
+        }
+
+
+        // ------------------------------------
+        // 子画面
+        // ------------------------------------
+
+        else{
+
+            const teamButton =
+                document.createElement("button");
+
+            teamButton.textContent =
+                "チーム成績";
+
+            teamButton.style.fontSize =
+                "16px";
+
+            teamButton.style.padding =
+                "10px 24px";
+
+            teamButton.style.cursor =
+                "pointer";
+
+
+            teamButton.onclick =
+                showTeamResultPage;
+
+
+            buttonArea.appendChild(
+                teamButton
+            );
+
+        }
+
 
         wrapper.appendChild(
             buttonArea
@@ -445,6 +487,363 @@ export function showCompatibilityFinalResult(
 
         wrapper.appendChild(
             closeText
+        );
+
+
+        container.appendChild(
+            wrapper
+        );
+
+    }
+
+    // ========================================
+    // 条件別平均ページ
+    // ========================================
+
+    function showFactorMeanPage(){
+
+        container.innerHTML = "";
+
+        const wrapper =
+            document.createElement("div");
+
+        wrapper.className =
+            "compatibility-ui";
+
+        wrapper.style.color =
+            "#222";
+
+
+        // ====================================
+        // タイトル
+        // ====================================
+
+        const title =
+            document.createElement("h2");
+
+        title.textContent =
+            "📊 条件別平均";
+
+        title.style.textAlign =
+            "center";
+
+        wrapper.appendChild(
+            title
+        );
+
+
+        // ====================================
+        // 説明
+        // ====================================
+
+        const description =
+            document.createElement("p");
+
+        description.textContent =
+            "チームの実際の相性と表示された相性の組み合わせごとの平均得点";
+
+        description.style.textAlign =
+            "center";
+
+        description.style.marginBottom =
+            "20px";
+
+        wrapper.appendChild(
+            description
+        );
+
+
+        // ====================================
+        // データ取得
+        // ====================================
+
+        const factorMeans =
+            msg.factor_means || {};
+
+
+        // ====================================
+        // 2×2表
+        // ====================================
+
+        const table =
+            document.createElement("table");
+
+        table.style.width =
+            "100%";
+
+        table.style.maxWidth =
+            "600px";
+
+        table.style.margin =
+            "20px auto";
+
+        table.style.borderCollapse =
+            "collapse";
+
+
+        // ====================================
+        // ヘッダー
+        // ====================================
+
+        const thead =
+            document.createElement("thead");
+
+        const headerRow =
+            document.createElement("tr");
+
+
+        const cornerCell =
+            document.createElement("th");
+
+        cornerCell.textContent =
+            "実際の相性 ＼ 表示相性";
+
+        styleHeaderCell(
+            cornerCell
+        );
+
+        headerRow.appendChild(
+            cornerCell
+        );
+
+
+        const shownHighHeader =
+            document.createElement("th");
+
+        shownHighHeader.textContent =
+            "高（90%）";
+
+        styleHeaderCell(
+            shownHighHeader
+        );
+
+        headerRow.appendChild(
+            shownHighHeader
+        );
+
+
+        const shownLowHeader =
+            document.createElement("th");
+
+        shownLowHeader.textContent =
+            "低（20%）";
+
+        styleHeaderCell(
+            shownLowHeader
+        );
+
+        headerRow.appendChild(
+            shownLowHeader
+        );
+
+
+        thead.appendChild(
+            headerRow
+        );
+
+        table.appendChild(
+            thead
+        );
+
+
+        // ====================================
+        // 本体
+        // ====================================
+
+        const tbody =
+            document.createElement("tbody");
+
+
+        // ------------------------------------
+        // 実際：高
+        // ------------------------------------
+
+        const highRow =
+            document.createElement("tr");
+
+
+        const highLabel =
+            document.createElement("th");
+
+        highLabel.textContent =
+            "高";
+
+        styleHeaderCell(
+            highLabel
+        );
+
+        highRow.appendChild(
+            highLabel
+        );
+
+
+        const highHighCell =
+            document.createElement("td");
+
+        highHighCell.textContent =
+            `${factorMeans.high_high ?? "―"}点`;
+
+        styleBodyCell(
+            highHighCell
+        );
+
+        highRow.appendChild(
+            highHighCell
+        );
+
+
+        const highLowCell =
+            document.createElement("td");
+
+        highLowCell.textContent =
+            `${factorMeans.high_low ?? "―"}点`;
+
+        styleBodyCell(
+            highLowCell
+        );
+
+        highRow.appendChild(
+            highLowCell
+        );
+
+
+        tbody.appendChild(
+            highRow
+        );
+
+
+        // ------------------------------------
+        // 実際：低
+        // ------------------------------------
+
+        const lowRow =
+            document.createElement("tr");
+
+
+        const lowLabel =
+            document.createElement("th");
+
+        lowLabel.textContent =
+            "低";
+
+        styleHeaderCell(
+            lowLabel
+        );
+
+        lowRow.appendChild(
+            lowLabel
+        );
+
+
+        const lowHighCell =
+            document.createElement("td");
+
+        lowHighCell.textContent =
+            `${factorMeans.low_high ?? "―"}点`;
+
+        styleBodyCell(
+            lowHighCell
+        );
+
+        lowRow.appendChild(
+            lowHighCell
+        );
+
+
+        const lowLowCell =
+            document.createElement("td");
+
+        lowLowCell.textContent =
+            `${factorMeans.low_low ?? "―"}点`;
+
+        styleBodyCell(
+            lowLowCell
+        );
+
+        lowRow.appendChild(
+            lowLowCell
+        );
+
+
+        tbody.appendChild(
+            lowRow
+        );
+
+
+        table.appendChild(
+            tbody
+        );
+
+
+        wrapper.appendChild(
+            table
+        );
+
+
+        // ====================================
+        // 補足
+        // ====================================
+
+        const note =
+            document.createElement("p");
+
+        note.textContent =
+            "※ 各セルは、その条件に該当するチームの平均得点です。";
+
+        note.style.textAlign =
+            "center";
+
+        note.style.fontSize =
+            "14px";
+
+        note.style.opacity =
+            "0.7";
+
+        wrapper.appendChild(
+            note
+        );
+
+
+        // ====================================
+        // 戻るボタン
+        // ====================================
+
+        const buttonArea =
+            document.createElement("div");
+
+        buttonArea.style.textAlign =
+            "center";
+
+        buttonArea.style.marginTop =
+            "25px";
+
+
+        const backButton =
+            document.createElement("button");
+
+        backButton.textContent =
+            "ランキングを見る";
+
+        backButton.style.fontSize =
+            "16px";
+
+        backButton.style.padding =
+            "10px 24px";
+
+        backButton.style.cursor =
+            "pointer";
+
+
+        backButton.onclick =
+            showRankingPage;
+
+
+        buttonArea.appendChild(
+            backButton
+        );
+
+        wrapper.appendChild(
+            buttonArea
         );
 
 
