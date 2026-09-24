@@ -856,6 +856,7 @@ if(msg.type==="ranking_result"){
                         results.find(
                             r => r.target === answerer
                         );
+                    console.log("myResult", myResult);
         
                 }
         
