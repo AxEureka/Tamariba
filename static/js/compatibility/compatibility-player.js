@@ -54,8 +54,8 @@ export function startCompatibilityPlayer(
 
             showRankingWaiting(
                 container,
-                "回答しました",
-                "他の回答者の回答を待っています"
+                "…相性計算中…",
+                "しばらくお待ちください"
             );
 
 
@@ -265,8 +265,8 @@ export function showRankingQuestion(
 
                 showRankingWaiting(
                     container,
-                    "回答しました",
-                    "他の回答者の回答を待っています"
+                    "順位を保存しました",
+                    "しばらくお待ちください"
                 );
             }
         );
@@ -283,7 +283,7 @@ export function showRankingQuestion(
 
     showRankingWaiting(
         container,
-        "回答者が回答中です"
+        "チームの代表者が回答中です"
     );
 }
 
@@ -366,8 +366,8 @@ export function showRankingPrediction(
 
         showRankingWaiting(
             container,
-            "回答者です",
-            "他のメンバーがあなたの回答を予想しています"
+            "他のメンバーがあなたの回答を予想しています",
+            "しばらくお待ちください"
         );
         return;
 
@@ -414,7 +414,7 @@ export function showRankingPrediction(
                 showRankingWaiting(
                     container,
                     "予想を送信しました",
-                    "他のメンバーの予想を待っています"
+                    "しばらくお待ちください"
                 );
         
             },
