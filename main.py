@@ -2838,7 +2838,80 @@ async def handle_ranking(room,data):
                 }
             )
         
-        
+        # =========================
+        # 2×2セル作成
+        # =========================
+
+        factor_cells = {
+            "high_high": [],
+            "high_low": [],
+            "low_high": [],
+            "low_low": []
+        }
+
+        team_level_data = []
+
+        for team_name, score in game["team_scores"].items():
+
+            team_info = room["compatibility"]["teams"][team_name]
+
+            actual = team_info.get("type")          # high / low
+            shown_score = team_info.get("shown_score")
+
+            shown_type = (
+                "high"
+                if shown_score >= 50
+                else "low"
+            )
+
+            key = f"{actual}_{shown_type}"
+
+            factor_cells[key].append(score)
+
+            team_level_data.append(
+                {
+                    "team":
+                        team_name,
+
+                    "team_game_score":
+                        score,
+
+                    "actual_condition":
+                        actual,
+
+                    "shown_condition":
+                        shown_type,
+
+                    "shown_score":
+                        shown_score,
+
+                    "actual_similarity":
+                        team_info.get("score"),
+
+                    "members":
+                        team_info.get(
+                            "members",
+                            []
+                        )
+                }
+            )
+
+        # =========================
+        # 2×2平均
+        # =========================
+
+        factor_means = {}
+
+        for key, values in factor_cells.items():
+
+            factor_means[key] = (
+                round(
+                    sum(values) / len(values),
+                    2
+                )
+                if values
+                else 0
+            )
         # =========================
         # トップ3得点を取得
         # 同点はすべて含める
@@ -3118,7 +3191,16 @@ async def handle_ranking(room,data):
     
                 # ★チーム成績マトリクス
                 "team_matrix":
-                    team_matrix
+                    team_matrix,
+
+                "factor_means":
+                    factor_means,
+
+                "factor_cells":
+                    factor_cells,
+
+                "team_level_data":
+                    team_level_data
             }
         )
 
