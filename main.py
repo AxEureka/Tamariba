@@ -2512,12 +2512,20 @@ async def handle_ranking(room,data):
         
                     score += point
         
+                    answer_top3 = answer[:3]
+                    predict_top3 = predict[:3]
+                    
+                    matched = list(
+                        set(answer_top3) &
+                        set(predict_top3)
+                    )
                     result_types.append({
                         "target": target,
                         "type": result_type,
                         "score": point,
                         "answer": answer,
-                        "prediction": predict
+                        "prediction": predict,
+                        "matched": matched
                     })
         
             question_scores[player] = score
