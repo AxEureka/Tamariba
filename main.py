@@ -3496,17 +3496,23 @@ def calc_ranking_result(answer, predict):
     predict_top3 = predict[:3]
 
 
-    exact = 0
-    hit = 0
+    # =========================
+    # 1～3位の順位一致
+    # =========================
+
+    exact = sum(
+        answer_top3[i] == predict_top3[i]
+        for i in range(3)
+    )
 
 
-    for i in range(3):
+    # =========================
+    # 1～3位の人物一致
+    # =========================
 
-        if answer_top3[i] == predict_top3[i]:
-            exact += 1
-
-        if predict_top3[i] in answer_top3:
-            hit += 1
+    hit = len(
+        set(answer_top3) & set(predict_top3)
+    )
 
 
     # =========================
@@ -3529,23 +3535,26 @@ def calc_ranking_result(answer, predict):
     # ニレンタン
     # =========================
 
-    elif exact == 2:
+    elif (
+        answer_top3[0] == predict_top3[0]
+        and answer_top3[1] == predict_top3[1]
+    ):
         return "ニレンタン", 3
 
 
     # =========================
-    # ニレンプク
+    # プクプク
     # =========================
 
     elif hit == 2:
-        return "ニレンプク", 2
+        return "プクプク", 2
 
 
     # =========================
     # タン
     # =========================
 
-    elif hit == 1:
+    elif answer_top3[0] == predict_top3[0]:
         return "タン", 1
 
 
