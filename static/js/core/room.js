@@ -456,6 +456,13 @@ if (msg.type === "compatibility_team_created") {
     }
 
 }
+if(msg.type === "compatibility_team_error"){
+
+    if(myName === hostName){
+        alert(msg.message);
+    }
+
+}
     
 if (msg.type === "ranking_question") {
 
