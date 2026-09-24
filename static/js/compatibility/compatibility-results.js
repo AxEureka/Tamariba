@@ -497,6 +497,95 @@ export function showCompatibilityFinalResult(
     }
 
     // ========================================
+    // R用CSVダウンロード
+    // ========================================
+    
+    function downloadTeamDataCSV(){
+    
+        const data =
+            msg.team_level_data || [];
+    
+        if(data.length === 0){
+    
+            alert(
+                "ダウンロードできるデータがありません。"
+            );
+    
+            return;
+        }
+    
+        // CSVの列
+        const headers = [
+            "team",
+            "team_game_score",
+            "actual_condition",
+            "shown_condition",
+            "shown_score",
+            "actual_similarity"
+        ];
+    
+        // CSV本体
+        const rows = data.map(row => {
+    
+            return headers.map(key => {
+    
+                let value =
+                    row[key] ?? "";
+    
+                // CSV用に文字列化
+                value = String(value);
+    
+                // カンマ・改行・ダブルクォート対策
+                if(
+                    value.includes(",") ||
+                    value.includes('"') ||
+                    value.includes("\n")
+                ){
+                    value =
+                        '"' +
+                        value.replace(/"/g, '""') +
+                        '"';
+                }
+    
+                return value;
+    
+            }).join(",");
+    
+        });
+    
+        const csv =
+            [headers.join(","), ...rows].join("\n");
+    
+        // Excel / Rで文字化けしにくいようUTF-8 BOMを付ける
+        const blob =
+            new Blob(
+                ["\uFEFF" + csv],
+                {
+                    type: "text/csv;charset=utf-8;"
+                }
+            );
+    
+        const url =
+            URL.createObjectURL(blob);
+    
+        const link =
+            document.createElement("a");
+    
+        link.href = url;
+    
+        link.download =
+            "compatibility_team_data.csv";
+    
+        document.body.appendChild(link);
+    
+        link.click();
+    
+        document.body.removeChild(link);
+    
+        URL.revokeObjectURL(url);
+    }
+
+    // ========================================
     // 条件別平均ページ
     // ========================================
 
@@ -817,7 +906,31 @@ export function showCompatibilityFinalResult(
         buttonArea.style.marginTop =
             "25px";
 
-
+        // CSVダウンロードボタン
+        const csvButton =
+            document.createElement("button");
+        
+        csvButton.textContent =
+            "CSVダウンロード";
+        
+        csvButton.style.fontSize =
+            "16px";
+        
+        csvButton.style.padding =
+            "10px 24px";
+        
+        csvButton.style.cursor =
+            "pointer";
+        
+        csvButton.style.marginRight =
+            "10px";
+        
+        csvButton.onclick =
+            downloadTeamDataCSV;
+        
+        buttonArea.appendChild(
+            csvButton
+        );
         const backButton =
             document.createElement("button");
 
