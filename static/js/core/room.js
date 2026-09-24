@@ -907,36 +907,9 @@ if(msg.type==="ranking_result"){
                         : [];
                 
 
-                // -----------------------------
-                // 得点対象順位
-                // -----------------------------
-                
-                function getScoredRankCount(type){
-                
-                    switch(type){
-                
-                        case "完全一致":
-                            return 7;
-                
-                        case "サンレンタン":
-                        case "サンレンプク":
-                            return 3;
-                
-                        case "ニレンタン":
-                        case "ニレンプク":
-                            return 2;
-                
-                        case "タン":
-                            return 1;
-                
-                        default:
-                            return 0;
-                    }
-                
-                }
-                
-                const scoredRankCount =
-                    getScoredRankCount(resultType);
+                                
+               const matchedChoices =
+                    myResult?.matched ?? [];
                 // -----------------------------
                 // 通常の結果表示
                 // -----------------------------
@@ -978,14 +951,14 @@ if(msg.type==="ranking_result"){
                                     answerRanking.map(
                                         (id, i) => `
                                             <div class="ranking-row ${
-                                                i < scoredRankCount
+                                                matchedChoices.includes(id)
                                                     ? "ranking-score-hit"
                                                     : ""
                                             }">
                                                 <span class="ranking-position">
                                                     ${i + 1}位
                                                 </span>
-                                    
+                                
                                                 <span class="ranking-choice">
                                                     ${getChoiceText(id)}
                                                 </span>
@@ -994,8 +967,7 @@ if(msg.type==="ranking_result"){
                                     ).join("")
                                     :
                                     `<div class="ranking-empty">―</div>`
-                                }
-                
+                                }                
                             </div>
                 
                 
@@ -1013,7 +985,7 @@ if(msg.type==="ranking_result"){
                                     predictionRanking.map(
                                         (id, i) => `
                                             <div class="ranking-row ${
-                                                i < scoredRankCount
+                                                matchedChoices.includes(id)
                                                     ? "ranking-score-hit"
                                                     : ""
                                             }">
