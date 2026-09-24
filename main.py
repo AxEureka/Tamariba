@@ -3544,23 +3544,17 @@ def make_team_ranking(scores, top_score_count=None):
 
 def calc_ranking_result(answer, predict):
 
-    # =========================
-    # 7択完全一致
-    # =========================
-
     if answer == predict:
         return "完全一致", 15
-
 
     answer_top3 = answer[:3]
     predict_top3 = predict[:3]
 
+    hit = len(
+        set(answer_top3) & set(predict_top3)
+    )
 
-    # =========================
     # サンレンタン
-    # 1～3位すべて順位一致
-    # =========================
-
     if (
         answer_top3[0] == predict_top3[0]
         and answer_top3[1] == predict_top3[1]
@@ -3568,50 +3562,23 @@ def calc_ranking_result(answer, predict):
     ):
         return "サンレンタン", 6
 
+    # サンレンプク
+    if hit == 3:
+        return "サンレンプク", 4
 
-    # =========================
     # ニレンタン
-    # 1位・2位が順位一致
-    # =========================
-
     if (
         answer_top3[0] == predict_top3[0]
         and answer_top3[1] == predict_top3[1]
     ):
         return "ニレンタン", 3
 
-
-    # =========================
-    # タン
-    # 1位が順位一致
-    # =========================
-
-    if answer_top3[0] == predict_top3[0]:
-        return "タン", 1
-
-
-    # =========================
-    # 3人一致
-    # =========================
-
-    hit = len(
-        set(answer_top3) & set(predict_top3)
-    )
-
-    if hit == 3:
-        return "サンレンプク", 4
-
-
-    # =========================
-    # 2人一致
-    # =========================
-
+    # ニレンプク
     if hit == 2:
         return "ニレンプク", 2
 
-
-    # =========================
-    # はずれ
-    # =========================
+    # タン
+    if answer_top3[0] == predict_top3[0]:
+        return "タン", 1
 
     return "はずれ", 0
